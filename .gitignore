@@ -1,0 +1,5 @@
+.vercel/
+tests/*.png
+*.log
+Thumbs.db
+.DS_Store
