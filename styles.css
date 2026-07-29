@@ -2887,14 +2887,3 @@ body.workspace-entered .printed-document.is-paper-ball,body.workspace-entered .p
     radial-gradient(ellipse 45% 9% at var(--patch-x2) var(--patch-y),transparent 31%,rgba(48,47,41,.38) 43%,rgba(255,255,255,.25) 48%,transparent 59%),
     linear-gradient(var(--crease-c),transparent 41%,rgba(43,42,36,.3) 45%,rgba(255,255,255,.32) 48%,transparent 52%)!important;
 }
-/* experience-v27: reproduce the spacious 80% browser composition at 100% */
-@media (min-width:901px) {
-  body {
-    min-height:125vh;
-    zoom:.8;
-  }
-
-  .app {
-    height:125vh;
-  }
-}
