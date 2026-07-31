@@ -4253,3 +4253,38 @@ body.inner-mode .item-dialog[open] {
 .business-card .card-school { bottom:30px; }
 .business-card .card-email { position:absolute;left:18px;bottom:14px;z-index:1;display:block;color:#4e514a;font-family:var(--sans);font-size:9px;line-height:1;letter-spacing:.045em;text-transform:lowercase; }
 .business-card.is-paper-ball .card-email { display:none; }
+
+
+body.inner-mode.is-entering-inner .computer-stage,
+body.inner-mode.is-entering-inner .monitor-wrap,
+body.inner-mode.is-entering-inner .retro-os,
+body.inner-mode.is-entering-inner .screen-home,
+body.inner-mode.is-entering-inner .outer-items,
+body.inner-mode.is-entering-inner .outer-connections {
+  will-change:transform,opacity;
+}
+/* Outside → inside: keep the desktop's native ratio and animate only compositor properties. */
+@media (min-width:901px) {
+  body.inner-mode .computer-stage {
+    top:15vh;
+    width:min(104vw,1660px);
+    height:min(79vh,790px);
+  }
+  body.inner-mode .monitor-wrap {
+    top:38vh;
+    width:min(82vw,118.5vh,1390px);
+    transform:translate(-50%,-50%) scale(1.12);
+    transform-origin:50% 50%;
+  }
+}
+/* Keep the filtered desktop warm behind the home screen so entering does not pay a first-paint penalty. */
+body:not(.inner-mode) .retro-os {
+  visibility:visible!important;
+  opacity:.001;
+  pointer-events:none;
+  filter:url(#crtGlassWarpSoft)!important;
+}
+.monitor-wrap.is-mode-traveling {
+  transition:none!important;
+  will-change:translate,scale;
+}

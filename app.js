@@ -88,7 +88,54 @@ function esc(v=""){return String(v).replaceAll("&","&amp;").replaceAll("<","&lt;
 function inlineMd(v){return esc(v).replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noreferrer">$1</a>').replace(/`([^`]+)`/g,'<span class="md-tag">$1</span>').replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/(^|[^*])\*([^*]+)\*/g,"$1<em>$2</em>")}
 function markdownToHTML(md=""){const lines=String(md).replace(/\r/g,"").split("\n");let h="",list=null;const close=()=>{if(list){h+=`</${list}>`;list=null}};for(const line of lines){const hd=line.match(/^(#{1,3})\s+(.+)$/),ul=line.match(/^[-*]\s+(.+)$/),ol=line.match(/^\d+\.\s+(.+)$/);if(hd){close();h+=`<h${hd[1].length}>${inlineMd(hd[2])}</h${hd[1].length}>`}else if(line.startsWith("> ")){close();h+=`<blockquote>${inlineMd(line.slice(2))}</blockquote>`}else if(ul){if(list!=="ul"){close();list="ul";h+="<ul>"}h+=`<li>${inlineMd(ul[1])}</li>`}else if(ol){if(list!=="ol"){close();list="ol";h+="<ol>"}h+=`<li>${inlineMd(ol[1])}</li>`}else if(!line.trim())close();else{close();h+=`<p>${inlineMd(line)}</p>`}}close();return h||"<p>NO CONTENT</p>"}
 
-function setLevel(n,openId){const l=Math.max(0,Math.min(2,n));state.level=l;els.body.classList.toggle("workspace-entered",l>0);els.body.classList.toggle("inner-mode",l===2);els.stage.classList.toggle("entered",l>0);els.toolbar.hidden=l!==1;els.modeGuide.hidden=l===0;if(l===0){state.connectMode=false;state.selected=[];document.getElementById("connectItems").classList.remove("is-active")}else if(l===1){els.modeLabel.textContent="OUTSIDE MODE / 01";els.modeDescription.textContent="\u62d6\u52a8\u4fbf\u7b7e\uff0c\u7ee7\u7eed\u5411\u524d\u6eda\u52a8\u8fdb\u5165\u5c4f\u5e55\u3002"}else{els.modeLabel.textContent=state.codeMode?"TERMINAL TREE / 02":"PIXEL DESKTOP / 02";els.modeDescription.textContent="\u5411\u540e\u6eda\u52a8\u53ef\u9000\u56de\u5c4f\u5e55\u5916\u3002";if(state.codeMode){codeTreeExpanded.clear();codeFileExpanded.clear();els.retroDesktop.querySelector(".code-desktop-tree")?.remove()}renderInnerItems();if(openId)openItemWindow(openId)}state.wheelAmount=0;els.zoomMeter.style.width="0"}
+function prepareInnerTransition(){clearTimeout(prepareInnerTransition.timer);els.body.classList.add("is-entering-inner");prepareInnerTransition.timer=setTimeout(()=>els.body.classList.remove("is-entering-inner"),1450)}
+function finishMonitorTravel(monitor,animation){
+  animation.onfinish=animation.oncancel=()=>monitor.classList.remove("is-mode-traveling");
+}
+function animateMonitorTravel(monitor,first){
+  const last=monitor.getBoundingClientRect();
+  if(!first.width||!last.width){monitor.classList.remove("is-mode-traveling");return}
+  const dx=first.left+first.width/2-(last.left+last.width/2);
+  const dy=first.top+first.height/2-(last.top+last.height/2);
+  const scale=first.width/last.width;
+  const animation=monitor.animate(
+    [
+      {translate:`${dx}px ${dy}px`,scale:String(scale)},
+      {translate:"0px 0px",scale:"1"}
+    ],
+    {duration:1180,easing:"cubic-bezier(.16,1,.3,1)"}
+  );
+  finishMonitorTravel(monitor,animation);
+}
+function setLevel(n,openId){
+  const l=Math.max(0,Math.min(2,n)),entering=state.level!==2&&l===2,crossingInner=(state.level===2)!==(l===2);
+  const monitor=document.querySelector(".monitor-wrap"),first=crossingInner?monitor.getBoundingClientRect():null;
+  if(crossingInner){monitor.getAnimations().forEach(animation=>animation.cancel());monitor.classList.add("is-mode-traveling")}
+  if(entering)prepareInnerTransition();else if(l!==2)els.body.classList.remove("is-entering-inner");
+  state.level=l;
+  els.body.classList.toggle("workspace-entered",l>0);
+  els.body.classList.toggle("inner-mode",l===2);
+  els.stage.classList.toggle("entered",l>0);
+  els.toolbar.hidden=l!==1;
+  els.modeGuide.hidden=l===0;
+  if(l===0){
+    state.connectMode=false;
+    state.selected=[];
+    document.getElementById("connectItems").classList.remove("is-active");
+  }else if(l===1){
+    els.modeLabel.textContent="OUTSIDE MODE / 01";
+    els.modeDescription.textContent="\u62d6\u52a8\u4fbf\u7b7e\uff0c\u7ee7\u7eed\u5411\u524d\u6eda\u52a8\u8fdb\u5165\u5c4f\u5e55\u3002";
+  }else{
+    els.modeLabel.textContent=state.codeMode?"TERMINAL TREE / 02":"PIXEL DESKTOP / 02";
+    els.modeDescription.textContent="\u5411\u540e\u6eda\u52a8\u53ef\u9000\u56de\u5c4f\u5e55\u5916\u3002";
+    if(!els.customInnerItems.childElementCount)renderInnerItems();
+    else if(state.codeMode&&!els.retroDesktop.querySelector(".code-desktop-tree"))renderCodeTree();
+    if(openId)openItemWindow(openId);
+  }
+  if(first)animateMonitorTravel(monitor,first);
+  state.wheelAmount=0;
+  els.zoomMeter.style.width="0";
+}
 function renderOuterItems(){
   els.outerItems.innerHTML="";
   state.outerItems.forEach(item=>{
@@ -279,8 +326,8 @@ function crumpleBusinessCard(card){
 }
 function paperRadius(card){return +(card.dataset.paperRadius||29)}
 function throwPlan(card,dx,dy){
-  const layer=card.parentElement.getBoundingClientRect(),origin={x:parseFloat(card.style.left),y:parseFloat(card.style.top)},g=880,tr=document.getElementById("deskTrash").getBoundingClientRect(),radius=paperRadius(card),deskY=Math.min(layer.height-30,tr.bottom-layer.top-radius);
-  let vx=-dx*4.8,vy=Math.max(-980,Math.min(-330,-520-dy*2.8));
+  const layer=card.parentElement.getBoundingClientRect(),origin={x:parseFloat(card.style.left),y:parseFloat(card.style.top)},g=1040,tr=document.getElementById("deskTrash").getBoundingClientRect(),radius=paperRadius(card),deskY=Math.min(layer.height-30,tr.bottom-layer.top-radius);
+  let vx=-dx*6.1,vy=Math.max(-1080,Math.min(-380,-620-dy*3.2));
   const disc=Math.max(0,vy*vy-2*g*(origin.y-deskY)),endT=Math.max(.42,(-vy+Math.sqrt(disc))/g);
   const point=t=>({x:origin.x+vx*t,y:origin.y+vy*t+.5*g*t*t});let hit=false,hitT=endT;
   for(let t=.02;t<=endT;t+=.02){const p=point(t),inBin=p.x>=tr.left-layer.left-16&&p.x<=tr.right-layer.left+16&&p.y>=tr.top-layer.top-26&&p.y<=tr.top-layer.top+42;if(inBin){hit=true;hitT=t;break}}
@@ -324,7 +371,7 @@ function resolvePaperBallPairs(card,body,layer,radius,gravity){
 function simulatePaperBall(card,plan){
   const layer=plan.layer,trash=document.getElementById("deskTrash"),radius=paperRadius(card),tr=trash.getBoundingClientRect(),deskY=Math.min(layer.height-30,tr.bottom-layer.top-radius);
   const obstacles=[physicsRect(document.querySelector(".monitor"),layer,.56),physicsRect(document.querySelector("#deskPrinter .printer-top"),layer,.5),physicsRect(document.querySelector("#deskPrinter .printer-shell"),layer,.5)].filter(Boolean),opening={left:tr.left-layer.left-7,right:tr.right-layer.left+7,top:tr.top-layer.top-16,bottom:tr.top-layer.top+32};
-  const body={x:plan.origin.x,y:plan.origin.y,vx:plan.vx,vy:plan.vy,spin:Math.max(-720,Math.min(720,plan.vx*1.25)),angle:0,bounces:0};
+  const body={x:plan.origin.x,y:plan.origin.y,vx:plan.vx,vy:plan.vy,spin:Math.max(-820,Math.min(820,plan.vx*1.35)),angle:0,bounces:0},visualOrigin={x:plan.origin.x,y:plan.origin.y};
   const token={running:true};card._physics=token;card._physicsBody=body;card.classList.remove("is-ball-resting");card.classList.add("is-ball-flying");let previous=0;
   const step=stamp=>{
     if(card._physics!==token||!token.running||!card.isConnected)return;
@@ -342,10 +389,10 @@ function simulatePaperBall(card,plan){
       if(body.y>deskY){body.y=deskY;if(Math.abs(body.vy)>34){body.vy=-Math.abs(body.vy)*.49;body.vx*=.78;body.spin*=.7;body.bounces++}else body.vy=0}
       if(body.y>=deskY-.5&&body.vy===0){body.vx=Math.sign(body.vx)*Math.max(0,Math.abs(body.vx)-900*dt);body.spin=Math.sign(body.spin)*Math.max(0,Math.abs(body.spin)-720*dt)}
     }
-    card.style.left=`${body.x}px`;card.style.top=`${body.y}px`;card.style.setProperty("--ball-spin",`${body.angle}deg`);
-    if(captured){token.running=false;trashCollision(card,trash);return}
+    card.style.transform=`translate(-50%,-50%) translate3d(${body.x-visualOrigin.x}px,${body.y-visualOrigin.y}px,0) rotate(${body.angle}deg)`;
+    if(captured){token.running=false;card.style.left=`${body.x}px`;card.style.top=`${body.y}px`;card.style.transform="";card.style.setProperty("--ball-spin",`${body.angle}deg`);trashCollision(card,trash);return}
     const sleeping=body.y>=deskY-.5&&Math.abs(body.vy)<5&&Math.abs(body.vx)<10;
-    if(sleeping||(body.bounces>24&&body.y>=deskY-.5)){token.running=false;body.vx=0;body.vy=0;trash.classList.remove("is-open");card.classList.remove("is-ball-flying");card.classList.add("is-ball-resting");return}
+    if(sleeping||(body.bounces>24&&body.y>=deskY-.5)){token.running=false;body.vx=0;body.vy=0;card.style.left=`${body.x}px`;card.style.top=`${body.y}px`;card.style.transform="";card.style.setProperty("--ball-spin",`${body.angle}deg`);trash.classList.remove("is-open");card.classList.remove("is-ball-flying");card.classList.add("is-ball-resting");return}
     requestAnimationFrame(step);
   };requestAnimationFrame(step);
 }
