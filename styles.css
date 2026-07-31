@@ -2674,7 +2674,7 @@ body.inner-mode .retro-wallpaper::after { content:""!important;position:absolute
 .printer-file-row { display:grid;grid-template-columns:24px 48px minmax(0,1fr);align-items:center;gap:11px;min-height:68px;padding:8px 12px;border-bottom:1px dotted #8c887e;cursor:pointer; }
 .printer-file-row:hover { background:rgba(215,255,36,.17); }
 .printer-file-row input { width:17px;height:17px;accent-color:#708800; }
-.printer-file-row .pixel-file { transform:scale(.72);transform-origin:center; }
+.printer-file-row .pixel-file { transform:scale(.76);transform-origin:center; }
 .printer-file-row b,.printer-file-row small { display:block; }
 .printer-file-row b { font-size:15px; }
 .printer-file-row small { margin-top:3px;color:#66685f;font-size:9px;letter-spacing:.12em; }
@@ -2887,3 +2887,1369 @@ body.workspace-entered .printed-document.is-paper-ball,body.workspace-entered .p
     radial-gradient(ellipse 45% 9% at var(--patch-x2) var(--patch-y),transparent 31%,rgba(48,47,41,.38) 43%,rgba(255,255,255,.25) 48%,transparent 59%),
     linear-gradient(var(--crease-c),transparent 41%,rgba(43,42,36,.3) 45%,rgba(255,255,255,.32) 48%,transparent 52%)!important;
 }
+/* experience-v28: desktop-native scale and a complete monitor silhouette */
+/* The former frame was only a decorative line; removing it keeps the composition open. */
+.app::before { display:none!important; }
+
+@media (min-width:901px) {
+  /* Reduce the physical scene without changing browser zoom or typography. */
+  .computer-stage,
+  .computer-stage.entered {
+    width:min(101vw,1602px);
+    height:min(75.6vh,756px);
+  }
+
+  .monitor-wrap,
+  body:not(.workspace-entered) .monitor-wrap,
+  body.workspace-entered:not(.inner-mode) .monitor-wrap {
+    width:min(68.4vw,1098px);
+  }
+
+  body.inner-mode .computer-stage {
+    width:min(90vw,1512px);
+    height:min(86.4vh,810px);
+  }
+
+  body.inner-mode .monitor-wrap {
+    width:min(77.4vw,1242px);
+  }
+
+  /* Paper, printer and bin share the same roughly ten-percent reduction. */
+  .outer-item {
+    width:148px;
+    min-height:135px;
+  }
+
+  .outer-item.has-media {
+    width:184px;
+    min-height:220px;
+  }
+
+  .sticky-media {
+    height:104px;
+    margin:12px 12px 0;
+  }
+
+  .desk-printer {
+    width:clamp(171px,11.88vw,225px);
+  }
+
+  .desk-trash {
+    width:59px;
+    height:77px;
+  }
+
+  body.workspace-entered .desk-trash {
+    width:49px;
+    height:65px;
+  }
+}
+
+/* experience-v29: balanced desktop scale and three-line statement */
+@media (min-width:901px) {
+  .hero-copy h1 {
+    font-size:clamp(66px,6.6vw,120px);
+    line-height:.84;
+  }
+
+  .computer-stage,
+  .computer-stage.entered {
+    width:min(104vw,1660px);
+    height:min(79vh,790px);
+  }
+
+  .monitor-wrap,
+  body:not(.workspace-entered) .monitor-wrap,
+  body.workspace-entered:not(.inner-mode) .monitor-wrap {
+    top:2%;
+    width:min(82vw,118.5vh,1390px);
+  }
+
+  body.inner-mode .computer-stage {
+    top:2vh;
+    width:min(94vw,1580px);
+    height:min(90vh,850px);
+  }
+
+  body.inner-mode .monitor-wrap {
+    top:max(3%,calc(50vh - 510px));
+    width:min(84vw,128vh,1390px);
+  }
+
+  .desk-trash {
+    width:64px;
+    height:84px;
+  }
+
+  body.workspace-entered .desk-trash {
+    width:52px;
+    height:69px;
+  }
+}
+
+/* experience-v30: landscape notes and one-piece desktop folders */
+@media (min-width:901px) {
+  .outer-item {
+    width:210px;
+    min-height:184px;
+  }
+
+  .outer-item.has-media {
+    width:228px;
+    min-height:200px;
+  }
+
+  .outer-item.has-media .sticky-media {
+    height:86px;
+    margin:11px 11px 0;
+  }
+}
+
+.custom-inner-icon[data-kind="folder"] > .pixel-folder {
+  position:relative!important;
+  width:56px!important;
+  height:45px!important;
+  margin:10px 0 1px!important;
+  border-radius:5px 5px 6px 6px!important;
+}
+
+.custom-inner-icon[data-kind="folder"] > .pixel-folder::before {
+  z-index:0!important;
+  left:0!important;
+  top:-10px!important;
+  width:28px!important;
+  height:12px!important;
+  border-radius:4px 4px 0 0!important;
+}
+
+.custom-inner-icon[data-kind="folder"] > .pixel-folder::after {
+  z-index:1!important;
+  left:0!important;
+  right:0!important;
+  top:0!important;
+  bottom:0!important;
+  width:auto!important;
+  height:auto!important;
+  border-radius:5px 5px 6px 6px!important;
+}
+
+/* experience-v31: persistent print accents and click hierarchy */
+.printed-document:not(.is-paper-ball) {
+  box-shadow:
+    inset 5px 0 0 var(--orange),
+    inset 0 -1px rgba(38,40,34,.08),
+    0 9px 17px rgba(0,0,0,.4)!important;
+}
+
+.printed-document.is-dragging-card:not(.is-paper-ball) {
+  transform:translate(-50%,-50%) perspective(700px) rotateX(0) rotateZ(calc(var(--document-rotation) + var(--drag-tilt,0deg))) scale(.74)!important;
+  box-shadow:
+    inset 5px 0 0 var(--orange),
+    inset 0 -1px rgba(38,40,34,.08),
+    0 25px 28px rgba(0,0,0,.43)!important;
+}
+
+.printed-document:not(.is-paper-ball)::before,
+.printed-document.is-long-document:not(.is-paper-ball)::before {
+  display:block!important;
+  right:12px!important;
+  top:12px!important;
+  width:38px!important;
+  height:30px!important;
+  opacity:.94!important;
+  background:
+    linear-gradient(145deg,var(--lime) 0 52%,transparent 53%),
+    linear-gradient(35deg,transparent 0 38%,var(--orange) 39% 72%,transparent 73%)!important;
+}
+
+.printed-document.is-printed-document:not(.is-paper-ball):not(.is-expanded):not(.is-dragging-card):not(.is-card-dropping):not(.is-crumpling) {
+  transform:translate(-50%,-50%) perspective(700px) rotateX(28deg) rotateZ(var(--document-rotation)) scale(.72)!important;
+}
+
+.printed-document.is-expanded:not(.is-paper-ball) {
+  z-index:12000!important;
+  cursor:zoom-out!important;
+  transform:translate(-50%,-50%) perspective(700px) rotateX(0) rotateZ(0) scale(1.48)!important;
+  box-shadow:
+    inset 5px 0 0 var(--orange),
+    0 34px 70px rgba(0,0,0,.62)!important;
+}
+
+.business-card.is-expanded:not(.is-paper-ball) { cursor:zoom-out!important; }
+.business-card:not(.is-paper-ball):not(.is-expanded) { cursor:pointer; }
+
+/* experience-v32: centered paper focus with click-away return */
+.business-card-layer.is-paper-focus-mode {
+  z-index:500!important;
+}
+
+.paper-focus-backdrop {
+  position:absolute;
+  z-index:11900;
+  inset:0;
+  width:100%;
+  height:100%;
+  padding:0;
+  border:0;
+  background:rgba(16,18,14,.34);
+  backdrop-filter:blur(3px);
+  cursor:zoom-out;
+  pointer-events:auto;
+  animation:paperFocusFade .28s ease both;
+}
+
+@keyframes paperFocusFade {
+  from { opacity:0; }
+  to { opacity:1; }
+}
+
+.throwable-paper:not(.is-paper-ball):not(.is-printing-card):not(.is-printing-document):not(.is-dragging-card):not(.is-card-dropping) {
+  transition:left .48s cubic-bezier(.16,1,.3,1),top .48s cubic-bezier(.16,1,.3,1),transform .48s cubic-bezier(.16,1,.3,1),box-shadow .4s ease!important;
+}
+
+.business-card.is-expanded:not(.is-paper-ball),
+.printed-document.is-expanded:not(.is-paper-ball) {
+  pointer-events:auto!important;
+}
+
+.business-card.is-expanded:not(.is-paper-ball),
+.printed-document.is-expanded:not(.is-paper-ball) {
+  transform-origin:50% 50%!important;
+}
+
+/* experience-v33: compact document scale and fast crumple */
+.printed-document { --crumple-final:.246!important; }
+.printed-document.is-paper-ball {
+  width:64px!important;
+  height:64px!important;
+}
+
+.printed-document.is-crumpling {
+  animation:crumpleDocumentCompact .82s cubic-bezier(.2,.62,.12,1) forwards!important;
+}
+
+@keyframes crumpleDocumentCompact {
+  0% {
+    transform:translate(-50%,-50%) perspective(700px) rotateX(28deg) rotateY(0) rotateZ(var(--card-rotation)) scale(.72);
+    clip-path:polygon(0 0,100% 0,100% 100%,0 100%);
+    border-radius:3px;
+  }
+  12% {
+    transform:translate(-50%,-50%) translate(4px,-3px) perspective(700px) rotateX(18deg) rotateY(24deg) rotateZ(calc(var(--card-rotation) + 5deg)) scale(.58,.66) skewY(5deg);
+    clip-path:polygon(0 0,84% 0,100% 25%,96% 100%,3% 94%);
+  }
+  26% {
+    transform:translate(-50%,-50%) translate(-6px,3px) perspective(700px) rotateX(9deg) rotateY(-44deg) rotateZ(-8deg) scale(.44,.5) skewX(-7deg);
+    clip-path:polygon(11% 0,100% 8%,89% 100%,0 83%,5% 32%);
+  }
+  43% {
+    transform:translate(-50%,-50%) translate(5px,4px) perspective(700px) rotateX(42deg) rotateY(16deg) rotateZ(15deg) scale(.34,.37) skew(8deg,-5deg);
+    clip-path:polygon(0 13%,80% 0,100% 61%,72% 100%,8% 86%);
+  }
+  62% {
+    transform:translate(-50%,-50%) translate(-3px,-3px) perspective(700px) rotateX(-24deg) rotateY(49deg) rotateZ(-21deg) scale(.28) skew(-8deg,7deg);
+    clip-path:polygon(18% 0,100% 22%,82% 95%,9% 100%,0 34%);
+  }
+  80% {
+    transform:translate(-50%,-50%) translate(2px,1px) perspective(700px) rotateX(20deg) rotateY(-25deg) rotateZ(31deg) scale(.255);
+    border-radius:35% 24% 43% 27%;
+    clip-path:polygon(12% 12%,53% 0,91% 15%,100% 58%,76% 95%,35% 100%,3% 73%,0 34%);
+  }
+  100% {
+    transform:translate(-50%,-50%) perspective(700px) rotateX(0) rotateY(0) rotateZ(var(--ball-rest)) scale(.246);
+    border-radius:var(--ball-radius);
+    clip-path:var(--ball-shape);
+    filter:drop-shadow(5px 11px 7px rgba(0,0,0,.38));
+  }
+}
+
+/* experience-v34: quieter type scale and switchable terminal desktop */
+@media (min-width:901px) {
+  .outer-item {
+    width:198px;
+    min-height:172px;
+  }
+  .outer-item.has-media {
+    width:214px;
+    min-height:188px;
+  }
+  .outer-item.has-media .sticky-media {
+    height:80px;
+    margin:10px 10px 0;
+  }
+  .sticky-copy { padding:17px 16px 47px; }
+  .outer-item h3 { font-size:16.5px;line-height:1.32; }
+  .outer-item p { font-size:14px;line-height:1.55; }
+  .outer-item small { left:16px;bottom:13px;font-size:9px;line-height:1.3; }
+
+  .custom-inner-icon,.system-printer-icon {
+    width:132px!important;
+    height:120px!important;
+    gap:12px!important;
+    font-size:16.5px!important;
+  }
+  .custom-inner-icon > .pixel-folder {
+    width:52px!important;
+    height:42px!important;
+    margin-top:9px!important;
+  }
+  .custom-inner-icon > .pixel-folder::before {
+    top:-9px!important;
+    width:26px!important;
+    height:11px!important;
+  }
+  .custom-inner-icon > .pixel-file { width:40px!important;height:52px!important; }
+  .system-printer-icon > .pixel-printer-icon { width:59px!important;height:44px!important; }
+}
+
+.retro-window__bar { font-size:12px; }
+.retro-window__body { padding:18px 20px;font-size:14px;line-height:1.68; }
+.retro-window__status { font-size:9px; }
+.window-file-tools { font-size:11px; }
+.window-file-tools button,.folder-entry__actions button { font-size:11px; }
+.markdown-view blockquote,.markdown-view p { font-size:14px;line-height:1.68; }
+.markdown-view h1,.markdown-view h2,.markdown-view h3 { font-size:13px!important;line-height:1.45!important; }
+.markdown-view ul,.markdown-view ol { font-size:13px;line-height:1.65; }
+.folder-entry { min-height:70px!important;padding:9px 10px!important; }
+.folder-entry__label b { font-size:15px;line-height:1.4; }
+.folder-entry__label small { font-size:10px!important; }
+.item-dialog header h2 { font-size:32px; }
+.item-dialog label,.item-dialog .color-field,.item-dialog .note-media-row,.item-dialog .doodle-heading { font-size:14px; }
+.item-dialog input[type="text"],.item-dialog input:not([type]),.item-dialog textarea { font-size:16px; }
+.item-dialog .media-upload,.item-dialog .media-ghost,.item-dialog footer button { font-size:14px; }
+
+body.code-desktop-mode .monitor-screen {
+  background:#020704!important;
+  box-shadow:inset 0 0 38px rgba(0,0,0,.78),inset 0 0 4px rgba(163,255,89,.18)!important;
+}
+body.code-desktop-mode .screen-home,
+body.code-desktop-mode .retro-os {
+  background:
+    radial-gradient(circle at 78% 18%,rgba(215,255,36,.055),transparent 28%),
+    repeating-linear-gradient(0deg,rgba(121,255,105,.022) 0 1px,transparent 1px 4px),
+    #030805!important;
+  color:#b8ff9b;
+}
+body.code-desktop-mode .screen-grid {
+  opacity:.32;
+  background-image:linear-gradient(rgba(121,255,105,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(121,255,105,.1) 1px,transparent 1px);
+}
+body.code-desktop-mode .retro-wallpaper {
+  opacity:.14;
+  filter:hue-rotate(36deg) saturate(1.8);
+}
+body.code-desktop-mode .retro-topbar {
+  border-bottom-color:rgba(140,255,105,.36);
+  background:rgba(0,12,5,.8);
+  color:#a6ff7b;
+  text-shadow:0 0 8px rgba(121,255,105,.42);
+}
+body.code-desktop-mode .retro-topbar span:first-child::before { content:"> root@kong-mile:~/desktop  ";color:var(--lime); }
+body.code-desktop-mode .desktop-intro .pixel-kicker,
+body.code-desktop-mode .desktop-intro strong { color:#c7ffad; }
+body.code-desktop-mode .desktop-intro small { color:rgba(184,255,155,.58); }
+
+body.code-desktop-mode .custom-inner-icon,
+body.code-desktop-mode .system-printer-icon {
+  width:166px!important;
+  height:67px!important;
+  padding:10px 12px!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  gap:3px!important;
+  border:1px solid rgba(137,255,101,.3)!important;
+  border-radius:3px;
+  background:linear-gradient(100deg,rgba(32,73,36,.34),rgba(3,12,6,.84))!important;
+  color:#d9ffd0!important;
+  font-family:var(--pixel)!important;
+  text-align:left!important;
+  text-shadow:none!important;
+  box-shadow:inset 3px 0 0 rgba(215,255,36,.7),0 7px 18px rgba(0,0,0,.28);
+}
+body.code-desktop-mode .custom-inner-icon:hover,
+body.code-desktop-mode .custom-inner-icon:focus,
+body.code-desktop-mode .system-printer-icon:hover,
+body.code-desktop-mode .system-printer-icon:focus {
+  border-color:var(--lime)!important;
+  background:rgba(42,91,41,.58)!important;
+  box-shadow:inset 3px 0 0 var(--orange),0 0 16px rgba(179,255,82,.18);
+}
+body.code-desktop-mode .custom-inner-icon > .pixel-icon,
+body.code-desktop-mode .system-printer-icon > .pixel-icon { display:none!important; }
+body.code-desktop-mode .custom-inner-icon::before,
+body.code-desktop-mode .system-printer-icon::before {
+  display:block;
+  color:#86ff65;
+  font:10px/1.2 var(--pixel);
+  letter-spacing:.06em;
+}
+body.code-desktop-mode .custom-inner-icon[data-kind="folder"]::before { content:"> [DIR]  可打开文件夹"; }
+body.code-desktop-mode .custom-inner-icon[data-kind="file"]::before { content:"> [MD]   可阅读文件"; }
+body.code-desktop-mode .system-printer-icon::before { content:"> [SYS]  输出设备"; }
+body.code-desktop-mode .custom-inner-icon > span:last-child,
+body.code-desktop-mode .system-printer-icon > span:last-child {
+  width:100%;
+  margin:0!important;
+  overflow:hidden;
+  color:#eef9e9;
+  font:13px/1.4 var(--pixel);
+  text-align:left;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+body.code-desktop-mode .custom-inner-icon[data-kind="folder"] > span:last-child::after { content:" /";color:var(--lime); }
+
+body.code-desktop-mode .desktop-icon {
+  border:1px solid rgba(137,255,101,.28);
+  border-radius:2px;
+  background:rgba(2,12,5,.66);
+  color:#d9ffd0;
+  text-shadow:none;
+}
+body.code-desktop-mode .desktop-icon .pixel-icon { display:none!important; }
+body.code-desktop-mode .desktop-icon::before { color:#86ff65;font:9px var(--pixel); }
+body.code-desktop-mode .desktop-icon[data-kind="folder"]::before { content:"> [DIR] 可打开文件夹"; }
+body.code-desktop-mode .desktop-icon[data-kind="file"]::before { content:"> [MD] 可阅读文件"; }
+body.code-desktop-mode .desktop-icon > span:last-child { font-family:var(--pixel);font-size:12px!important; }
+
+body.code-desktop-mode .retro-window:not([data-system-app]) {
+  border-color:#17271a;
+  background:#071009;
+  color:#cbf9be;
+  box-shadow:6px 7px 0 rgba(0,0,0,.62),0 0 0 1px rgba(134,255,101,.42);
+}
+body.code-desktop-mode .retro-window:not([data-system-app]) .retro-window__bar {
+  background:linear-gradient(90deg,#07150a,#173019);
+  color:#baff9f;
+}
+body.code-desktop-mode .retro-window:not([data-system-app]) .retro-window__body {
+  background:repeating-linear-gradient(0deg,rgba(130,255,99,.025) 0 1px,transparent 1px 4px),#050b06;
+  color:#cbe9c3;
+}
+body.code-desktop-mode .retro-window:not([data-system-app]) .retro-window__status,
+body.code-desktop-mode .retro-window:not([data-system-app]) .window-file-tools {
+  border-color:rgba(135,255,102,.2);
+  background:#09130b;
+  color:#8eff6c;
+}
+body.code-desktop-mode .retro-window:not([data-system-app]) .window-file-tools button {
+  border-color:rgba(135,255,102,.42);
+  background:#0c1c0f;
+  color:#baff9f;
+}
+body.code-desktop-mode .retro-window:not([data-system-app]) .markdown-view blockquote {
+  border-color:rgba(135,255,102,.28);
+  background:#0a150c;
+  color:#d8ead3;
+}
+body.code-desktop-mode .retro-window:not([data-system-app]) .markdown-view h1,
+body.code-desktop-mode .retro-window:not([data-system-app]) .markdown-view h2,
+body.code-desktop-mode .retro-window:not([data-system-app]) .markdown-view h3 {
+  background:#0c1c0f!important;
+  color:#a8ff87!important;
+}
+body.code-desktop-mode .retro-window:not([data-system-app]) .folder-entry {
+  position:relative;
+  grid-template-columns:66px minmax(0,1fr)!important;
+  border-bottom:1px solid rgba(135,255,102,.16);
+  color:#d4f0cc;
+}
+body.code-desktop-mode .retro-window:not([data-system-app]) .folder-entry > .pixel-icon { display:none!important; }
+body.code-desktop-mode .retro-window:not([data-system-app]) .folder-entry::before {
+  color:#83ff63;
+  font:10px var(--pixel);
+}
+body.code-desktop-mode .retro-window:not([data-system-app]) .folder-entry[data-kind="folder"]::before { content:"[DIR]"; }
+body.code-desktop-mode .retro-window:not([data-system-app]) .folder-entry[data-kind="file"]::before { content:"[MD]"; }
+body.code-desktop-mode .retro-window:not([data-system-app]) .folder-entry__label small { color:rgba(172,255,147,.5); }
+
+body.code-desktop-mode .tower-power {
+  background:var(--lime);
+  box-shadow:0 0 0 1px #111,0 0 14px rgba(215,255,36,.88);
+}
+.desktop-mode-switching .monitor-screen::after {
+  opacity:0;
+  background:var(--lime);
+  animation:desktopModeFlash .52s ease both;
+}
+@keyframes desktopModeFlash {
+  0%,100% { opacity:0; }
+  42% { opacity:.2; }
+  58% { opacity:.08; }
+}
+/* experience-v35: interactive terminal tree instead of code-themed icon cards */
+.code-desktop-tree { display:none; }
+body.code-desktop-mode #customInnerItems { display:none; }
+body.code-desktop-mode .code-desktop-tree {
+  position:absolute;
+  inset:4% 5% 5%;
+  z-index:6;
+  display:block;
+  overflow:auto;
+  padding:20px 24px 34px;
+  border:1px solid rgba(111,255,93,.2);
+  border-radius:2px;
+  background:
+    repeating-linear-gradient(0deg,rgba(93,255,76,.027) 0 1px,transparent 1px 4px),
+    linear-gradient(105deg,rgba(0,20,6,.96),rgba(0,6,2,.98));
+  color:#baff9e;
+  box-shadow:inset 0 0 34px rgba(0,0,0,.68),0 12px 30px rgba(0,0,0,.2);
+  font-family:var(--pixel);
+  text-shadow:0 0 7px rgba(92,255,76,.2);
+}
+.code-desktop-tree > header {
+  padding-bottom:10px;
+  border-bottom:1px solid rgba(111,255,93,.2);
+  color:#81ff67;
+  font-size:13px;
+  line-height:1.5;
+}
+.code-desktop-tree > header span { color:#d7ff24; }
+.code-desktop-tree > header b { color:#73cfff;font-weight:600; }
+.code-tree-help { margin:10px 0 15px;color:rgba(180,255,158,.48);font:10px/1.55 var(--pixel); }
+.code-tree-root { display:flex;flex-direction:column;gap:2px; }
+.code-tree-branch { display:flex;flex-direction:column;gap:2px; }
+.code-tree-node { position:relative;padding-left:calc(var(--tree-depth,0) * 22px); }
+.code-tree-node::before {
+  content:"";
+  position:absolute;
+  left:calc(var(--tree-depth,0) * 22px + 7px);
+  top:-3px;
+  bottom:-3px;
+  border-left:1px dotted rgba(111,255,93,.16);
+}
+.code-tree-toggle,.code-tree-printer {
+  position:relative;
+  z-index:1;
+  display:grid;
+  width:100%;
+  min-height:40px;
+  padding:7px 10px;
+  grid-template-columns:22px 52px minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+  border:0;
+  border-radius:2px;
+  background:transparent;
+  color:#d6f5cf;
+  font-family:var(--pixel);
+  text-align:left;
+  cursor:pointer;
+}
+.code-tree-toggle:hover,.code-tree-toggle:focus-visible,.code-tree-printer:hover,.code-tree-printer:focus-visible {
+  outline:1px solid rgba(139,255,104,.42);
+  background:rgba(78,145,67,.16);
+}
+.code-tree-caret { color:#d7ff24;font-size:18px;transition:transform .24s ease;transform-origin:45% 52%; }
+.code-tree-node.is-folder.is-open > .code-tree-toggle .code-tree-caret { transform:rotate(90deg); }
+.code-tree-type { color:#70e4ff;font-size:10px;letter-spacing:.04em; }
+.code-tree-node.is-file .code-tree-type { color:#ff7957; }
+.code-tree-name { overflow:hidden;color:#c5ffb4;font-size:13px;line-height:1.4;text-overflow:ellipsis;white-space:nowrap; }
+.code-tree-node.is-file .code-tree-name { color:#e3eee0; }
+.code-tree-action { color:rgba(190,255,173,.35);font-size:8px;letter-spacing:.08em; }
+.code-tree-node.is-open > .code-tree-toggle { background:rgba(75,141,65,.12); }
+.code-tree-node > .code-tree-branch {
+  margin:1px 0 5px 17px;
+  padding-left:5px;
+  border-left:1px solid rgba(111,255,93,.14);
+  animation:terminalBranchOpen .3s cubic-bezier(.16,.8,.2,1) both;
+}
+.code-file-content {
+  margin:2px 10px 10px 82px;
+  padding:13px 15px 15px;
+  overflow:hidden;
+  border-left:2px solid rgba(215,255,36,.62);
+  background:rgba(0,0,0,.42);
+  color:#c9dfc3;
+  font-family:var(--sans);
+  text-shadow:none;
+  animation:terminalBranchOpen .32s cubic-bezier(.16,.8,.2,1) both;
+}
+.code-file-command { margin:-2px 0 11px;color:#74ff65;font:10px/1.5 var(--pixel); }
+.code-file-content blockquote { margin:0 0 12px;padding:10px 12px;border:1px solid rgba(112,255,90,.2);background:rgba(57,105,50,.12);color:#d7ead2;font-size:13px;line-height:1.65; }
+.code-file-content h1,.code-file-content h2,.code-file-content h3 { margin:13px 0 7px!important;padding:6px 8px!important;border-left:2px solid var(--orange)!important;background:rgba(35,74,36,.28)!important;color:#a9ff90!important;font:12px/1.45 var(--pixel)!important; }
+.code-file-content p { margin:7px 0;color:#d6e5d2;font-size:13px;line-height:1.68; }
+.code-file-content ul,.code-file-content ol { margin:7px 0;padding-left:22px;color:#d6e5d2;font-size:12px;line-height:1.65; }
+.code-file-content .md-tag { padding:2px 5px;background:rgba(255,90,40,.84);font-size:9px; }
+.code-tree-printer { margin-top:6px;grid-template-columns:22px 52px minmax(0,1fr) auto; }
+.code-tree-printer > span:first-child { color:#d7ff24;font-size:18px; }
+.code-tree-printer b { color:#f17b57;font-size:10px; }
+.code-tree-printer > span:nth-child(3) { color:#c5ffb4;font-size:13px; }
+.code-tree-printer small { color:rgba(190,255,173,.35);font-size:8px; }
+@keyframes terminalBranchOpen {
+  from { opacity:0;transform:translateY(-7px);clip-path:inset(0 0 100% 0); }
+  to { opacity:1;transform:translateY(0);clip-path:inset(0); }
+}
+
+/* The outer screen previews the same hierarchy as compact terminal rows. */
+body.code-desktop-mode .desktop-icons {
+  right:6%;
+  top:12%;
+  display:flex;
+  width:38%;
+  flex-direction:column;
+  gap:5px;
+}
+body.code-desktop-mode .desktop-icon {
+  min-height:43px;
+  padding:8px 11px;
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-start;
+  gap:10px;
+  border:0;
+  border-left:2px solid rgba(215,255,36,.55);
+  border-radius:0;
+  background:rgba(0,12,4,.46);
+  text-align:left;
+}
+body.code-desktop-mode .desktop-icon:hover { transform:translateX(5px);background:rgba(44,96,40,.28); }
+body.code-desktop-mode .desktop-icon::before { flex:0 0 150px; }
+body.code-desktop-mode .desktop-icon > span:last-child { overflow:hidden;text-align:left;text-overflow:ellipsis;white-space:nowrap; }
+
+@media (max-width:720px) {
+  body.code-desktop-mode .code-desktop-tree { inset:3%;padding:13px 12px 24px; }
+  .code-desktop-tree > header { font-size:10px; }
+  .code-tree-toggle,.code-tree-printer { grid-template-columns:16px 42px minmax(0,1fr);padding:6px;gap:5px; }
+  .code-tree-action,.code-tree-printer small { display:none; }
+  .code-tree-name,.code-tree-printer > span:nth-child(3) { font-size:10px; }
+  .code-file-content { margin-left:48px;padding:10px; }
+}
+/* experience-v36: keep the original business-card print and landing motion isolated */
+.business-card.is-settled:not(.is-expanded):not(.is-focus-returning):not(.is-dragging-card):not(.is-card-dropping):not(.is-crumpling):not(.is-paper-ball) {
+  transition:none!important;
+}
+.business-card.is-focus-returning:not(.is-paper-ball) {
+  transition:left .48s cubic-bezier(.16,1,.3,1),top .48s cubic-bezier(.16,1,.3,1),transform .48s cubic-bezier(.16,1,.3,1),box-shadow .4s ease!important;
+}
+/* experience-v37: full-black terminal canvas and restored compact print geometry */
+body.code-desktop-mode .retro-os,
+body.code-desktop-mode .retro-desktop,
+body.code-desktop-mode .monitor-screen {
+  background:#000!important;
+}
+body.code-desktop-mode .retro-wallpaper { display:none!important; }
+body.code-desktop-mode .code-desktop-tree {
+  inset:0;
+  padding:4% 5% 6%;
+  border:0;
+  border-radius:0;
+  background:repeating-linear-gradient(0deg,rgba(93,255,76,.025) 0 1px,transparent 1px 4px),#000;
+  box-shadow:inset 0 0 42px rgba(29,91,28,.12);
+}
+.code-tree-caret {
+  display:inline-flex;
+  width:22px;
+  height:22px;
+  align-items:center;
+  justify-content:center;
+  line-height:1;
+  transform-origin:50% 50%!important;
+}
+.code-tree-node.is-folder.is-open > .code-tree-toggle .code-tree-caret { transform:rotate(90deg); }
+.business-card:not(.is-paper-ball) { width:202px; }
+/* experience-v38: dark convex CRT hardware, true tree collapse and terminal printer */
+.code-tree-branch[hidden],.code-file-content[hidden] { display:none!important; }
+
+.monitor {
+  padding:clamp(20px,2.05vw,34px) clamp(22px,2.35vw,39px) clamp(28px,2.7vw,45px);
+  border:2px solid #3d403a;
+  border-radius:42px 42px 54px 54px / 38px 38px 48px 48px;
+  background:
+    linear-gradient(150deg,rgba(255,255,255,.1),transparent 18%),
+    linear-gradient(102deg,#2d302b 0,#171a17 46%,#090b0a 78%,#252823 100%);
+  box-shadow:
+    0 42px 78px rgba(0,0,0,.68),
+    inset 3px 3px 2px rgba(255,255,255,.07),
+    inset -7px -8px 12px rgba(0,0,0,.5),
+    0 0 0 1px rgba(0,0,0,.8);
+}
+.monitor::after {
+  content:"";
+  position:absolute;
+  left:12%;
+  right:12%;
+  bottom:12px;
+  height:8px;
+  opacity:.7;
+  border-radius:50%;
+  background:repeating-linear-gradient(90deg,transparent 0 10px,rgba(0,0,0,.62) 10px 14px);
+  box-shadow:inset 0 1px rgba(255,255,255,.035);
+  pointer-events:none;
+}
+.monitor-screen {
+  border:2px solid rgba(0,0,0,.88)!important;
+  border-radius:7% / 6%!important;
+  background:#07100b;
+  box-shadow:
+    inset 0 0 16px rgba(255,255,255,.035),
+    inset 0 0 58px rgba(0,0,0,.86),
+    0 0 0 4px #0b0d0b,
+    0 0 0 7px rgba(82,86,77,.34)!important;
+  transform:translateZ(0) perspective(1200px) scale(1.004);
+}
+.monitor-screen::before {
+  content:"";
+  position:absolute;
+  z-index:96;
+  inset:0;
+  border-radius:inherit;
+  background:
+    radial-gradient(ellipse 88% 78% at 50% 48%,transparent 61%,rgba(0,0,0,.25) 80%,rgba(0,0,0,.62) 100%),
+    linear-gradient(118deg,rgba(255,255,255,.075),transparent 19% 74%,rgba(255,255,255,.018));
+  box-shadow:inset 9px 7px 18px rgba(255,255,255,.025),inset -12px -10px 20px rgba(0,0,0,.34);
+  pointer-events:none;
+}
+body.inner-mode .monitor-neck,body.inner-mode .monitor-base {
+  opacity:0!important;
+  visibility:hidden!important;
+  transform:translateY(80px) scale(.7)!important;
+  pointer-events:none!important;
+}
+body.inner-mode .monitor {
+  padding:clamp(17px,1.5vw,25px) clamp(19px,1.8vw,30px) clamp(22px,2vw,33px);
+  border-radius:48px / 42px;
+}
+body.inner-mode .monitor-screen { border-radius:7.5% / 6.5%!important; }
+body.inner-mode .screen-home,body.inner-mode .retro-os {
+  transform:perspective(1000px) scale(1.024);
+  transform-origin:50% 50%;
+}
+body.inner-mode .retro-desktop { inset:38px 0 0; }
+
+/* Code-mode printer window uses the same terminal language. */
+body.code-desktop-mode .retro-window[data-system-app="printer"] {
+  border-color:#132717;
+  background:#020704;
+  color:#c9f4bf;
+  box-shadow:7px 8px 0 rgba(0,0,0,.68),0 0 0 1px rgba(120,255,92,.38);
+}
+body.code-desktop-mode .retro-window[data-system-app="printer"] .retro-window__bar {
+  background:linear-gradient(90deg,#061208,#173419);
+  color:#b6ff9c;
+}
+body.code-desktop-mode .retro-window[data-system-app="printer"] .retro-window__body {
+  background:repeating-linear-gradient(0deg,rgba(103,255,82,.026) 0 1px,transparent 1px 4px),#010502!important;
+  color:#c9e9c2;
+}
+body.code-desktop-mode .retro-window[data-system-app="printer"] .retro-window__status {
+  border-color:rgba(120,255,92,.22);
+  background:#061008;
+  color:#8cff6a;
+}
+body.code-desktop-mode .printer-app { color:#c9e9c2; }
+body.code-desktop-mode .printer-app__head {
+  border-color:rgba(120,255,92,.24);
+  background:linear-gradient(100deg,rgba(29,70,31,.35),rgba(0,5,2,.92));
+}
+body.code-desktop-mode .printer-app__head small { color:#7dff61; }
+body.code-desktop-mode .printer-app__head h2 { color:#d8ffd0!important; }
+body.code-desktop-mode .printer-app__head p { color:rgba(210,242,203,.68); }
+body.code-desktop-mode .printer-app__glyph {
+  border-color:#345438;
+  background:linear-gradient(#263f29 0 26%,#0b140d 27% 78%,#030704 79%);
+  box-shadow:7px 8px 0 rgba(0,0,0,.45),0 0 18px rgba(105,255,81,.07);
+}
+body.code-desktop-mode .printer-app__glyph::before,body.code-desktop-mode .printer-app__glyph::after {
+  border-color:#4e6651;
+  background:#dce7d8;
+}
+body.code-desktop-mode .printer-file-list { border-top-color:rgba(120,255,92,.25); }
+body.code-desktop-mode .printer-file-row {
+  border-bottom-color:rgba(120,255,92,.2);
+  background:rgba(0,10,3,.42);
+}
+body.code-desktop-mode .printer-file-row:hover { background:rgba(63,133,55,.2); }
+body.code-desktop-mode .printer-file-row b { color:#d7f7cf; }
+body.code-desktop-mode .printer-file-row small { color:rgba(145,255,118,.5); }
+body.code-desktop-mode .printer-file-row input { accent-color:#9dff70; }
+body.code-desktop-mode .printer-app__footer {
+  border-color:rgba(120,255,92,.3);
+  background:#061008;
+  box-shadow:0 -10px 20px rgba(0,0,0,.45);
+}
+body.code-desktop-mode .printer-page-summary b { color:#adff91; }
+body.code-desktop-mode .printer-page-summary small { color:rgba(190,255,171,.5); }
+body.code-desktop-mode .printer-app__footer button {
+  border:1px solid #8ab94f;
+  background:#d7ff24;
+  box-shadow:0 0 14px rgba(215,255,36,.13);
+}
+/* Matching dark 1990s tower: boxier shell and stacked drive bays. */
+.computer-tower {
+  border-radius:7px;
+  border-color:#454940;
+  background:linear-gradient(112deg,rgba(255,255,255,.08),transparent 17%),linear-gradient(90deg,#20231f,#101310 72%,#292c26);
+  box-shadow:0 34px 52px rgba(0,0,0,.66),inset 3px 2px rgba(255,255,255,.035),inset -5px -4px rgba(0,0,0,.3);
+}
+.tower-slits { inset:10% 13% 29%;opacity:1;background:none; }
+.tower-slits::before,.tower-slits::after {
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  height:19%;
+  border:1px solid #050605;
+  border-radius:2px;
+  background:linear-gradient(#30332d,#111310 42%,#080908 54%,#1e211c);
+  box-shadow:inset 0 1px rgba(255,255,255,.05),0 7px 10px rgba(0,0,0,.25);
+}
+.tower-slits::before { top:0; }
+.tower-slits::after { top:27%;height:14%; }
+/* experience-v39: full-layer glass warp, compact printer head and code-tree CRUD */
+.crt-filter-defs { position:fixed;left:-9999px;top:-9999px;pointer-events:none; }
+body.inner-mode .retro-os {
+  inset:2.4% 2.8% 2.8%;
+  overflow:hidden;
+  border-radius:6.5% / 5.5%;
+  filter:url(#crtGlassWarp);
+  transform:perspective(820px) rotateX(.45deg) scale(.992);
+  transform-origin:50% 50%;
+}
+body.inner-mode .retro-os::after {
+  content:"";
+  position:absolute;
+  z-index:2000;
+  inset:0;
+  border-radius:inherit;
+  background:radial-gradient(ellipse 84% 78% at 50% 48%,transparent 62%,rgba(0,0,0,.1) 78%,rgba(0,0,0,.36) 100%);
+  box-shadow:inset 10px 7px 19px rgba(255,255,255,.018),inset -13px -11px 24px rgba(0,0,0,.28);
+  pointer-events:none;
+}
+
+.code-tree-toggle { padding-right:146px; }
+.code-tree-action { display:none; }
+.code-tree-actions {
+  position:absolute;
+  z-index:5;
+  right:10px;
+  top:7px;
+  display:flex;
+  gap:6px;
+  opacity:.68;
+  transition:opacity .18s ease;
+}
+.code-tree-node:hover > .code-tree-actions,.code-tree-node:focus-within > .code-tree-actions { opacity:1; }
+.code-tree-actions button {
+  min-width:44px;
+  padding:5px 7px;
+  border:1px solid rgba(120,255,92,.32);
+  border-radius:2px;
+  background:#071309;
+  color:#aaff8f;
+  font:9px/1 var(--pixel);
+  cursor:pointer;
+}
+.code-tree-actions button:hover,.code-tree-actions button:focus-visible { border-color:var(--lime);background:#17301a;outline:0; }
+.code-tree-actions [data-code-delete] { border-color:rgba(255,90,40,.45);color:#ff8462; }
+.code-tree-actions [data-code-delete]:hover { border-color:var(--orange);background:rgba(255,90,40,.12); }
+
+/* A shorter printer introduction leaves most of the window to the queue. */
+.printer-app__head {
+  grid-template-columns:64px minmax(0,1fr);
+  gap:13px;
+  padding:10px 12px;
+}
+.printer-app__head small { font-size:8px; }
+.printer-app__head h2 { margin:3px 0!important;font-size:18px!important; }
+.printer-app__head p { font-size:11px;line-height:1.45; }
+.printer-app__glyph { width:56px;height:42px;box-shadow:4px 5px 0 rgba(0,0,0,.2); }
+.printer-app__glyph::before { left:10px;right:10px;top:-9px;height:18px; }
+.printer-app__glyph::after { left:11px;right:11px;bottom:-8px;height:16px; }
+.printer-app__glyph i { right:8px;top:13px;width:6px;height:6px; }
+.printer-file-list { margin-top:8px; }
+
+body.code-desktop-mode .retro-window[data-system-app="printer"] {
+  border:2px solid rgba(130,255,99,.58);
+  box-shadow:9px 11px 0 rgba(0,0,0,.72),0 0 0 2px rgba(28,69,31,.72),0 0 28px rgba(117,255,87,.1);
+}
+body.code-desktop-mode .retro-window[data-system-app="printer"] .retro-window__bar {
+  border-bottom:1px solid rgba(130,255,99,.48);
+  background:linear-gradient(90deg,#0b2410,#061008 72%);
+}
+
+@media (max-width:720px) {
+  .code-tree-toggle { padding-right:100px; }
+  .code-tree-actions { right:5px;gap:3px; }
+  .code-tree-actions button { min-width:38px;padding:4px;font-size:8px; }
+  body.inner-mode .retro-os { inset:2.2%; }
+}
+body.inner-mode .item-dialog[open] {
+  filter:url(#crtGlassWarp);
+  transform:scale(.99);
+  transform-origin:50% 50%;
+}
+.color-field[hidden],
+.note-media-tools[hidden],
+.note-image-preview[hidden] {
+  display:none!important;
+}
+/* experience-v40: convex CRT safe-area correction */
+body.inner-mode .retro-topbar {
+  left:1.2%;
+  right:1.2%;
+  padding-left:22px;
+  padding-right:22px;
+}
+body.inner-mode .retro-desktop {
+  left:1.25%;
+  right:1.25%;
+  bottom:1.4%;
+}
+body.inner-mode .window-layer {
+  inset:1.1% 1.25% 1.4%;
+}
+body.inner-mode .retro-actions {
+  right:2.2%;
+}
+/* experience-v41: seamless convex viewport across all three navigation levels */
+body.inner-mode .retro-os {
+  inset:1.05% 1.2% 1.15%;
+}
+body.inner-mode .retro-desktop {
+  left:.6%;
+  right:.6%;
+  bottom:.8%;
+}
+body.inner-mode .window-layer {
+  inset:.65% .7% .8%;
+}
+body:not(.inner-mode) .screen-home {
+  inset:1.05%;
+  overflow:hidden;
+  border-radius:6.5% / 5.5%;
+  filter:url(#crtGlassWarp);
+  transform:scale(.995);
+  transform-origin:50% 50%;
+}
+/* experience-v42: smooth glass dome, without pixel-stepped displacement */
+body.inner-mode .retro-os,
+body:not(.inner-mode) .screen-home,
+body.inner-mode .item-dialog[open] {
+  image-rendering:auto!important;
+}
+.monitor-screen::before {
+  background:
+    radial-gradient(ellipse 76% 68% at 42% 31%,rgba(255,255,255,.065),rgba(255,255,255,.018) 35%,transparent 58%),
+    radial-gradient(ellipse 90% 82% at 50% 48%,transparent 61%,rgba(0,0,0,.22) 80%,rgba(0,0,0,.58) 100%),
+    linear-gradient(118deg,rgba(255,255,255,.055),transparent 20% 76%,rgba(255,255,255,.014));
+  box-shadow:
+    inset 10px 8px 22px rgba(255,255,255,.032),
+    inset -13px -11px 25px rgba(0,0,0,.31);
+}
+/* experience-v43: stronger dome with high-resolution, post-warp antialiasing */
+.monitor-screen::before {
+  background:
+    radial-gradient(ellipse 74% 66% at 41% 30%,rgba(255,255,255,.085),rgba(255,255,255,.024) 34%,transparent 59%),
+    radial-gradient(ellipse 90% 82% at 50% 48%,transparent 58%,rgba(0,0,0,.24) 79%,rgba(0,0,0,.64) 100%),
+    linear-gradient(118deg,rgba(255,255,255,.068),transparent 20% 76%,rgba(255,255,255,.018));
+}
+/* experience-v44: optical glass dome; preserve the live UI's continuous one-pixel lines */
+body.inner-mode .retro-os,
+body:not(.inner-mode) .screen-home,
+body.inner-mode .item-dialog[open] {
+  filter:none!important;
+}
+body.inner-mode .retro-os,
+body:not(.inner-mode) .screen-home {
+  border-radius:7.2% / 6.6%;
+  box-shadow:
+    inset 0 0 14px rgba(255,255,255,.035),
+    inset 0 0 58px rgba(0,0,0,.22);
+}
+.monitor-screen::before {
+  opacity:1;
+  background:
+    radial-gradient(ellipse 66% 44% at 34% 9%,rgba(255,255,255,.115),rgba(255,255,255,.036) 34%,transparent 72%),
+    radial-gradient(ellipse 108% 96% at 50% 48%,transparent 54%,rgba(3,8,5,.14) 70%,rgba(0,0,0,.47) 88%,rgba(0,0,0,.72) 100%),
+    linear-gradient(112deg,rgba(255,255,255,.085),transparent 17% 73%,rgba(255,255,255,.022)),
+    linear-gradient(90deg,rgba(255,255,255,.026),transparent 8% 91%,rgba(0,0,0,.12));
+  box-shadow:
+    inset 17px 12px 30px rgba(255,255,255,.043),
+    inset -21px -17px 38px rgba(0,0,0,.42),
+    inset 0 0 76px rgba(0,0,0,.25);
+}
+body.inner-mode .monitor-screen,
+body:not(.inner-mode) .monitor-screen {
+  box-shadow:
+    inset 0 0 18px rgba(255,255,255,.04),
+    inset 0 0 68px rgba(0,0,0,.78),
+    0 0 0 4px #0b0d0b,
+    0 0 0 7px rgba(82,86,77,.34),
+    0 18px 34px rgba(0,0,0,.32)!important;
+}
+/* experience-v45: the glass and every live UI element share one smooth convex projection */
+body.inner-mode .retro-os,
+body:not(.inner-mode) .screen-home,
+body.inner-mode .item-dialog[open] {
+  filter:url(#crtGlassWarp)!important;
+  image-rendering:auto!important;
+}
+/* A soft companion stroke keeps one-pixel terminal rules continuous after projection. */
+body.code-desktop-mode .retro-topbar,
+body.code-desktop-mode .code-desktop-tree > header,
+body.code-desktop-mode .retro-window__bar,
+body.code-desktop-mode .retro-window__status,
+body.code-desktop-mode .folder-entry {
+  -webkit-font-smoothing:antialiased;
+}
+/* Terminal hairlines stay visually slim but use two sampled rows/columns under the lens. */
+body.code-desktop-mode .retro-topbar,
+body.code-desktop-mode .code-desktop-tree > header {
+  border-bottom-width:2px;
+  border-bottom-color:rgba(111,255,93,.13);
+}
+body.code-desktop-mode .code-tree-node::before,
+body.code-desktop-mode .code-tree-node > .code-tree-branch {
+  border-left-width:2px;
+  border-left-color:rgba(111,255,93,.11);
+}
+body.code-desktop-mode .retro-window__bar {
+  border-bottom-width:2px;
+}
+/* experience-v46: a cleaner terminal surface under the curved glass */
+body.code-desktop-mode .retro-os,
+body.code-desktop-mode .retro-desktop,
+body.code-desktop-mode .code-desktop-tree {
+  background:#020603!important;
+  background-image:
+    radial-gradient(ellipse 68% 54% at 46% 38%,rgba(82,255,73,.025),transparent 72%)!important;
+}
+body.code-desktop-mode .retro-topbar {
+  border-bottom:0!important;
+  background:linear-gradient(180deg,rgba(3,15,6,.96),rgba(2,8,4,.88))!important;
+  box-shadow:0 10px 24px rgba(0,0,0,.2);
+}
+body.code-desktop-mode .code-desktop-tree {
+  border:0!important;
+  box-shadow:none!important;
+}
+body.code-desktop-mode .code-desktop-tree > header {
+  border-bottom:0!important;
+  padding-bottom:12px;
+  background:linear-gradient(90deg,rgba(92,255,68,.045),transparent 72%);
+}
+body.code-desktop-mode .code-tree-toggle,
+body.code-desktop-mode .code-tree-printer {
+  outline:0!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.code-desktop-mode .code-tree-toggle:hover,
+body.code-desktop-mode .code-tree-toggle:focus-visible,
+body.code-desktop-mode .code-tree-printer:hover,
+body.code-desktop-mode .code-tree-printer:focus-visible {
+  outline:0!important;
+  background:linear-gradient(90deg,rgba(107,205,90,.18),rgba(49,108,47,.07) 72%,transparent)!important;
+  box-shadow:inset 3px 0 rgba(215,255,36,.52)!important;
+}
+body.code-desktop-mode .code-tree-node.is-open > .code-tree-toggle {
+  background:linear-gradient(90deg,rgba(75,141,65,.14),transparent 78%);
+}
+body.code-desktop-mode .code-tree-node::before,
+body.code-desktop-mode .code-tree-node > .code-tree-branch {
+  border-left-color:rgba(111,255,93,.08)!important;
+}
+body.code-desktop-mode .retro-window__body,
+body.code-desktop-mode .retro-window[data-system-app="printer"] .retro-window__body {
+  background-color:#020603!important;
+  background-image:radial-gradient(ellipse 72% 58% at 44% 34%,rgba(84,255,73,.025),transparent 74%)!important;
+}
+/* experience-v47: refined classic desktop without disturbing terminal mode */
+body.inner-mode:not(.code-desktop-mode) .retro-window {
+  border:0;
+  background:#c9c5ba;
+  box-shadow:
+    0 0 0 3px rgba(17,20,15,.92),
+    0 0 0 5px rgba(190,225,33,.58),
+    11px 14px 0 rgba(0,0,0,.38),
+    0 18px 34px rgba(0,0,0,.2);
+}
+body.inner-mode:not(.code-desktop-mode) .retro-window__bar {
+  border-bottom:0;
+  background:linear-gradient(100deg,#25291f 0%,#43511c 58%,#687d14 100%);
+  box-shadow:0 6px 15px rgba(0,0,0,.09);
+}
+body.inner-mode:not(.code-desktop-mode) .retro-window__body {
+  background:
+    radial-gradient(ellipse 82% 64% at 42% 32%,rgba(255,255,255,.18),transparent 70%),
+    #d9d5ca!important;
+  background-size:auto!important;
+}
+body.inner-mode:not(.code-desktop-mode) .retro-window__status {
+  border-top:0;
+  background:#bbb7ac;
+  box-shadow:inset 0 5px 12px rgba(0,0,0,.035);
+}
+body.inner-mode:not(.code-desktop-mode) .window-file-tools {
+  border:0;
+  background:linear-gradient(90deg,#c4c0b5,#cfcbc0);
+  box-shadow:inset 4px 0 rgba(87,101,23,.45),0 5px 12px rgba(0,0,0,.055);
+}
+body.inner-mode:not(.code-desktop-mode) .folder-description,
+body.inner-mode:not(.code-desktop-mode) .markdown-view blockquote {
+  border:0;
+  background:#ebe7dc;
+  box-shadow:inset 4px 0 rgba(255,90,40,.38),0 5px 14px rgba(0,0,0,.055);
+}
+body.inner-mode:not(.code-desktop-mode) .folder-entry {
+  border-bottom:0!important;
+  border-radius:3px;
+  transition:background .16s ease,box-shadow .16s ease,transform .16s ease;
+}
+body.inner-mode:not(.code-desktop-mode) .folder-entry:hover {
+  background:linear-gradient(90deg,rgba(92,106,39,.14),rgba(255,255,255,.12) 72%,transparent);
+  box-shadow:inset 4px 0 rgba(215,255,36,.56);
+  transform:translateX(2px);
+}
+body.inner-mode:not(.code-desktop-mode) .retro-wallpaper::before {
+  opacity:.32;
+}
+body.inner-mode:not(.code-desktop-mode) .retro-wallpaper::after {
+  opacity:.48;
+  border-width:2px!important;
+  filter:blur(.18px);
+}
+/* experience-v48: classic desktop micro-polish */
+body.inner-mode:not(.code-desktop-mode) .retro-window {
+  border-radius:4px;
+  overflow:hidden!important;
+}
+body.inner-mode:not(.code-desktop-mode) .retro-window.is-active {
+  box-shadow:
+    0 0 0 3px rgba(17,20,15,.94),
+    0 0 0 5px rgba(205,239,38,.72),
+    12px 15px 0 rgba(0,0,0,.36),
+    0 22px 38px rgba(0,0,0,.24);
+}
+body.inner-mode:not(.code-desktop-mode) .retro-window__bar {
+  min-height:42px;
+  height:42px;
+  padding:0 5px 0 16px;
+  letter-spacing:.075em;
+  box-shadow:inset 0 1px rgba(255,255,255,.1),0 7px 18px rgba(0,0,0,.1);
+}
+body.inner-mode:not(.code-desktop-mode) .window-title-group {
+  gap:9px;
+}
+body.inner-mode:not(.code-desktop-mode) .window-title {
+  font-weight:700;
+  text-shadow:0 1px rgba(0,0,0,.46);
+}
+body.inner-mode:not(.code-desktop-mode) .window-controls {
+  gap:4px;
+  padding-right:0;
+}
+body.inner-mode:not(.code-desktop-mode) .window-controls button,
+body.inner-mode:not(.code-desktop-mode) .window-back {
+  width:34px;
+  min-width:34px;
+  height:32px;
+  min-height:32px;
+  border:0;
+  border-radius:2px;
+  background:linear-gradient(180deg,#e3dfd4,#c7c2b6);
+  color:#171914;
+  box-shadow:inset 0 1px rgba(255,255,255,.85),inset 0 -2px rgba(80,78,70,.18),0 2px 5px rgba(0,0,0,.18);
+  font-weight:800;
+}
+body.inner-mode:not(.code-desktop-mode) .window-controls button:hover,
+body.inner-mode:not(.code-desktop-mode) .window-back:hover {
+  background:linear-gradient(180deg,#efff9a,#d4f42f);
+  transform:translateY(-1px);
+}
+body.inner-mode:not(.code-desktop-mode) .window-controls .window-close:hover {
+  background:linear-gradient(180deg,#ff8a69,#ff5a32);
+}
+body.inner-mode:not(.code-desktop-mode) .retro-window__body {
+  padding:24px 26px;
+  scrollbar-color:rgba(74,80,44,.42) transparent;
+  scrollbar-width:thin;
+}
+body.inner-mode:not(.code-desktop-mode) .window-file-tools {
+  min-height:54px;
+  margin:-3px -3px 20px;
+  padding:11px 14px 11px 17px;
+  border-radius:3px;
+  letter-spacing:.04em;
+}
+body.inner-mode:not(.code-desktop-mode) .window-file-tools > span {
+  color:#3d4430;
+  font-weight:800;
+}
+body.inner-mode:not(.code-desktop-mode) .window-file-tools button,
+body.inner-mode:not(.code-desktop-mode) .folder-entry__actions button {
+  min-height:32px;
+  padding:7px 11px;
+  border:0;
+  border-radius:2px;
+  background:#e3dfd4;
+  box-shadow:inset 0 0 0 2px rgba(31,33,27,.5),inset 0 1px rgba(255,255,255,.78);
+  transition:transform .14s ease,filter .14s ease;
+}
+body.inner-mode:not(.code-desktop-mode) .window-file-tools button:hover,
+body.inner-mode:not(.code-desktop-mode) .folder-entry__actions button:hover {
+  filter:brightness(1.05);
+  transform:translateY(-1px);
+}
+body.inner-mode:not(.code-desktop-mode) .window-file-tools [data-delete],
+body.inner-mode:not(.code-desktop-mode) .folder-entry__actions [data-delete] {
+  background:linear-gradient(180deg,#ff7658,#f04d29);
+}
+body.inner-mode:not(.code-desktop-mode) .folder-description,
+body.inner-mode:not(.code-desktop-mode) .markdown-view blockquote {
+  margin-bottom:20px;
+  padding:16px 18px 16px 21px;
+  border-radius:3px;
+  color:#30332b;
+}
+body.inner-mode:not(.code-desktop-mode) .markdown-view h1,
+body.inner-mode:not(.code-desktop-mode) .markdown-view h2,
+body.inner-mode:not(.code-desktop-mode) .markdown-view h3 {
+  margin-top:18px!important;
+  padding:9px 13px!important;
+  border-radius:2px;
+  background:linear-gradient(90deg,#151914,#20251e)!important;
+  box-shadow:inset 4px 0 var(--lime),0 5px 12px rgba(0,0,0,.08);
+}
+body.inner-mode:not(.code-desktop-mode) .folder-dropzone {
+  gap:6px;
+}
+body.inner-mode:not(.code-desktop-mode) .folder-entry {
+  min-height:68px!important;
+  padding:9px 12px!important;
+  gap:13px;
+}
+body.inner-mode:not(.code-desktop-mode) .folder-entry__label b {
+  color:#252820;
+  letter-spacing:.01em;
+}
+body.inner-mode:not(.code-desktop-mode) .folder-entry__label small {
+  color:rgba(53,58,44,.58);
+  letter-spacing:.055em;
+}
+body.inner-mode:not(.code-desktop-mode) .retro-window__status {
+  min-height:30px;
+  height:30px;
+  padding:8px 12px;
+  color:rgba(32,35,28,.72);
+  letter-spacing:.075em;
+}
+body.inner-mode:not(.code-desktop-mode) .retro-wallpaper {
+  filter:saturate(.92) contrast(.98)!important;
+}
+/* experience-v48: continuous antialiased projection for classic/home views only */
+body.inner-mode:not(.code-desktop-mode) .retro-os,
+body:not(.inner-mode) .screen-home {
+  filter:url(#crtGlassWarpSoft)!important;
+}
+body.inner-mode.code-desktop-mode .retro-os {
+  filter:url(#crtGlassWarpSoft)!important;
+}
+
+/* Dialogs sit above the curved screen, so keep their rounded silhouette unwarped. */
+body.inner-mode .item-dialog[open] {
+  overflow:auto;
+  filter:none!important;
+  background-clip:padding-box;
+}
+
+/* Keep note editing compact enough to show every control without dialog scrolling. */
+.item-dialog[open]:has(#noteMediaTools:not([hidden])) {
+  width:min(90vw,540px);
+}
+.item-dialog:has(#noteMediaTools:not([hidden])) form { padding:18px 20px; }
+.item-dialog:has(#noteMediaTools:not([hidden])) header { margin-bottom:12px; }
+.item-dialog:has(#noteMediaTools:not([hidden])) header h2 { font-size:28px; }
+.item-dialog:has(#noteMediaTools:not([hidden])) label { margin-top:9px; }
+.item-dialog:has(#noteMediaTools:not([hidden])) input[type="text"],
+.item-dialog:has(#noteMediaTools:not([hidden])) input:not([type]),
+.item-dialog:has(#noteMediaTools:not([hidden])) textarea {
+  margin-top:5px;
+  padding:8px 10px;
+  font-size:14px;
+  line-height:1.4;
+}
+.item-dialog:has(#noteMediaTools:not([hidden])) textarea { height:92px;min-height:72px; }
+.item-dialog:has(#noteMediaTools:not([hidden])) .color-field { margin-top:11px; }
+.item-dialog:has(#noteMediaTools:not([hidden])) .note-media-tools {
+  margin-top:11px;
+  padding:10px;
+}
+.item-dialog:has(#noteMediaTools:not([hidden])) .media-upload,
+.item-dialog:has(#noteMediaTools:not([hidden])) .media-ghost { padding:6px 8px; font-size:12px; }
+.item-dialog:has(#noteMediaTools:not([hidden])) .note-image-preview {
+  height:72px;
+  margin-top:8px;
+}
+.item-dialog:has(#noteMediaTools:not([hidden])) .doodle-heading { margin-top:9px; }
+.item-dialog:has(#noteMediaTools:not([hidden])) #noteDoodle {
+  height:96px;
+  margin-top:6px;
+}
+.item-dialog:has(#noteMediaTools:not([hidden])) footer { margin-top:14px; }
+.item-dialog:has(#noteMediaTools:not([hidden])) footer button {
+  padding:8px 14px;
+  font-size:13px;
+}
+/* Quiet, hand-drawn discovery marks: visible only until each interaction is tried. */
+.interaction-hint {
+  position:fixed;
+  z-index:20050;
+  pointer-events:none;
+  opacity:0;
+  transform:translateY(3px);
+  transition:opacity .16s ease,transform .22s ease;
+}
+.interaction-hint.is-visible { opacity:1;transform:translateY(0); }
+.interaction-hint .hint-ring-svg {
+  position:absolute;
+  left:-8%;
+  top:-10%;
+  width:116%;
+  height:120%;
+  overflow:visible;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.72));
+}
+.interaction-hint .hint-pointer-svg {
+  position:absolute;
+  overflow:visible;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.72));
+}
+.interaction-hint path {
+  fill:none;
+  stroke:rgba(255,255,255,.88);
+  stroke-width:1.65;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  vector-effect:non-scaling-stroke;
+}
+.interaction-hint .hint-ring-b { opacity:.42;stroke-width:1.05; }
+.interaction-hint .hint-arrow { stroke-width:1.45; }
+.interaction-hint > span {
+  position:absolute;
+  left:0;
+  top:0;
+  padding:3px 6px;
+  color:rgba(255,255,255,.94);
+  font:italic 500 11px/1.35 var(--sans);
+  letter-spacing:.055em;
+  white-space:nowrap;
+  text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.9);
+  transform:rotate(-2deg);
+}
+
+
+@media (prefers-reduced-motion:reduce) {
+  .interaction-hint { transition:none; }
+}
+@media (hover:none),(max-width:720px) {
+  .interaction-hint { display:none!important; }
+}
+.zoom-meter small { display:none!important; }
+
+
+/* business card contact */
+.business-card .card-school { bottom:30px; }
+.business-card .card-email { position:absolute;left:18px;bottom:14px;z-index:1;display:block;color:#4e514a;font-family:var(--sans);font-size:9px;line-height:1;letter-spacing:.045em;text-transform:lowercase; }
+.business-card.is-paper-ball .card-email { display:none; }

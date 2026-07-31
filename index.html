@@ -9,6 +9,28 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+  <svg class="crt-filter-defs" width="0" height="0" aria-hidden="true" focusable="false">
+    <filter id="crtGlassWarp" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feImage href="./assets/crt-bulge-map.png?v=6" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="bulgeMap" />
+      <feGaussianBlur in="bulgeMap" stdDeviation="5" edgeMode="duplicate" result="smoothBulgeMap" />
+      <feDisplacementMap in="SourceGraphic" in2="smoothBulgeMap" scale="35" xChannelSelector="R" yChannelSelector="G" result="warpedGraphic" />
+      <feGaussianBlur in="warpedGraphic" stdDeviation="0.52" edgeMode="duplicate" result="softWarpEdges" />
+      <feMerge>
+        <feMergeNode in="softWarpEdges" />
+        <feMergeNode in="warpedGraphic" />
+      </feMerge>
+    </filter>
+    <filter id="crtGlassWarpSoft" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feImage href="./assets/crt-bulge-map.png?v=6" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="bulgeMapSoft" />
+      <feGaussianBlur in="bulgeMapSoft" stdDeviation="5" edgeMode="duplicate" result="smoothBulgeMapSoft" />
+      <feDisplacementMap in="SourceGraphic" in2="smoothBulgeMapSoft" scale="35" xChannelSelector="R" yChannelSelector="G" result="warpedGraphicSoft" />
+      <feGaussianBlur in="warpedGraphicSoft" stdDeviation="0.28" edgeMode="duplicate" result="continuousWarp" />
+      <feMerge>
+        <feMergeNode in="continuousWarp" />
+        <feMergeNode in="continuousWarp" />
+      </feMerge>
+    </filter>
+  </svg>
     <main id="app" class="app">
       <div class="ambient-grid" aria-hidden="true"></div>
 
@@ -16,15 +38,15 @@
         <a class="monogram" href="#" aria-label="&#x8FD4;&#x56DE;&#x9996;&#x9875;">K.</a>
         <p class="identity">&#x4EA7;&#x54C1;&#x7ECF;&#x7406; / &#x72EC;&#x7ACB;&#x5F00;&#x53D1; / &#x5357;&#x5F00;&#x5927;&#x5B66;</p>
         <nav aria-label="&#x4E3B;&#x8981;&#x5BFC;&#x822A;">
-          <button type="button" data-open-app="explore">WORK</button>
-          <button type="button" data-open-app="about">ABOUT</button>
-          <button type="button" data-open-app="notes">NOTES</button>
+          <button type="button" data-open-app="portfolio">PORTFOLIO</button>
+          <button type="button" data-open-app="internships">EXPERIENCE</button>
+          <button type="button" data-open-app="campus">CAMPUS</button>
         </nav>
       </header>
 
       <section class="hero-copy" aria-labelledby="hero-title">
         <p class="eyebrow">KONG MILE'S LIVING ARCHIVE / 2026</p>
-        <h1 id="hero-title">KEEP BEING AMBITIOUS.</h1>
+        <h1 id="hero-title">KEEP <br>BEING <br>AMBITIOUS.</h1>
       </section>
 
       <section id="computerStage" class="computer-stage" aria-label="&#x4EA4;&#x4E92;&#x5F0F;&#x4E2A;&#x4EBA;&#x7535;&#x8111;">
@@ -37,22 +59,21 @@
               <section id="screenHome" class="screen-home" aria-label="&#x7535;&#x8111;&#x684C;&#x9762;">
                 <div class="screen-grid" aria-hidden="true"></div>
                 <div class="desktop-intro">
-                  <span class="pixel-kicker">WELCOME TO MY DESKTOP</span>
-                  <strong>&#x628A;&#x60F3;&#x6CD5;&#xFF0C;&#x63A8;&#x5230;&#x73B0;&#x5B9E;&#x53D1;&#x751F;&#x3002;</strong>
-                  <small>&#x53CC;&#x51FB;&#x4EFB;&#x610F;&#x6587;&#x4EF6;&#xFF0C;&#x8FDB;&#x5165;&#x5C4F;&#x5E55;&#x5185;&#x6A21;&#x5F0F;</small>
+                  <span class="pixel-kicker">LIVING ARCHIVE / SELECT A DIRECTORY</span>
+                  <strong>经历、实践与作品，持续写入。</strong>
+                  <small>双击文件夹，进入内容档案</small>
                 </div>
                 <div class="desktop-icons">
-                  <button class="desktop-icon" data-app="explore"><span class="pixel-icon pixel-folder"></span><span>&#x63A2;&#x7D22;&#x5B63; H5</span></button>
-                  <button class="desktop-icon" data-app="about"><span class="pixel-icon pixel-file"></span><span>&#x5173;&#x4E8E;&#x6211;.txt</span></button>
-                  <button class="desktop-icon" data-app="notebook"><span class="pixel-icon pixel-file"></span><span>AI &#x667A;&#x80FD;&#x7B14;&#x8BB0;</span></button>
-                  <button class="desktop-icon" data-app="longlu"><span class="pixel-icon pixel-folder"></span><span>&#x957F;&#x82A6;&#x76D0;&#x4E1A;</span></button>
+                  <button class="desktop-icon" data-kind="folder" data-app="internships"><span class="pixel-icon pixel-folder"></span><span>实习经历</span></button>
+                  <button class="desktop-icon" data-kind="folder" data-app="campus"><span class="pixel-icon pixel-folder"></span><span>校园经历</span></button>
+                  <button class="desktop-icon" data-kind="folder" data-app="portfolio"><span class="pixel-icon pixel-folder"></span><span>作品集</span></button>
                 </div>
-                <div class="screen-status"><span>BOARD / 01</span><span>DRAG / CONNECT / EXPAND</span></div>
+                <div class="screen-status"><span>ARCHIVE / 01</span><span>OPEN / TRACE / EXPAND</span></div>
               </section>
 
               <section id="retroOS" class="retro-os" aria-label="&#x590D;&#x53E4;&#x50CF;&#x7D20;&#x6587;&#x4EF6;&#x7CFB;&#x7EDF;">
                 <div class="retro-wallpaper" aria-hidden="true"><span></span><span></span><span></span></div>
-                <div class="retro-topbar"><span>MY DESKTOP / BOARD 01</span><span id="retroClock">12:00</span></div>
+                <div class="retro-topbar"><span>LIVING ARCHIVE / DIRECTORY 01</span><span id="retroClock">12:00</span></div>
                 <div id="retroDesktop" class="retro-desktop">
                   <div id="customInnerItems"></div>
                 </div>
@@ -70,7 +91,7 @@
           <div class="monitor-base"></div>
         </div>
 
-        <aside class="computer-tower" aria-label="&#x7535;&#x8111;&#x4E3B;&#x673A;"><div class="tower-slits"></div><button id="powerButton" class="tower-power" type="button" aria-label="&#x5F00;&#x5173;&#x7535;&#x8111;"></button><small>KML / 26</small></aside>
+        <aside class="computer-tower" aria-label="&#x7535;&#x8111;&#x4E3B;&#x673A;"><div class="tower-slits"></div><button id="powerButton" class="tower-power" type="button" aria-label="&#x5207;&#x6362;&#x7535;&#x8111;&#x684C;&#x9762;&#x663E;&#x793A;&#x6A21;&#x5F0F;"></button><small>KML / 26</small></aside>
         <button id="enterMouse" class="mouse" type="button" aria-label="&#x70B9;&#x51FB;&#x9F20;&#x6807;&#x8FDB;&#x5165;&#x5DE5;&#x4F5C;&#x53F0;"><span class="mouse-wheel"></span><span class="mouse-glow"></span></button>
       </section>
 
