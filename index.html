@@ -6,31 +6,15 @@
     <meta name="description" content="&#x5B54;&#x7C73;&#x4E50;&#x7684;&#x4E2A;&#x4EBA;&#x5DE5;&#x4F5C;&#x53F0;&#xFF1A;&#x4EA7;&#x54C1;&#x3001;&#x5F00;&#x53D1;&#x3001;&#x8BED;&#x8A00;&#x4E0E;&#x6301;&#x7EED;&#x751F;&#x957F;&#x7684;&#x60F3;&#x6CD5;&#x3002;" />
     <title>&#x5B54;&#x7C73;&#x4E50; / Ideas Keep Growing</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2712%27 fill=%27%23060706%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2710%27 fill=%27%23d7ff24%27/%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=20260810ad" />
   </head>
   <body>
-  <svg class="crt-filter-defs" width="0" height="0" aria-hidden="true" focusable="false">
-    <filter id="crtGlassWarp" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
-      <feImage href="./assets/crt-bulge-map.png?v=6" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="bulgeMap" />
-      <feGaussianBlur in="bulgeMap" stdDeviation="5" edgeMode="duplicate" result="smoothBulgeMap" />
-      <feDisplacementMap in="SourceGraphic" in2="smoothBulgeMap" scale="35" xChannelSelector="R" yChannelSelector="G" result="warpedGraphic" />
-      <feGaussianBlur in="warpedGraphic" stdDeviation="0.52" edgeMode="duplicate" result="softWarpEdges" />
-      <feMerge>
-        <feMergeNode in="softWarpEdges" />
-        <feMergeNode in="warpedGraphic" />
-      </feMerge>
-    </filter>
-    <filter id="crtGlassWarpSoft" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
-      <feImage href="./assets/crt-bulge-map.png?v=6" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="bulgeMapSoft" />
-      <feGaussianBlur in="bulgeMapSoft" stdDeviation="5" edgeMode="duplicate" result="smoothBulgeMapSoft" />
-      <feDisplacementMap in="SourceGraphic" in2="smoothBulgeMapSoft" scale="35" xChannelSelector="R" yChannelSelector="G" result="warpedGraphicSoft" />
-      <feGaussianBlur in="warpedGraphicSoft" stdDeviation="0.28" edgeMode="duplicate" result="continuousWarp" />
-      <feMerge>
-        <feMergeNode in="continuousWarp" />
-        <feMergeNode in="continuousWarp" />
-      </feMerge>
-    </filter>
-  </svg>
+    <svg class="crt-filter-defs" width="0" height="0" aria-hidden="true" focusable="false">
+      <filter id="crtConvexLight" x="-3%" y="-3%" width="106%" height="106%" color-interpolation-filters="sRGB">
+        <feImage href="./assets/crt-bulge-map.png?v=7" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="convexMap" />
+        <feDisplacementMap in="SourceGraphic" in2="convexMap" scale="31" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </svg>
     <main id="app" class="app">
       <div class="ambient-grid" aria-hidden="true"></div>
 
@@ -53,6 +37,7 @@
         <svg id="outerConnections" class="outer-connections" aria-hidden="true"></svg>
         <div id="outerItems" class="outer-items" aria-label="&#x5C4F;&#x5E55;&#x5916;&#x4FBF;&#x7B7E;&#x5C42;"></div>
 
+        <div class="monitor-motion-shell">
         <div class="monitor-wrap">
           <div class="monitor">
             <div id="monitorScreen" class="monitor-screen">
@@ -89,6 +74,7 @@
           </div>
           <div class="monitor-neck"></div>
           <div class="monitor-base"></div>
+        </div>
         </div>
 
         <aside class="computer-tower" aria-label="&#x7535;&#x8111;&#x4E3B;&#x673A;"><div class="tower-slits"></div><button id="powerButton" class="tower-power" type="button" aria-label="&#x5207;&#x6362;&#x7535;&#x8111;&#x684C;&#x9762;&#x663E;&#x793A;&#x6A21;&#x5F0F;"></button><small>KML / 26</small></aside>
@@ -156,6 +142,6 @@
 
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
     </main>
-    <script src="./app.js"></script>
+    <script src="./app.js?v=20260810ad"></script>
   </body>
 </html>

@@ -1311,13 +1311,14 @@ body.inner-mode .retro-os { display: block; }
 
 body.inner-mode .outer-items,
 body.inner-mode .outer-connections {
-  filter: blur(13px) saturate(1.25);
-  opacity: 0.32;
+  filter: none;
+  opacity: 0;
+  visibility: hidden;
   pointer-events: none;
 }
 
 body.inner-mode .outer-items {
-  transform: scale(1.02);
+  transform: none;
 }
 
 body.inner-mode .monitor-wrap {
@@ -1870,7 +1871,7 @@ body.inner-mode .mouse { z-index:1; pointer-events:none; }
 .folder-description{max-height:155px;overflow:auto}.folder-dropzone{display:flex;flex-direction:column;gap:3px}.folder-entry{display:grid!important;grid-template-columns:30px minmax(0,1fr) auto!important;min-height:42px!important;padding:6px!important}.folder-entry .pixel-icon{width:24px!important;height:20px!important;margin:0!important}.folder-entry__label{display:flex;min-width:0;flex-direction:column}.folder-entry__label b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.folder-entry__label small{font-size:6px;color:#5b5b55}.folder-entry__actions{display:flex;align-items:center}
 .inner-icon-actions{position:absolute;z-index:5;top:-8px;right:-9px;display:none}.custom-inner-icon:hover .inner-icon-actions{display:flex}.inner-icon-actions button{width:19px;height:19px;padding:0;border:1px solid #111;background:#d7d2c5;font:8px var(--pixel);cursor:pointer}.inner-icon-actions [data-delete]{background:var(--orange)}
 .pixel-folder,.folder-entry .pixel-folder{border:2px solid #171a13!important;background:var(--lime)!important;box-shadow:inset -4px -4px 0 #8ca410!important}.pixel-folder::before,.folder-entry .pixel-folder::before{top:-7px!important;left:-2px!important;width:15px!important;height:7px!important;border:2px solid #171a13!important;border-bottom:0!important;background:var(--lime)!important}
-body.inner-mode .monitor-wrap{z-index:32;left:50%;top:-9%;width:min(96vw,1440px);transform:translateX(-50%)}body.inner-mode .monitor{z-index:33}body.inner-mode .outer-items,body.inner-mode .outer-connections{z-index:46!important;pointer-events:none!important;opacity:.3;filter:blur(12px) saturate(1.3)}body.inner-mode .outer-item{pointer-events:none!important}body.inner-mode .computer-tower{transform:translateX(160vw);opacity:0}body.inner-mode .keyboard{transform:translateY(70vh);opacity:0}body.inner-mode .mouse{transform:translate(120vw,60vh);opacity:0}
+body.inner-mode .monitor-wrap{z-index:32;left:50%;top:-9%;width:min(96vw,1440px);transform:translateX(-50%)}body.inner-mode .monitor{z-index:33}body.inner-mode .outer-items,body.inner-mode .outer-connections{z-index:46!important;pointer-events:none!important;opacity:0;visibility:hidden;filter:none}body.inner-mode .outer-item{pointer-events:none!important}body.inner-mode .computer-tower{transform:translateX(160vw);opacity:0}body.inner-mode .keyboard{transform:translateY(70vh);opacity:0}body.inner-mode .mouse{transform:translate(120vw,60vh);opacity:0}
 .monitor-screen{background:#020302}.screen-home,.retro-os{transform-origin:50% 50%}.powering-off .screen-home,.powering-off .retro-os{animation:crtOff .52s forwards}.screen-off .screen-home,.screen-off .retro-os{opacity:0!important;transform:scale(0,.02)!important;pointer-events:none!important}.powering-on .screen-home,.powering-on .retro-os{animation:crtOn .62s both}
 .monitor-screen::after{content:"";position:absolute;z-index:100;inset:0;pointer-events:none;opacity:0;background:#fff}.powering-off .monitor-screen::after{animation:screenFlash .52s}.powering-on .monitor-screen::after{animation:screenFlash .45s reverse}
 @keyframes crtOff{0%{transform:scale(1);filter:brightness(1)}45%{transform:scale(1,.025);filter:brightness(3)}72%{transform:scale(.05,.02);opacity:1}100%{transform:scale(0,.02);opacity:0}}@keyframes crtOn{0%{transform:scale(0,.02);opacity:0}35%{transform:scale(.08,.025);opacity:1;filter:brightness(3)}65%{transform:scale(1,.035)}100%{transform:scale(1);filter:brightness(1)}}@keyframes screenFlash{0%,100%{opacity:0}45%{opacity:.85}}
@@ -2445,7 +2446,8 @@ body.inner-mode .desk-trash { opacity:0;pointer-events:none;transform:translate(
 /* Slower, GPU-friendly travel between home, outside and inside modes. */
 .computer-stage { transition:left 1.25s cubic-bezier(.16,1,.3,1),top 1.25s cubic-bezier(.16,1,.3,1),width 1.25s cubic-bezier(.16,1,.3,1),height 1.25s cubic-bezier(.16,1,.3,1),transform 1.25s cubic-bezier(.16,1,.3,1);will-change:left,top,width,transform; }
 .monitor-wrap { transition:left 1.2s cubic-bezier(.16,1,.3,1),top 1.2s cubic-bezier(.16,1,.3,1),width 1.2s cubic-bezier(.16,1,.3,1),transform 1.2s cubic-bezier(.16,1,.3,1);will-change:left,top,width,transform; }
-.outer-items,.outer-connections { transition:opacity 1s ease,filter 1.05s ease,transform 1.05s cubic-bezier(.16,1,.3,1); }
+.outer-items,.outer-connections { transition:opacity .18s linear,visibility 0s linear; }
+body.inner-mode .outer-items,body.inner-mode .outer-connections { transition:opacity .18s linear,visibility 0s linear .18s; }
 .retro-os { display:block!important;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .78s ease,visibility 0s linear .78s; }
 body.inner-mode .retro-os { opacity:1;visibility:visible;pointer-events:auto;transition:opacity .88s ease; }
 .screen-home { transition:opacity .78s ease; }
@@ -2579,8 +2581,8 @@ html,body { background:#292d24!important; }
 body.inner-mode .masthead nav { opacity:0;visibility:hidden;pointer-events:none;transform:translate(28px,-10px);transition:opacity .42s ease,transform .7s cubic-bezier(.16,1,.3,1),visibility 0s linear .45s; }
 
 /* Focusing into the screen pushes the foreground paper away from the focal point. */
-.outer-items,.outer-connections { transform-origin:50% 50%;transition:transform 1.62s cubic-bezier(.16,1,.3,1),filter 1.38s cubic-bezier(.16,1,.3,1),opacity 1.1s ease!important;will-change:transform,filter,opacity; }
-body.inner-mode .outer-items,body.inner-mode .outer-connections { transform:scale(1.28)!important;opacity:.2!important;filter:blur(15px) saturate(1.18)!important;pointer-events:none!important; }
+.outer-items,.outer-connections { transform-origin:50% 50%;transition:opacity .18s linear,visibility 0s linear!important;will-change:auto; }
+body.inner-mode .outer-items,body.inner-mode .outer-connections { transform:none!important;opacity:0!important;visibility:hidden!important;filter:none!important;pointer-events:none!important;transition:opacity .18s linear,visibility 0s linear .18s!important; }
 
 /* The physical accessories leave the focal plane slowly instead of snapping away. */
 body.inner-mode .computer-tower { transition:transform 1.9s cubic-bezier(.16,1,.3,1),opacity 1.42s ease!important; }
@@ -3702,7 +3704,7 @@ body.inner-mode .retro-os {
   inset:2.4% 2.8% 2.8%;
   overflow:hidden;
   border-radius:6.5% / 5.5%;
-  filter:url(#crtGlassWarp);
+  filter:none;
   transform:perspective(820px) rotateX(.45deg) scale(.992);
   transform-origin:50% 50%;
 }
@@ -3775,7 +3777,7 @@ body.code-desktop-mode .retro-window[data-system-app="printer"] .retro-window__b
   body.inner-mode .retro-os { inset:2.2%; }
 }
 body.inner-mode .item-dialog[open] {
-  filter:url(#crtGlassWarp);
+  filter:none;
   transform:scale(.99);
   transform-origin:50% 50%;
 }
@@ -3818,7 +3820,7 @@ body:not(.inner-mode) .screen-home {
   inset:1.05%;
   overflow:hidden;
   border-radius:6.5% / 5.5%;
-  filter:url(#crtGlassWarp);
+  filter:none;
   transform:scale(.995);
   transform-origin:50% 50%;
 }
@@ -3844,12 +3846,7 @@ body.inner-mode .item-dialog[open] {
     radial-gradient(ellipse 90% 82% at 50% 48%,transparent 58%,rgba(0,0,0,.24) 79%,rgba(0,0,0,.64) 100%),
     linear-gradient(118deg,rgba(255,255,255,.068),transparent 20% 76%,rgba(255,255,255,.018));
 }
-/* experience-v44: optical glass dome; preserve the live UI's continuous one-pixel lines */
-body.inner-mode .retro-os,
-body:not(.inner-mode) .screen-home,
-body.inner-mode .item-dialog[open] {
-  filter:none!important;
-}
+/* experience-v44: optical glass dome and continuous one-pixel lines */
 body.inner-mode .retro-os,
 body:not(.inner-mode) .screen-home {
   border-radius:7.2% / 6.6%;
@@ -3877,13 +3874,6 @@ body:not(.inner-mode) .monitor-screen {
     0 0 0 4px #0b0d0b,
     0 0 0 7px rgba(82,86,77,.34),
     0 18px 34px rgba(0,0,0,.32)!important;
-}
-/* experience-v45: the glass and every live UI element share one smooth convex projection */
-body.inner-mode .retro-os,
-body:not(.inner-mode) .screen-home,
-body.inner-mode .item-dialog[open] {
-  filter:url(#crtGlassWarp)!important;
-  image-rendering:auto!important;
 }
 /* A soft companion stroke keeps one-pixel terminal rules continuous after projection. */
 body.code-desktop-mode .retro-topbar,
@@ -4138,13 +4128,13 @@ body.inner-mode:not(.code-desktop-mode) .retro-window__status {
 body.inner-mode:not(.code-desktop-mode) .retro-wallpaper {
   filter:saturate(.92) contrast(.98)!important;
 }
-/* experience-v48: continuous antialiased projection for classic/home views only */
+/* Keep the live UI unfiltered; the monitor overlays provide the glass treatment. */
 body.inner-mode:not(.code-desktop-mode) .retro-os,
 body:not(.inner-mode) .screen-home {
-  filter:url(#crtGlassWarpSoft)!important;
+  filter:none!important;
 }
 body.inner-mode.code-desktop-mode .retro-os {
-  filter:url(#crtGlassWarpSoft)!important;
+  filter:none!important;
 }
 
 /* Dialogs sit above the curved screen, so keep their rounded silhouette unwarped. */
@@ -4263,6 +4253,11 @@ body.inner-mode.is-entering-inner .outer-items,
 body.inner-mode.is-entering-inner .outer-connections {
   will-change:transform,opacity;
 }
+/* The monitor uses FLIP; snap its layout parent so it is not reflowed every frame. */
+body.is-crossing-inner .computer-stage {
+  transition:none!important;
+  will-change:auto;
+}
 /* Outside → inside: keep the desktop's native ratio and animate only compositor properties. */
 @media (min-width:901px) {
   body.inner-mode .computer-stage {
@@ -4277,14 +4272,461 @@ body.inner-mode.is-entering-inner .outer-connections {
     transform-origin:50% 50%;
   }
 }
-/* Keep the filtered desktop warm behind the home screen so entering does not pay a first-paint penalty. */
+/* Keep the inactive desktop out of the render tree until inner mode is entered. */
 body:not(.inner-mode) .retro-os {
-  visibility:visible!important;
-  opacity:.001;
+  visibility:hidden!important;
+  opacity:0;
+
   pointer-events:none;
-  filter:url(#crtGlassWarpSoft)!important;
+  filter:none!important;
 }
 .monitor-wrap.is-mode-traveling {
   transition:none!important;
-  will-change:translate,scale;
+}
+.monitor-motion-shell { position:absolute;inset:0;z-index:5;transform-origin:0 0;pointer-events:none; }
+.monitor-motion-shell .monitor-wrap { pointer-events:auto; }
+body.inner-mode .monitor-motion-shell { z-index:32; }
+.monitor-motion-shell.is-mode-traveling { will-change:transform; }
+.computer-stage.is-mode-traveling { transition:none!important; }
+.monitor-wrap { transition:none!important; }
+body.inner-mode .computer-stage,body.inner-mode .computer-tower,body.inner-mode .mouse,body.inner-mode .outer-items,body.inner-mode .outer-connections { transition:none!important; }
+body.is-crossing-inner .monitor-wrap { transition:transform .28s cubic-bezier(.16,1,.3,1)!important; }
+body.inner-mode .outer-items {
+  visibility:visible!important;
+  opacity:.28!important;
+  filter:none!important;
+  transform:none!important;
+}
+body.inner-mode .outer-item { filter:blur(8px) saturate(.78)!important; pointer-events:none!important; }
+.monitor-wrap.is-zooming-inner {
+  transition:top .78s cubic-bezier(.16,1,.3,1),width .78s cubic-bezier(.16,1,.3,1),transform .78s cubic-bezier(.16,1,.3,1)!important;
+  will-change:top,width,transform;
+}
+/* Restore the stable layered transition used by the earlier smooth build. */
+.computer-stage { transition:left 1.25s cubic-bezier(.16,1,.3,1),top 1.25s cubic-bezier(.16,1,.3,1),width 1.25s cubic-bezier(.16,1,.3,1),height 1.25s cubic-bezier(.16,1,.3,1),transform 1.25s cubic-bezier(.16,1,.3,1)!important; will-change:left,top,width,transform; }
+.monitor-wrap { transition:left 1.2s cubic-bezier(.16,1,.3,1),top 1.2s cubic-bezier(.16,1,.3,1),width 1.2s cubic-bezier(.16,1,.3,1),transform 1.2s cubic-bezier(.16,1,.3,1)!important; will-change:left,top,width,transform; }
+.outer-items,.outer-connections { transition:transform 1.24s cubic-bezier(.2,.65,.25,1),opacity 1.02s ease-out!important; }
+body.inner-mode .computer-stage { transition:none!important; }
+body.inner-mode .monitor-wrap { transition:left 1.2s cubic-bezier(.16,1,.3,1),top 1.2s cubic-bezier(.16,1,.3,1),width 1.2s cubic-bezier(.16,1,.3,1),transform 1.2s cubic-bezier(.16,1,.3,1)!important; }
+body.inner-mode .computer-tower { transition:transform 1.9s cubic-bezier(.16,1,.3,1),opacity 1.42s ease!important; }
+body.inner-mode .mouse { transition:transform 1.95s cubic-bezier(.16,1,.3,1),opacity 1.48s ease!important; }
+body.inner-mode .outer-items { transform:scale(1.18)!important; opacity:.2!important; filter:none!important; pointer-events:none!important; }
+body.inner-mode .outer-item { transition:transform 1.24s cubic-bezier(.2,.65,.25,1),filter 1.12s ease-out,opacity 1.02s ease-out!important; transform:translate(-50%,-50%) scale(1.22) rotate(var(--rotation,0deg))!important; filter:blur(11px) saturate(.72)!important; pointer-events:none!important; }
+/* Enter the inner desktop as separate layers: the monitor travels and scales,
+   while the surrounding hardware and notes clear away independently. */
+body.is-entering-inner.inner-mode .computer-tower,
+body.is-entering-inner.inner-mode .mouse {
+  transition:transform .76s cubic-bezier(.16,1,.3,1),opacity .58s linear!important;
+  will-change:transform,opacity;
+}
+body.is-entering-inner.inner-mode .outer-items {
+  transition:opacity .62s ease-out!important;
+}
+body.is-entering-inner.inner-mode .outer-item {
+  transition:transform .76s cubic-bezier(.16,1,.3,1),filter .76s ease-out,opacity .62s ease-out!important;
+  transform:translate(-50%,-50%) scale(1.22) rotate(var(--rotation,0deg))!important;
+  filter:blur(8px) saturate(.78)!important;
+  pointer-events:none!important;
+  will-change:transform,filter,opacity;
+}
+
+/* The shared inner/outer FLIP path owns monitor geometry while crossing. */
+body .computer-stage.is-mode-traveling,
+body .monitor-wrap.is-mode-traveling {
+  transition:none!important;
+}
+
+/* Lightweight convex glass: the whole desktop shares one composited perspective plane. */
+.monitor-screen {
+  --lens-x:42%;
+  --lens-y:28%;
+  border-radius:8% / 7%!important;
+  isolation:isolate;
+  perspective:1200px;
+  box-shadow:
+    inset 0 0 22px rgba(255,255,255,.045),
+    inset 0 0 58px rgba(0,0,0,.46),
+    inset 14px 0 24px rgba(0,0,0,.18),
+    inset -14px 0 24px rgba(0,0,0,.22)!important;
+}
+body:not(.powering-off):not(.powering-on):not(.screen-off) .screen-home,
+body:not(.powering-off):not(.powering-on):not(.screen-off) .retro-os {
+  transform:scale(1.018,1.028)!important;
+  transform-origin:50% 50%;
+  transition:opacity .24s ease-out!important;
+  backface-visibility:hidden;
+}
+.monitor-screen::before {
+  opacity:1!important;
+  background:
+    radial-gradient(ellipse 72% 48% at var(--lens-x) var(--lens-y),rgba(255,255,255,.115),rgba(255,255,255,.036) 34%,transparent 70%),
+    radial-gradient(ellipse 94% 86% at 50% 48%,transparent 57%,rgba(0,0,0,.16) 77%,rgba(0,0,0,.54) 100%),
+    linear-gradient(90deg,rgba(255,255,255,.055),transparent 7%,transparent 92%,rgba(0,0,0,.18)),
+    linear-gradient(180deg,rgba(255,255,255,.055),transparent 9%,transparent 90%,rgba(0,0,0,.24))!important;
+  filter:none!important;
+  transition:opacity .18s ease-out!important;
+}
+.crt-filter-defs {
+  position:absolute;
+  width:0;
+  height:0;
+  overflow:hidden;
+  pointer-events:none;
+}
+body:not(.inner-mode):not(.screen-off) .screen-home,
+body.inner-mode:not(.screen-off) .retro-os {
+  filter:url(#crtConvexLight)!important;
+}
+body .monitor-motion-shell.is-mode-traveling .screen-home,
+body .monitor-motion-shell.is-mode-traveling .retro-os {
+  filter:none!important;
+}
+
+/* Final CRT geometry must win over the earlier two-layer normalization. */
+body .monitor,
+body.inner-mode .monitor {
+  padding:clamp(28px,2.35vw,39px) clamp(30px,2.6vw,44px) clamp(72px,6.4vw,96px)!important;
+  border-radius:28px 28px 34px 34px / 25px 25px 31px 31px!important;
+}
+body .monitor-screen,
+body.inner-mode .monitor-screen,
+body:not(.inner-mode) .monitor-screen {
+  border-color:rgba(32,31,27,.76)!important;
+  border-radius:6.5% / 6%!important;
+}
+body:not(.inner-mode):not(.screen-off) .screen-home,
+body.inner-mode:not(.screen-off) .retro-os {
+  filter:none!important;
+}
+
+/* Chunky late-90s CRT shell: broad plastic bezel and a deep, clean lower chin. */
+.monitor,
+body.inner-mode .monitor {
+  padding:clamp(28px,2.35vw,39px) clamp(30px,2.6vw,44px) clamp(72px,6.4vw,96px)!important;
+  border:2px solid #625f54!important;
+  border-radius:28px 28px 34px 34px / 25px 25px 31px 31px!important;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.22),transparent 18%),
+    linear-gradient(112deg,#aaa593 0%,#928d7d 46%,#777366 78%,#9b9686 100%)!important;
+  box-shadow:
+    0 46px 82px rgba(0,0,0,.62),
+    inset 3px 3px 2px rgba(255,255,255,.24),
+    inset -8px -9px 14px rgba(48,45,38,.38),
+    0 0 0 1px rgba(19,20,17,.72)!important;
+}
+.monitor::after {
+  display:none!important;
+}
+.monitor::before {
+  content:"";
+  position:absolute;
+  z-index:5;
+  left:7%;
+  right:7%;
+  bottom:clamp(20px,2vw,31px);
+  height:clamp(24px,2.2vw,34px);
+  border-top:1px solid rgba(55,53,46,.32);
+  background:
+    radial-gradient(circle at 93% 58%,#5f5c52 0 7px,#b9b3a1 8px 11px,transparent 12px),
+    radial-gradient(circle at 88.5% 58%,#d7ff24 0 2px,rgba(74,74,61,.5) 3px 4px,transparent 5px);
+  opacity:.78;
+  pointer-events:none;
+}
+.monitor-screen,
+body.inner-mode .monitor-screen,
+body:not(.inner-mode) .monitor-screen {
+  border-color:rgba(32,31,27,.76)!important;
+  border-radius:6.5% / 6%!important;
+}
+.monitor-neck {
+  background:linear-gradient(90deg,#5e5b51,#9b9685 50%,#555248)!important;
+}
+.monitor-base {
+  background:linear-gradient(180deg,#9a9584,#5b584e)!important;
+}
+
+/* Two visual layers only: the chassis and one continuous convex glass surface. */
+.monitor,
+body.inner-mode .monitor {
+  padding:clamp(18px,1.75vw,29px)!important;
+  border-radius:44px 44px 52px 52px / 40px 40px 48px 48px!important;
+}
+.monitor-screen,
+body.inner-mode .monitor-screen,
+body:not(.inner-mode) .monitor-screen {
+  border:1px solid rgba(255,255,255,.09)!important;
+  border-radius:8% / 7%!important;
+}
+body:not(.inner-mode) .screen-home,
+body.inner-mode .retro-os {
+  inset:0!important;
+  border-radius:inherit!important;
+  box-shadow:none!important;
+}
+
+/* Keep one permanent convex surface so changing desktop modes cannot reshape an inner layer. */
+.monitor-screen,
+body.inner-mode .monitor-screen,
+body:not(.inner-mode) .monitor-screen {
+  filter:url(#crtConvexLight)!important;
+}
+body:not(.inner-mode) .screen-home,
+body.inner-mode .retro-os,
+body .monitor-motion-shell.is-mode-traveling .screen-home,
+body .monitor-motion-shell.is-mode-traveling .retro-os {
+  filter:none!important;
+}
+
+/* Final CRT geometry must remain identical in outer and inner modes. */
+body .monitor,
+body.inner-mode .monitor {
+  padding:clamp(28px,2.35vw,39px) clamp(30px,2.6vw,44px) clamp(72px,6.4vw,96px)!important;
+  border-radius:28px 28px 34px 34px / 25px 25px 31px 31px!important;
+}
+body .monitor-screen,
+body.inner-mode .monitor-screen,
+body:not(.inner-mode) .monitor-screen {
+  border-color:rgba(32,31,27,.76)!important;
+  border-radius:6.5% / 6%!important;
+}
+
+/* A squarer CRT body, with the fixed glass clipping one permanently warped content plane. */
+body .monitor {
+  aspect-ratio:1.48!important;
+}
+body .monitor-screen,
+body.inner-mode .monitor-screen,
+body:not(.inner-mode) .monitor-screen {
+  filter:none!important;
+  overflow:hidden!important;
+}
+body .screen-home,
+body .retro-os,
+body:not(.inner-mode):not(.screen-off) .screen-home,
+body.inner-mode:not(.screen-off) .retro-os {
+  filter:url(#crtConvexLight)!important;
+  transform:scale(1.035,1.05)!important;
+  transform-origin:50% 50%!important;
+}
+@media (min-width:901px) {
+  body.workspace-entered:not(.inner-mode) .monitor-wrap {
+    top:-3vh!important;
+    width:min(69vw,1080px)!important;
+  }
+  body.inner-mode .monitor-wrap {
+    top:33vh!important;
+    width:min(72vw,104vh,1220px)!important;
+  }
+}
+
+/* The tower and mouse use the same aged warm-gray plastic as the CRT shell. */
+body .computer-tower {
+  border-color:#625f54!important;
+  background:
+    linear-gradient(120deg,rgba(255,255,255,.2),transparent 22%),
+    linear-gradient(96deg,#aaa593,#8e8979 58%,#716d61)!important;
+  box-shadow:
+    0 35px 52px rgba(0,0,0,.52),
+    inset 3px 3px 2px rgba(255,255,255,.2),
+    inset -7px -8px 12px rgba(48,45,38,.34)!important;
+}
+body .computer-tower .tower-slits {
+  background:repeating-linear-gradient(90deg,#555247 0 3px,transparent 3px 8px)!important;
+  opacity:.52;
+}
+body .mouse {
+  border-color:#625f54!important;
+  background:
+    linear-gradient(90deg,rgba(255,255,255,.2),transparent 36%,rgba(54,51,44,.16) 74%),
+    linear-gradient(160deg,#aaa593,#817c6d 72%)!important;
+  box-shadow:
+    0 8px 0 #5d594e,
+    0 22px 22px rgba(0,0,0,.58),
+    inset 0 2px 2px rgba(255,255,255,.28)!important;
+}
+
+/* Smooth mode travel: layout snaps once, then the scene moves only on compositor layers. */
+body .computer-stage,
+body .computer-stage.entered,
+body.inner-mode .computer-stage,
+body .monitor-wrap,
+body.inner-mode .monitor-wrap {
+  transition:none!important;
+  will-change:auto!important;
+}
+body .computer-stage.is-mode-traveling,
+body .monitor-motion-shell.is-mode-traveling {
+  will-change:transform!important;
+}
+body .monitor-motion-shell {
+  transition:none!important;
+}
+
+/* Surrounding objects keep one stable route while clearing or returning. */
+body .computer-tower,
+body.inner-mode .computer-tower {
+  transition:transform .9s cubic-bezier(.16,1,.3,1),opacity .62s ease-out!important;
+  backface-visibility:hidden;
+}
+body .mouse,
+body.inner-mode .mouse {
+  transition:transform .92s cubic-bezier(.16,1,.3,1),opacity .64s ease-out!important;
+  backface-visibility:hidden;
+}
+body .outer-items,
+body.inner-mode .outer-items,
+body .outer-connections,
+body.inner-mode .outer-connections {
+  transition:opacity .7s ease-out!important;
+}
+body.inner-mode .outer-items {
+  transform:none!important;
+}
+body .outer-item,
+body.inner-mode .outer-item {
+  transition:transform 1.18s cubic-bezier(.2,.65,.25,1),filter 1.06s ease-out,opacity .72s ease-out!important;
+  backface-visibility:hidden;
+}
+
+/* Pre-promote only the elements that visibly stuttered on their first trip. */
+body .computer-stage,
+body .monitor-motion-shell {
+  will-change:transform!important;
+}
+body .computer-tower,
+body .mouse {
+  will-change:transform,opacity!important;
+}
+body .outer-item {
+  will-change:transform,filter,opacity!important;
+}
+
+/* Expose both parts of the CRT stand instead of burying the neck in the chassis. */
+body .monitor-neck {
+  left:42.5%!important;
+  top:95%!important;
+  width:15%!important;
+  height:14%!important;
+  z-index:1!important;
+  clip-path:polygon(25% 0,75% 0,92% 100%,8% 100%)!important;
+  background:linear-gradient(90deg,#575348 0%,#969080 25%,#aaa493 50%,#827d6f 76%,#4d4a41 100%)!important;
+  box-shadow:0 25px 30px rgba(0,0,0,.62),inset 2px 0 rgba(255,255,255,.15),inset -4px 0 rgba(36,34,29,.24)!important;
+}
+body .monitor-base {
+  left:32%!important;
+  top:105.5%!important;
+  width:36%!important;
+  height:4.6%!important;
+  z-index:2!important;
+  border-radius:50% 50% 12px 12px / 70% 70% 24% 24%!important;
+  background:linear-gradient(180deg,#aaa493 0%,#858071 48%,#4f4c43 100%)!important;
+  box-shadow:0 18px 24px rgba(0,0,0,.7),inset 0 2px rgba(255,255,255,.18)!important;
+}
+
+@media (min-width:901px) {
+  body.workspace-entered:not(.inner-mode) .monitor-wrap {
+    top:-10vh!important;
+  }
+  body.inner-mode .monitor-wrap {
+    top:35.2vh!important;
+    width:min(72vw,131vh,1250px)!important;
+  }
+}
+
+/* A subdued beige late-90s tower: stacked drives, service panel and vented intake. */
+body .computer-tower {
+  width:13.2%!important;
+  min-width:150px!important;
+  height:54%!important;
+  overflow:hidden!important;
+  border:1px solid #514e45!important;
+  border-radius:9px 9px 5px 5px!important;
+  background:
+    linear-gradient(118deg,rgba(255,255,255,.13),transparent 22%),
+    linear-gradient(96deg,#918c7d 0%,#7e796c 56%,#666257 100%)!important;
+  box-shadow:
+    20px 30px 30px rgba(0,0,0,.64),
+    4px 48px 58px rgba(0,0,0,.48),
+    inset 3px 3px 2px rgba(255,255,255,.13),
+    inset -8px -7px 13px rgba(40,38,33,.38)!important;
+}
+body .computer-tower::before {
+  content:"";
+  position:absolute;
+  z-index:1;
+  left:9%;
+  right:9%;
+  top:53%;
+  height:19%;
+  border:1px solid rgba(55,52,45,.55);
+  border-radius:2px 2px 14px 14px / 2px 2px 7px 7px;
+  background:linear-gradient(165deg,#878274,#6e6a5f 78%);
+  box-shadow:inset 0 1px rgba(255,255,255,.11),inset 0 -5px 8px rgba(42,40,35,.2);
+  pointer-events:none;
+}
+body .computer-tower::after {
+  content:"";
+  position:absolute;
+  z-index:2;
+  left:12%;
+  right:12%;
+  bottom:5.5%;
+  height:17%;
+  border-top:1px solid rgba(48,46,40,.42);
+  background:radial-gradient(circle,#4b483f 0 1.2px,transparent 1.6px) 0 0 / 8px 8px;
+  opacity:.72;
+  pointer-events:none;
+}
+body .computer-tower .tower-slits {
+  inset:7% 10% auto!important;
+  height:42%!important;
+  opacity:1!important;
+  background:none!important;
+}
+body .computer-tower .tower-slits::before {
+  top:0!important;
+  height:25%!important;
+  border:1px solid #575349!important;
+  border-radius:2px!important;
+  background:
+    linear-gradient(180deg,transparent 47%,#4c4941 48% 54%,transparent 55%),
+    linear-gradient(180deg,#a29c8c,#777267)!important;
+  box-shadow:inset 0 2px rgba(255,255,255,.16),0 4px 5px rgba(0,0,0,.2)!important;
+}
+body .computer-tower .tower-slits::after {
+  top:34%!important;
+  height:18%!important;
+  border:1px solid #565249!important;
+  border-radius:2px!important;
+  background:
+    linear-gradient(180deg,transparent 36%,#4e4b43 37% 45%,transparent 46%),
+    linear-gradient(180deg,#999384,#736f63)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.14),0 4px 5px rgba(0,0,0,.18)!important;
+}
+body .computer-tower .tower-power {
+  z-index:4!important;
+  left:46%!important;
+  bottom:24%!important;
+  width:14px!important;
+  height:14px!important;
+  border:1px solid #4e4b42!important;
+  background:linear-gradient(145deg,#aaa493,#6e6a5e)!important;
+  box-shadow:inset 1px 1px rgba(255,255,255,.22),0 2px 3px rgba(0,0,0,.45)!important;
+}
+body .computer-tower .tower-power::after {
+  content:"";
+  position:absolute;
+  width:3px;
+  height:3px;
+  right:-13px;
+  top:4px;
+  border-radius:50%;
+  background:var(--lime);
+  box-shadow:0 0 7px rgba(215,255,36,.7);
+}
+body .computer-tower small {
+  z-index:4!important;
+  right:9%!important;
+  bottom:2.5%!important;
+  color:rgba(230,224,208,.28)!important;
 }

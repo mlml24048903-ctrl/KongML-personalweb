@@ -88,34 +88,50 @@ function esc(v=""){return String(v).replaceAll("&","&amp;").replaceAll("<","&lt;
 function inlineMd(v){return esc(v).replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noreferrer">$1</a>').replace(/`([^`]+)`/g,'<span class="md-tag">$1</span>').replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/(^|[^*])\*([^*]+)\*/g,"$1<em>$2</em>")}
 function markdownToHTML(md=""){const lines=String(md).replace(/\r/g,"").split("\n");let h="",list=null;const close=()=>{if(list){h+=`</${list}>`;list=null}};for(const line of lines){const hd=line.match(/^(#{1,3})\s+(.+)$/),ul=line.match(/^[-*]\s+(.+)$/),ol=line.match(/^\d+\.\s+(.+)$/);if(hd){close();h+=`<h${hd[1].length}>${inlineMd(hd[2])}</h${hd[1].length}>`}else if(line.startsWith("> ")){close();h+=`<blockquote>${inlineMd(line.slice(2))}</blockquote>`}else if(ul){if(list!=="ul"){close();list="ul";h+="<ul>"}h+=`<li>${inlineMd(ul[1])}</li>`}else if(ol){if(list!=="ol"){close();list="ol";h+="<ol>"}h+=`<li>${inlineMd(ol[1])}</li>`}else if(!line.trim())close();else{close();h+=`<p>${inlineMd(line)}</p>`}}close();return h||"<p>NO CONTENT</p>"}
 
-function prepareInnerTransition(){clearTimeout(prepareInnerTransition.timer);els.body.classList.add("is-entering-inner");prepareInnerTransition.timer=setTimeout(()=>els.body.classList.remove("is-entering-inner"),1450)}
-function finishMonitorTravel(monitor,animation){
-  animation.onfinish=animation.oncancel=()=>monitor.classList.remove("is-mode-traveling");
+function finishMonitorTravel(stage,shell,monitor,animations){
+  const cleanup=()=>{
+    stage.classList.remove("is-mode-traveling");
+    shell.classList.remove("is-mode-traveling");
+    monitor.classList.remove("is-mode-traveling");
+  };
+  Promise.allSettled(animations.map(animation=>animation.finished)).then(cleanup);
+  setTimeout(cleanup,1050);
 }
-function animateMonitorTravel(monitor,first){
-  const last=monitor.getBoundingClientRect();
-  if(!first.width||!last.width){monitor.classList.remove("is-mode-traveling");return}
-  const dx=first.left+first.width/2-(last.left+last.width/2);
-  const dy=first.top+first.height/2-(last.top+last.height/2);
-  const scale=first.width/last.width;
-  const animation=monitor.animate(
+function animateMonitorTravel(stage,shell,monitor,firstStage,firstMonitor){
+  const lastStage=stage.getBoundingClientRect(),lastMonitor=monitor.getBoundingClientRect();
+  if(!firstStage.width||!lastStage.width||!firstMonitor.width||!lastMonitor.width){stage.classList.remove("is-mode-traveling");shell.classList.remove("is-mode-traveling");monitor.classList.remove("is-mode-traveling");return}
+  const stageDx=firstStage.left-lastStage.left,stageDy=firstStage.top-lastStage.top;
+  const scale=firstMonitor.width/lastMonitor.width;
+  const firstLocalX=firstMonitor.left-firstStage.left,firstLocalY=firstMonitor.top-firstStage.top;
+  const lastLocalX=lastMonitor.left-lastStage.left,lastLocalY=lastMonitor.top-lastStage.top;
+  const dx=firstLocalX-lastLocalX*scale;
+  const dy=firstLocalY-lastLocalY*scale;
+  const stageAnimation=stage.animate(
     [
-      {translate:`${dx}px ${dy}px`,scale:String(scale)},
-      {translate:"0px 0px",scale:"1"}
+      {translate:`${stageDx}px ${stageDy}px`},
+      {translate:"0 0"}
     ],
-    {duration:1180,easing:"cubic-bezier(.16,1,.3,1)"}
+    {duration:980,easing:"cubic-bezier(.16,1,.3,1)"}
   );
-  finishMonitorTravel(monitor,animation);
+  const monitorAnimation=shell.animate(
+    [
+      {transform:`translate(${dx}px,${dy}px) scale(${scale})`},
+      {transform:"translate(0,0) scale(1)"}
+    ],
+    {duration:980,easing:"cubic-bezier(.16,1,.3,1)"}
+  );
+  finishMonitorTravel(stage,shell,monitor,[stageAnimation,monitorAnimation]);
 }
 function setLevel(n,openId){
-  const l=Math.max(0,Math.min(2,n)),entering=state.level!==2&&l===2,crossingInner=(state.level===2)!==(l===2);
-  const monitor=document.querySelector(".monitor-wrap"),first=crossingInner?monitor.getBoundingClientRect():null;
-  if(crossingInner){monitor.getAnimations().forEach(animation=>animation.cancel());monitor.classList.add("is-mode-traveling")}
-  if(entering)prepareInnerTransition();else if(l!==2)els.body.classList.remove("is-entering-inner");
+  const l=Math.max(0,Math.min(2,n));
+  const levelChanged=state.level!==l,monitor=document.querySelector(".monitor-wrap"),shell=document.querySelector(".monitor-motion-shell");
+  const firstStage=levelChanged?els.stage.getBoundingClientRect():null,firstMonitor=levelChanged?monitor.getBoundingClientRect():null;
+  if(levelChanged){els.stage.getAnimations().forEach(animation=>animation.cancel());shell.getAnimations().forEach(animation=>animation.cancel());els.stage.classList.add("is-mode-traveling");shell.classList.add("is-mode-traveling");monitor.classList.add("is-mode-traveling")}
   state.level=l;
   els.body.classList.toggle("workspace-entered",l>0);
   els.body.classList.toggle("inner-mode",l===2);
   els.stage.classList.toggle("entered",l>0);
+  if(firstMonitor)requestAnimationFrame(()=>animateMonitorTravel(els.stage,shell,monitor,firstStage,firstMonitor));
   els.toolbar.hidden=l!==1;
   els.modeGuide.hidden=l===0;
   if(l===0){
@@ -132,7 +148,6 @@ function setLevel(n,openId){
     else if(state.codeMode&&!els.retroDesktop.querySelector(".code-desktop-tree"))renderCodeTree();
     if(openId)openItemWindow(openId);
   }
-  if(first)animateMonitorTravel(monitor,first);
   state.wheelAmount=0;
   els.zoomMeter.style.width="0";
 }
@@ -196,7 +211,7 @@ function bindOuterItem(n,item){
   n.querySelector(".delete-item").addEventListener("click",e=>{e.stopPropagation();state.outerItems=state.outerItems.filter(x=>x.id!==item.id);state.connections=state.connections.filter(x=>x.from!==item.id&&x.to!==item.id);persist();renderOuterItems()});
 }
 function toggleConnection(id){state.selected=state.selected.includes(id)?state.selected.filter(x=>x!==id):[...state.selected,id];if(state.selected.length===2){const[a,b]=state.selected;if(!state.connections.some(x=>(x.from===a&&x.to===b)||(x.from===b&&x.to===a)))state.connections.push({id:crypto.randomUUID(),from:a,to:b});state.selected=[];state.connectMode=false;document.getElementById("connectItems").classList.remove("is-active");persist()}renderOuterItems()}
-function renderConnections(){const r=els.outerConnections.getBoundingClientRect();if(!r.width)return;els.outerConnections.setAttribute("viewBox",`0 0 ${r.width} ${r.height}`);els.outerConnections.innerHTML="";state.connections.forEach(line=>{const a=state.outerItems.find(x=>x.id===line.from),b=state.outerItems.find(x=>x.id===line.to);if(!a||!b)return;const x1=a.x*r.width,y1=a.y*r.height,x2=b.x*r.width,y2=b.y*r.height,dx=x2-x1,dy=y2-y1,len=Math.max(1,Math.hypot(dx,dy)),nx=-dy/len,ny=dx/len,sign=[...line.id].reduce((s,c)=>s+c.charCodeAt(0),0)%2?1:-1,bend=Math.min(138,Math.max(42,len*.22))*sign,c1x=x1+dx*.28+nx*bend,c1y=y1+dy*.28+ny*bend,c2x=x1+dx*.72+nx*bend,c2y=y1+dy*.72+ny*bend,p=document.createElementNS("http://www.w3.org/2000/svg","path");p.setAttribute("d",`M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`);els.outerConnections.append(p)})}
+function renderConnections(){const r=els.outerConnections.getBoundingClientRect();if(!r.width)return;els.outerConnections.setAttribute("viewBox",`0 0 ${r.width} ${r.height}`);const paths=new Map([...els.outerConnections.querySelectorAll("path[data-connection-id]")].map(path=>[path.dataset.connectionId,path]));state.connections.forEach(line=>{const a=state.outerItems.find(x=>x.id===line.from),b=state.outerItems.find(x=>x.id===line.to);if(!a||!b)return;const x1=a.x*r.width,y1=a.y*r.height,x2=b.x*r.width,y2=b.y*r.height,dx=x2-x1,dy=y2-y1,len=Math.max(1,Math.hypot(dx,dy)),nx=-dy/len,ny=dx/len,sign=[...line.id].reduce((s,c)=>s+c.charCodeAt(0),0)%2?1:-1,bend=Math.min(138,Math.max(42,len*.22))*sign,c1x=x1+dx*.28+nx*bend,c1y=y1+dy*.28+ny*bend,c2x=x1+dx*.72+nx*bend,c2y=y1+dy*.72+ny*bend;let p=paths.get(line.id);if(!p){p=document.createElementNS("http://www.w3.org/2000/svg","path");p.dataset.connectionId=line.id;els.outerConnections.append(p)}p.setAttribute("d",`M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`);paths.delete(line.id)});paths.forEach(path=>path.remove())}
 const COMPACT_DESKTOP=matchMedia("(max-width:720px)").matches,DESKTOP_GRID=(COMPACT_DESKTOP?[.12,.37,.62,.87].flatMap(x=>[.17,.39,.61,.83].map(y=>({x,y}))):[.1,.25,.4,.55,.7,.85].flatMap(x=>[.2,.45,.7].map(y=>({x,y})))),PRINTER_DESKTOP_SLOT=COMPACT_DESKTOP?{x:.87,y:.83}:{x:.85,y:.7};
 function desktopGridIndex(x,y){let best=0,score=Infinity;DESKTOP_GRID.forEach((p,index)=>{const d=(p.x-x)**2+(p.y-y)**2;if(d<score){score=d;best=index}});return best}
 function nearestDesktopSlot(x=.1,y=.2,excludeId){const occupied=new Set([desktopGridIndex(PRINTER_DESKTOP_SLOT.x,PRINTER_DESKTOP_SLOT.y)]);state.innerItems.filter(i=>!i.parentId&&i.id!==excludeId).forEach(i=>occupied.add(desktopGridIndex(i.x,i.y)));const ranked=DESKTOP_GRID.map((p,index)=>({p,index,d:(p.x-x)**2+(p.y-y)**2})).sort((a,b)=>a.d-b.d);return clone((ranked.find(v=>!occupied.has(v.index))||ranked[0]).p)}
