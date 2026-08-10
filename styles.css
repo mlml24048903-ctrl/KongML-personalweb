@@ -4730,3 +4730,105 @@ body .computer-tower small {
   bottom:2.5%!important;
   color:rgba(230,224,208,.28)!important;
 }
+
+/* A neutral blue-graphite room keeps the beige hardware and paper accents coherent. */
+html,
+body {
+  background:#1d2324!important;
+}
+.app {
+  background:
+    radial-gradient(ellipse at 62% 47%,rgba(218,210,192,.075),transparent 39%),
+    linear-gradient(145deg,#272e2f 0%,#1d2324 54%,#171c1d 100%)!important;
+}
+.ambient-grid {
+  opacity:.18!important;
+}
+
+/* Both outer states align the full stand to the viewport edge; JS supplies the exact shift. */
+body:not(.workspace-entered) .monitor-wrap {
+  transform:translateX(-53%) translateY(var(--stand-shift-y,0px))!important;
+}
+body.workspace-entered:not(.inner-mode) .monitor-wrap {
+  width:min(62vw,980px)!important;
+  transform:translateX(-50%) translateY(var(--stand-shift-y,0px))!important;
+}
+
+/* Keep the two exterior views at one visual scale, without changing their travel path. */
+body:not(.workspace-entered) .monitor-wrap,
+body.workspace-entered:not(.inner-mode) .monitor-wrap {
+  width:min(62vw,980px)!important;
+}
+
+/* Bring the mouse back into the computer's working area in the exterior view. */
+body.workspace-entered:not(.inner-mode) .mouse {
+  right:13%!important;
+}
+
+/* A compact information index adds substance without competing with the slogan. */
+.hero-index {
+  display:grid;
+  gap:6px;
+  width:min(300px,25vw);
+  margin-top:clamp(14px,2.2vh,24px);
+  padding-top:clamp(10px,1.5vh,16px);
+  border-top:1px solid rgba(215,255,36,.34);
+  color:rgba(234,231,216,.7);
+  font-family:var(--mono);
+  font-size:clamp(9px,.67vw,11px);
+  letter-spacing:.08em;
+}
+.hero-index span {
+  display:grid;
+  grid-template-columns:4.4em 1fr;
+  align-items:baseline;
+  gap:12px;
+}
+.hero-index b {
+  color:var(--lime);
+  font-weight:700;
+  letter-spacing:.18em;
+}
+.hero-index i {
+  color:inherit;
+  font-style:normal;
+  white-space:nowrap;
+}
+
+/* Connection rendering was retired; keep stale cached markup harmless. */
+.outer-connections {
+  display:none!important;
+}
+
+@media (max-width:900px) {
+  .hero-index {
+    width:min(290px,68vw);
+    font-size:10px;
+  }
+}
+
+/* Restore the physical printer and lift the complete homepage copy above it. */
+body:not(.workspace-entered) .desk-printer {
+  left:3.4%!important;
+  top:58%!important;
+}
+@media (min-width:721px) {
+  body:not(.workspace-entered) .hero-copy {
+    top:9.5vh!important;
+  }
+}
+
+/* Make the glass bulge easier to read while preserving one stable content plane. */
+body .screen-home,
+body .retro-os,
+body:not(.inner-mode):not(.screen-off) .screen-home,
+body.inner-mode:not(.screen-off) .retro-os {
+  transform:scale(1.052,1.078)!important;
+}
+.monitor-screen::before {
+  background:
+    radial-gradient(ellipse 68% 44% at 44% 30%,rgba(255,255,255,.15),rgba(255,255,255,.045) 34%,transparent 68%),
+    radial-gradient(ellipse 92% 84% at 50% 48%,transparent 52%,rgba(0,0,0,.2) 76%,rgba(0,0,0,.62) 100%),
+    linear-gradient(90deg,rgba(255,255,255,.07),transparent 8%,transparent 91%,rgba(0,0,0,.23)),
+    linear-gradient(180deg,rgba(255,255,255,.065),transparent 9%,transparent 88%,rgba(0,0,0,.3))!important;
+}
