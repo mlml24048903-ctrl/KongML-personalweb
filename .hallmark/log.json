@@ -1,0 +1,20 @@
+[
+  {
+    "date": "2026-08-10",
+    "scope": "app",
+    "macrostructure": "floating workbench",
+    "theme": "studied-DNA",
+    "theme_axes": "warm ivory paper / Chinese editorial serif / fluorescent lime + orange-red",
+    "vibe": "好玩、松弛、可探索、有个人感",
+    "enrichment": "CSS/SVG found objects + WebGL crumpled-paper page turn",
+    "brief": "保留电脑工作台结构，把三个个人页面改成活泼的探索式空间",
+    "reference": "Jacky Zhong personal site for exploratory composition; Signature Eraser and RED for particle motion",
+    "qa": {
+      "desktop": "1440x900 home, outside, inside and three profile pages passed",
+      "responsive": "320, 375, 414 and 768px passed without horizontal overflow or wrapped controls",
+      "pageTurn": "All page-level particle motion has been retired. The outgoing snapshot is mapped onto a deterministic triangle mesh: its lower portion compresses upward into diagonal creases and a curled ridge while the next page remains flat underneath. Scroll progress directly controls the fold, reverse scrolling restores the same geometry, and mobile keeps a readable native long-page fallback",
+      "consoleErrors": 0,
+      "layoutBoundary": "monitor coordinates and screen travel rules unchanged"
+    }
+  }
+]

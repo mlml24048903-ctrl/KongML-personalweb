@@ -6,7 +6,9 @@
     <meta name="description" content="&#x5B54;&#x7C73;&#x4E50;&#x7684;&#x4E2A;&#x4EBA;&#x5DE5;&#x4F5C;&#x53F0;&#xFF1A;&#x4EA7;&#x54C1;&#x3001;&#x5F00;&#x53D1;&#x3001;&#x8BED;&#x8A00;&#x4E0E;&#x6301;&#x7EED;&#x751F;&#x957F;&#x7684;&#x60F3;&#x6CD5;&#x3002;" />
     <title>&#x5B54;&#x7C73;&#x4E50; / &#x60F3;&#x6CD5;&#x6301;&#x7EED;&#x751F;&#x957F;</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2712%27 fill=%27%23060706%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2710%27 fill=%27%23d7ff24%27/%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="./styles.css?v=20260810ah" />
+    <link rel="stylesheet" href="./tokens.css?v=20260810ak" />
+    <link rel="stylesheet" href="./particle-transition.css?v=20260811d" />
+    <link rel="stylesheet" href="./styles.css?v=20260811b" />
   </head>
   <body>
     <svg class="crt-filter-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -19,22 +21,80 @@
       <div class="ambient-grid" aria-hidden="true"></div>
 
       <header class="masthead">
-        <a class="monogram" href="#" aria-label="&#x8FD4;&#x56DE;&#x9996;&#x9875;">K.</a>
-        <p class="identity">&#x4EA7;&#x54C1;&#x7ECF;&#x7406; / &#x72EC;&#x7ACB;&#x5F00;&#x53D1; / &#x5357;&#x5F00;&#x5927;&#x5B66;</p>
         <nav aria-label="&#x4E3B;&#x8981;&#x5BFC;&#x822A;">
-          <button type="button" data-open-app="portfolio">PORTFOLIO</button>
-          <button type="button" data-open-app="internships">EXPERIENCE</button>
-          <button type="button" data-open-app="campus">CAMPUS</button>
+          <button type="button" data-profile-page="about">关于我</button>
+          <button type="button" data-profile-page="now">此刻</button>
+          <button type="button" data-profile-page="contact">联系我</button>
         </nav>
       </header>
 
+      <section id="profileLayer" class="profile-layer" aria-hidden="true" inert>
+        <div class="profile-grid" aria-hidden="true"></div>
+        <header class="profile-chrome">
+          <button id="profileBack" class="profile-back" type="button">← 返回首页</button>
+          <span>孔米乐 / 个人索引</span>
+          <nav aria-label="个人页面">
+            <button type="button" data-profile-switch="about">关于我</button>
+            <button type="button" data-profile-switch="now">此刻</button>
+            <button type="button" data-profile-switch="contact">联系我</button>
+          </nav>
+        </header>
+
+        <div class="profile-pages">
+          <article class="profile-page profile-page--about" data-profile-content="about" hidden>
+            <div class="profile-intro">
+              <span class="profile-kicker">01 / 关于我</span>
+              <h2>把模糊的问题，<br>做成可以体验的答案。</h2>
+              <p>孔米乐，来自南开大学。游走在产品、开发与文化内容之间，喜欢从人的真实感受出发，把想法一步步做成能够运行、能够被使用的东西。</p>
+            </div>
+            <div class="profile-details">
+              <section class="profile-traits" aria-label="个人特质">
+                <div><b>先理解，再定义</b><p>比起立刻给答案，我更愿意先找到真正的问题。</p></div>
+                <div><b>从零搭起</b><p>面对模糊状态，先建立结构，再用行动持续校准。</p></div>
+                <div><b>跨过边界</b><p>产品、内容与开发不是三条线，而是同一次体验。</p></div>
+              </section>
+              <dl class="profile-facts">
+                <div><dt>角色</dt><dd>产品经理 / 独立开发</dd></div>
+                <div><dt>坐标</dt><dd>天津</dd></div>
+                <div><dt>长期母题</dt><dd>人、文化与技术如何相遇</dd></div>
+              </dl>
+            </div>
+          </article>
+
+          <article class="profile-page profile-page--now" data-profile-content="now" hidden>
+            <div class="profile-intro">
+              <span class="profile-kicker">02 / 此刻</span>
+              <h2>最近，我在反复想三件事。</h2>
+              <p>这里不是完成清单，而是一张持续变化的坐标纸。它记录我此刻把注意力放在哪里。</p>
+            </div>
+            <ol class="now-list">
+              <li><span>01</span><div><b>人工智能如何进入真实体验</b><p>不只停留在对话框里，而是参与产品、空间与日常行动。</p></div></li>
+              <li><span>02</span><div><b>怎样把复杂系统讲清楚</b><p>让信息结构、交互和语言一起降低理解成本。</p></div></li>
+              <li><span>03</span><div><b>文化内容还能长成什么</b><p>寻找叙事、技术与现场体验之间新的连接方式。</p></div></li>
+            </ol>
+          </article>
+
+          <article class="profile-page profile-page--contact" data-profile-content="contact" hidden>
+            <div class="profile-intro">
+              <span class="profile-kicker">03 / 联系我</span>
+              <h2>如果你也在做有意思的事，欢迎来信。</h2>
+              <p>期待产品、人工智能、文化体验，以及内容与技术交叉方向的实习、合作与交流。</p>
+            </div>
+            <div class="contact-panel">
+              <span>邮箱</span>
+              <a href="mailto:mlml2404@outlook.com">mlml2404@outlook.com</a>
+              <div class="contact-actions">
+                <a class="contact-primary" href="mailto:mlml2404@outlook.com">写邮件</a>
+                <button id="copyEmail" type="button">复制邮箱</button>
+              </div>
+              <p>通常通过邮件联系。来信时可以简单介绍你正在做的事情，以及希望一起讨论的问题。</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
       <section class="hero-copy" aria-labelledby="hero-title">
         <h1 id="hero-title">KEEP <br>BEING <br>AMBITIOUS.</h1>
-        <div class="hero-index" aria-label="&#x80FD;&#x529B;&#x65B9;&#x5411;">
-          <span><b>&#x4EA7;&#x54C1;</b><i>&#x4ECE;&#x7814;&#x7A76;&#x5230;&#x843D;&#x5730;</i></span>
-          <span><b>&#x5F00;&#x53D1;</b><i>&#x4ECE;&#x539F;&#x578B;&#x5230;&#x5B9E;&#x73B0;</i></span>
-          <span><b>&#x6587;&#x5316;</b><i>&#x4ECE;&#x5185;&#x5BB9;&#x5230;&#x4F53;&#x9A8C;</i></span>
-        </div>
       </section>
 
       <section id="computerStage" class="computer-stage" aria-label="&#x4EA4;&#x4E92;&#x5F0F;&#x4E2A;&#x4EBA;&#x7535;&#x8111;">
@@ -144,6 +204,8 @@
 
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
     </main>
-    <script src="./app.js?v=20260810ag"></script>
+    <script src="./assets/vendor/html-to-image.js?v=1.11.13"></script>
+    <script src="./particle-transition.js?v=20260811d"></script>
+    <script src="./app.js?v=20260811b"></script>
   </body>
 </html>

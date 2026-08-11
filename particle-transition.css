@@ -1,0 +1,38 @@
+/* Hallmark · component: paper page turn · genre: playful editorial
+ * states: idle · capturing · folding · revealing · reduced-motion · failure-fallback
+ */
+/* Hallmark · pre-emit critique: P5 H5 E4 S5 R4 V5 */
+.paper-transition-layer {
+  position:fixed;
+  inset:0;
+  z-index:12000;
+  width:100%;
+  height:100%;
+  margin:0;
+  pointer-events:none;
+}
+.paper-transition-cover {
+  z-index:12001;
+  opacity:1;
+}
+.paper-turn-stage {
+  z-index:12002;
+  opacity:1;
+  background:var(--color-paper);
+}
+.paper-turn-stage.is-profile-long-scroll {
+  background:transparent;
+}
+body.paper-transition-active {
+  cursor:progress;
+}
+body.paper-transition-active #app {
+  pointer-events:none;
+}
+html.snapshot-capture *,html.snapshot-capture *::before,html.snapshot-capture *::after {
+  animation:none!important;
+  transition:none!important;
+}
+@media (prefers-reduced-motion:reduce) {
+  .paper-transition-layer { display:none!important; }
+}

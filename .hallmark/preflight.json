@@ -1,0 +1,11 @@
+{
+  "projectType": "vanilla-html-css-js",
+  "existingLogicPreserved": true,
+  "scope": {
+    "surfaceOnly": ["home", "outside-mode", "inside-mode"],
+    "collageLayout": ["about", "now", "contact"]
+  },
+  "productionFilesDeleted": [],
+  "assetStrategy": "code-native-css-svg",
+  "motionStrategy": "view-transition-snapshot-particle-mask"
+}
