@@ -1,25 +1,96 @@
-# Kong Mile / Personal Desktop Portfolio
+# 孔米乐的个人桌面作品集
 
-Local, dependency-free portfolio built around a desktop computer, sticky-note board, and editable retro file system.
+这是一个以“个人电脑与连续桌面”为视觉概念的交互式个人作品集。网页没有采用常规的卡片列表，而是把个人经历、项目档案和此刻关注的事情放进一台复古电脑及其周围的桌面环境中，让浏览过程更像进入一个真实的工作空间。
 
-## Interaction
+项目使用原生 HTML、CSS 和 JavaScript 开发，无需安装前端框架或构建工具即可运行。
 
-- Wheel forward: Home -> Outside Board -> Pixel Desktop. Wheel backward reverses the path.
-- Notes twist while pressed/dragged and settle back down when released.
-- Every desktop file/folder can be dragged, edited, or deleted.
-- Folders can contain files and nested folders. Nested folder windows include Back.
-- Opening a file creates a separate overlapping window. Windows can move, resize, maximize, and close.
-- File content supports Markdown: `> summary`, `## heading`, `` `tag` ``, `**bold**`, `*italic*`, lists, and links.
-- The tower power button runs CRT-style power-off and power-on transitions.
-- All user changes persist in browser `localStorage`.
+## 项目内容
 
-## Run
+作品集目前包含以下内容：
 
-Open `index.html`, or serve the folder with `python -m http.server 4173`.
+- 个人介绍、经历与能力特点
+- 实习经历与校园经历
+- “探索季”“拾墨”“抚尘归心”等项目档案
+- 当前学习方向与近期关注
+- 可编辑的桌面便签和文件系统
 
-## Verification
+## 核心体验
 
-- `tests/smoke.cjs`: desktop interaction regression.
-- `tests/mobile-smoke.cjs`: mobile viewport regression.
+### 连续的桌面场景
 
-All changes are local; nothing is pushed or deployed.
+首页、屏幕外区域和个人页面共享同一套复古桌面语言。电脑、打印机、主机、鼠标、便签和纸张共同组成完整场景，页面切换不是简单替换内容，而是在同一工作空间中移动视线。
+
+### 复古代码桌面
+
+进入电脑后，可以通过黑底绿字的文件目录查看实习、校园和作品集档案。文件内容支持 Markdown 排版，文件夹可展开，项目资料按照层级组织。
+
+### 可交互的打印系统
+
+- 点击桌面打印机可以打印个人名片。
+- 电脑内的 Markdown 文件可以发送到打印队列，并由屏幕外的打印机输出。
+- 较长内容会自动分页，打印纸保留标题、正文和页码。
+- 单击打印出的名片或文件可以将它揉成纸团。
+- 纸团可以拖拽、抛出、碰撞，并投入桌面垃圾桶。
+- 双击完整纸张可以放大查看。
+
+### 可编辑的个人档案
+
+桌面便签、文件和文件夹支持创建、编辑、拖动与删除。修改后的内容会保存在浏览器的 `localStorage` 中，刷新页面后仍可保留。
+
+### 电脑开关机
+
+主机按钮可控制电脑开关机，并带有 CRT 风格的屏幕过渡效果。再次按下按钮即可重新进入代码桌面。
+
+## 操作方式
+
+- 使用鼠标滚轮在首页、屏幕外区域和电脑桌面之间移动。
+- 点击顶部导航进入“关于我”或“此刻”。
+- 单击文件夹展开目录，单击文件查看内容。
+- 点击打印机打开打印功能。
+- 单击纸张将其揉成纸团，按住纸团拖动后松开即可抛出。
+- 双击完整名片或打印文件可放大查看。
+- 点击主机按钮关闭或打开电脑。
+
+页面内也会在首次使用相关功能时显示简短的交互提示。
+
+## 本地运行
+
+项目不需要安装依赖。可以直接打开 `index.html`，也可以在项目目录中启动本地静态服务：
+
+```bash
+python -m http.server 4173
+```
+
+然后在浏览器中访问：
+
+```text
+http://127.0.0.1:4173/
+```
+
+建议使用较新版本的 Chrome、Edge 或其他 Chromium 浏览器，以获得完整的动画和交互效果。
+
+## 项目结构
+
+```text
+个人网页/
+├─ index.html                 页面结构与主要场景
+├─ styles.css                页面样式、桌面物件与交互动画
+├─ tokens.css                颜色和基础视觉变量
+├─ app.js                    文件系统、打印、纸团物理与页面交互
+├─ particle-transition.css   页面粒子过渡样式
+├─ particle-transition.js    页面粒子过渡逻辑
+├─ assets/                   图片、字体及其他资源
+└─ tests/                    浏览器自动化与回归测试
+```
+
+## 数据说明
+
+便签和文件系统的编辑结果只保存在当前浏览器中，不会上传到服务器。需要恢复初始内容时，可以清除该网页的本地存储数据。
+
+## 测试
+
+`tests` 目录中包含桌面交互、移动端适配、打印排版、纸团形态和页面模式等自动化检查脚本。测试脚本使用 Playwright 和本机 Chrome 运行，主要用于开发过程中的视觉与交互回归验证。
+
+## 项目状态
+
+这是一个持续完善中的个人作品集。项目重点不只是展示文字内容，也在尝试用网页交互复现个人的工作桌面、使用习惯和审美偏好。
