@@ -1,23 +1,26 @@
-const STORAGE={outerItems:"km-portfolio-outer-items-v3",innerItems:"km-portfolio-inner-items-v3",desktopMode:"km-portfolio-desktop-mode-v1"};
-["km-portfolio-outer-items-v2","km-portfolio-inner-items-v2","km-portfolio-connections-v3"].forEach(key=>localStorage.removeItem(key));
+const STORAGE={outerItems:"km-portfolio-outer-items-v4",innerItems:"km-portfolio-inner-items-v6",desktopMode:"km-portfolio-desktop-mode-v1"};
+["km-portfolio-outer-items-v2","km-portfolio-outer-items-v3","km-portfolio-inner-items-v2","km-portfolio-inner-items-v3","km-portfolio-inner-items-v4","km-portfolio-inner-items-v5","km-portfolio-connections-v3"].forEach(key=>localStorage.removeItem(key));
 const defaultOuterItems=[
 {id:"note-edge",color:"orange",title:"\u4fdd\u6301\u950b\u8292",content:"\u5bf9\u4e16\u754c\u4fdd\u6301\u654f\u611f\uff0c\u5bf9\u7b54\u6848\u4fdd\u6301\u6000\u7591\u3002",x:.205,y:.2,rotation:-6},
-{id:"note-unfinished",color:"bone",title:"\u4fdd\u6301\u672a\u5b8c\u6210",content:"\u5b8c\u6210\u4e0d\u662f\u7ec8\u70b9\uff0c\u800c\u662f\u4e0b\u4e00\u6b21\u751f\u957f\u7684\u8d77\u70b9\u3002",x:.75,y:.56,rotation:4},
-{id:"note-next",color:"lime",title:"\u4e0b\u4e00\u7ad9 / AI \u00d7 \u4ea7\u54c1 \u00d7 \u6587\u5316",content:"\u5728\u8bed\u8a00\u3001\u6587\u5316\u4e0e\u6280\u672f\u7684\u4ea4\u754c\u5904\uff0c\u5bfb\u627e\u65b0\u7684\u4f53\u9a8c\u3002",x:.14,y:.6,rotation:-2}
+{id:"note-unfinished",color:"bone",title:"\u4fdd\u6709\u91ce\u5fc3",content:"\u7edd\u4e0d\u6b62\u6b65\u4e8e\u8fc7\u5f80\u548c\u73b0\u5728\uff0c\u6c38\u8fdc\u8d70\u5411\u672a\u6765\uff0c\u63a2\u5bfb\u65b0\u7684\u9886\u57df\u3002",x:.75,y:.56,rotation:4},
+{id:"note-next",color:"lime",title:"AI \u00d7 \u4ea7\u54c1 \u00d7 \u6587\u5316",content:"\u5728\u8bed\u8a00\u3001\u6587\u5316\u4e0e\u6280\u672f\u7684\u4ea4\u754c\u5904\uff0c\u5bfb\u627e\u65b0\u7684\u4f53\u9a8c\u3002",x:.14,y:.6,rotation:-2}
 ];
 const defaultInnerItems=[
-{id:"internships",kind:"folder",title:"实习经历",content:"> 从内容传播到数字产品，在不同业务中完成调研、判断、协作与落地。\n\n## 文件夹内容\n- 科技初创公司｜产品经理\n- 北京其遇文化｜商务合作",parentId:null,x:.12,y:.18},
-{id:"campus",kind:"folder",title:"校园经历",content:"> 关于课程、组织与共同成长的一次长期实践。\n\n## 文件夹内容\n- 启航团校｜执行校长",parentId:null,x:.34,y:.18},
-{id:"portfolio",kind:"folder",title:"作品集",content:"> 文化、内容与数字体验的三个切面。\n\n## 文件夹内容\n- 探索季\n- 抚尘归心\n- 拾墨",parentId:null,x:.56,y:.18},
-{id:"intern-product",kind:"file",title:"科技初创公司｜产品经理",content:"> 天津初创科技公司产品经理，负责探索季 H5，并参与小程序的产品建设与界面优化。\n\n工作范围覆盖需求整理、产品结构、交互设计、客户端实现、商家端配置和后台业务。探索季 H5 从概念提出到可运行版本独立推进，持续处理产品体验、业务规则与现场使用之间的关系。\n\n`PRODUCT` `H5` `MINI PROGRAM` `0 TO 1`",parentId:"internships",x:.5,y:.5},
-{id:"intern-bd",kind:"file",title:"北京其遇文化｜商务合作",content:"> 为国际义工旅行与海外实习项目拓展高校组织、校园媒体和内容账号合作。\n\n围绕学生触达能力、账号活跃度与内容调性建立合作方名单，通过社交平台、高校渠道和关系网络完成资源搜集、筛选与洽谈。根据不同组织的关注点调整沟通方式，将合作经验整理为可复用的话术和渠道资料。\n\n`BUSINESS DEVELOPMENT` `COMMUNICATION` `CHANNEL`",parentId:"internships",x:.5,y:.5},
-{id:"campus-school",kind:"file",title:"启航团校｜执行校长",content:"> 南开大学汉语言文化学院启航团校执行校长，负责面向大一团员的课程设计与项目运行。\n\n课程由理论学习、技能训练和实践活动组成，采用线上与线下结合的形式。工作内容包括培养计划、课程内容、讲授材料、嘉宾协调和现场组织，并形成可继续使用的课程模板与运行资料。\n\n`PROGRAM DESIGN` `ORGANIZATION` `EDUCATION`",parentId:"campus",x:.5,y:.5},
-{id:"work-explore",kind:"folder",title:"探索季",content:"> 将线下空间、剧情任务、AR 互动与商家运营连接起来的探索型产品。\n\n## 文件夹内容\n- 游客端\n- 商家端与后台\n- 项目职责",parentId:"portfolio",x:.5,y:.5},
-{id:"work-fuchen",kind:"file",title:"抚尘归心",content:"> 项目档案整理中。\n\n## 作品\n文化内容与体验表达的探索。\n\n## 档案状态\n项目简介、负责内容与最终呈现待补充。",parentId:"portfolio",x:.5,y:.5},
-{id:"work-shimo",kind:"file",title:"拾墨",content:"> 项目档案整理中。\n\n## 作品\n文化内容与数字媒介的探索。\n\n## 档案状态\n项目简介、负责内容与最终呈现待补充。",parentId:"portfolio",x:.5,y:.5},
-{id:"explore-visitor",kind:"file",title:"游客端",content:"游客从故事选择进入线下探索，在真实场地中寻找点位，通过剧情阅读、分支选择、AR 识别和设备任务推进流程。\n\n## 主要模块\n- 故事列表与游玩引导\n- 登录、游客身份与进度保存\n- 剧情浏览与分支选择\n- AR 与非 AR 任务\n- 进度恢复与异常状态\n- 结算、积分、成就与奖励\n\n`STORY` `AR` `OFFLINE EXPERIENCE`",parentId:"work-explore",x:.5,y:.5},
-{id:"explore-admin",kind:"file",title:"商家端与后台",content:"商家端用于完成故事创建、内容维护与现场运营，后台承载任务配置、权益发放和数据管理。\n\n## 主要模块\n- 故事库与基础信息配置\n- 剧情节点与流程编排\n- AR 场景、识别图与模型管理\n- 免费券配置与现场核销\n- 故事、任务与分支数据\n- 账号、通知与帮助系统\n\n`MERCHANT` `ADMIN` `OPERATION`",parentId:"work-explore",x:.5,y:.5},
-{id:"explore-role",kind:"file",title:"项目职责",content:"> 从产品概念到可运行系统的完整推进。\n\n负责需求拆解、信息架构、交互设计，以及 H5 客户端、商家端和后台的开发落地；同时参与小程序建设与整体 UI 优化。\n\n工作横跨产品与实现，重点处理多端协同、业务状态、异常路径和持续迭代。\n\n`PRODUCT OWNER` `END TO END` `FULL CYCLE`",parentId:"work-explore",x:.5,y:.5}
+{id:"internships",kind:"folder",title:"实习经历",content:"> 两段实习，分别聚焦数字产品和商务合作。\n\n## 文件夹内容\n- 科技初创公司｜产品经理\n- 北京其遇文化｜商务合作",parentId:null,x:.12,y:.18},
+{id:"campus",kind:"folder",title:"校园经历",content:"> 在校期间负责课程设计、团队协作与活动执行。\n\n## 文件夹内容\n- 启航团校｜执行校长",parentId:null,x:.34,y:.18},
+{id:"portfolio",kind:"folder",title:"作品集",content:"> 三个从需求调研推进到原型或可运行版本的产品项目。\n\n## 文件夹内容\n- 探索季｜线下 AR 探索产品\n- 抚尘归心｜心理支持产品\n- 拾墨｜AI 学习资料整理工具",parentId:null,x:.56,y:.18},
+{id:"intern-product",kind:"file",title:"科技初创公司｜产品经理",content:"> 负责探索季 H5，并参与微信小程序、商家端和运营后台的建设。\n\n## 主要工作\n- 根据线下场地的游玩过程整理需求和页面流程\n- 设计地图、AR 扫描、任务、图鉴和奖励等功能\n- 完成交互稿，并开发 H5 的主要页面\n- 参与小程序、商家端和后台的界面调整\n- 检查不同端的数据、页面状态和操作结果\n- 根据测试与现场使用情况修改功能和提示\n\n独立完成探索季 H5 从方案到可运行版本的主要工作，并整理产品说明和演示材料。",parentId:"internships",x:.5,y:.5},
+{id:"intern-bd",kind:"file",title:"北京其遇文化｜商务合作",content:"> 为国际义工旅行和海外实习项目拓展高校组织、校园媒体与内容账号合作。\n\n## 主要工作\n- 通过社交平台、高校渠道和已有关系收集合作方信息\n- 根据学生触达能力、账号活跃度和内容方向筛选合作对象\n- 针对不同组织的关注点调整沟通内容\n- 跟进合作意向、内容发布和后续联系\n- 整理常用话术、合作记录和渠道资料\n\n这段经历让我积累了信息搜集、合作判断和对外沟通经验。",parentId:"internships",x:.5,y:.5},
+{id:"campus-school",kind:"file",title:"启航团校｜执行校长",content:"> 担任南开大学汉语言文化学院启航团校执行校长，负责面向大一团员的课程设计和项目运行。\n\n## 主要工作\n- 制定培养计划，安排理论学习、技能训练和实践活动\n- 设计课程内容并整理讲授材料\n- 沟通授课嘉宾，协调时间与课程要求\n- 组织线上、线下课程和现场活动\n- 收集反馈并调整后续课程\n- 将课程资料整理为下一届可以继续使用的模板\n\n完成了从课程规划、人员协调到现场执行的完整工作。",parentId:"campus",x:.5,y:.5},
+{id:"work-explore",kind:"folder",title:"探索季",content:"> 为线下商业场地设计的 AR 探索产品。游客通过地图寻找目标，用手机扫描现场图片或设备，完成 3D 互动、小游戏、任务和收集；商家可以在管理端设置活动内容并查看运营信息。\n\n## 产品组成\n- 游客端 H5 与微信小程序\n- 商家端与运营后台\n- 地图、AR 扫描、3D 互动、任务、图鉴与奖励\n\n## 文件夹内容\n- 产品与功能\n- 我的工作与成果",parentId:"portfolio",x:.5,y:.5},
+{id:"work-fuchen",kind:"folder",title:"抚尘归心",content:"> 面向存在自我污名化和羞耻感的青年群体，提供测评、心理练习、知识内容、匿名支持与 AI 陪伴。\n\n项目希望用私密、低门槛的方式帮助使用者理解自己的感受，并在需要时找到专业支持。\n\n## 文件夹内容\n- 研究与产品方案\n- 我的工作与成果",parentId:"portfolio",x:.5,y:.5},
+{id:"work-shimo",kind:"folder",title:"拾墨",content:"> 面向大学生的 AI 学习资料整理工具。它可以读取笔记、教材、文献和课程大纲，按课程章节整理内容，并生成辅助复习的材料。\n\n## 使用过程\n导入资料 → AI 读取与整理 → 对应课程章节 → 生成复习内容\n\n## 文件夹内容\n- 产品与 AI 功能\n- 我的工作与成果",parentId:"portfolio",x:.5,y:.5},
+{id:"explore-product",kind:"file",title:"产品与功能",content:"> 探索季希望让游客在真实场地中主动寻找和发现内容，同时让商家可以持续更新活动，而不必为每次活动重新开发一套产品。\n\n## 游客端体验\n游客进入 H5 或小程序后，可以查看场地地图、不同区域和当前任务。到达对应区域后，使用手机摄像头扫描现场图片或设备；识别成功后，页面显示对应的 3D 内容、互动游戏或收集结果。完成互动可以推进任务、点亮图鉴，并根据活动设置领取积分、优惠券等奖励。\n\n扫描过程包含摄像头授权、识别引导、加载状态和结果反馈。对于识别失败、重复收集、设备未开放、网络异常等情况，页面会给出相应提示，并允许使用者重试或返回地图。\n\n## 商家端与后台\n商家可以设置场地、区域和地图，上传扫描图片，关联现场设备，并为不同目标配置 3D 模型、互动游戏、任务和奖励。后台还包括门店、会员、订单、账号、内容上线状态和运营信息等管理功能。\n\n通过这些设置，同一套产品可以适配不同场地和不同主题的活动。",parentId:"work-explore",x:.5,y:.5},
+{id:"explore-contribution",kind:"file",title:"我的工作与成果",content:"> 独立推进探索季 H5 的产品设计与前端实现，并参与微信小程序、商家端和运营后台的建设。\n\n## 我的工作\n1. 根据线下游玩过程和商家运营需求，整理游客端与管理端的功能范围。\n2. 设计地图浏览、区域选择、AR 扫描、目标识别、3D 互动、任务、图鉴和奖励领取流程。\n3. 完成主要页面和状态的交互设计，包括首次引导、摄像头授权、加载、识别成功、识别失败和重复收集等情况。\n4. 将交互方案开发为可运行的 H5，并完成手机端显示和触控操作适配。\n5. 参与小程序、商家端和后台的页面调整，检查扫描目标、任务、奖励等数据在不同端是否一致。\n6. 根据测试结果持续修改页面布局、操作提示、跳转和异常处理，并整理产品文档与演示材料。\n\n## 项目成果\n完成探索季 H5 可运行版本，跑通“查看地图—寻找目标—AR 扫描—完成互动—收集图鉴—领取奖励”的主要流程。系统已支持图片或设备识别、3D 内容、互动游戏、任务进度、奖励领取，以及商家对地图、扫描目标、互动内容和奖励的设置。",parentId:"work-explore",x:.5,y:.5},
+{id:"fuchen-plan",kind:"file",title:"研究与产品方案",content:"> 自我污名化是指一个人受到外界负面标签影响，并逐渐用这些标签否定自己。它可能带来羞耻、回避、求助意愿下降和社交退缩。\n\n项目围绕青年群体开展需求调研，并参考自我污名、认知行为疗法、叙事疗法和同伴支持等研究。产品从测评开始，根据使用者关注的问题推荐心理练习、知识内容和支持资源，同时明确测评不能代替专业诊断。\n\n## 主要功能\n- 自我污名化测评与阶段对比\n- 帮助使用者识别负面标签的心理练习\n- 情绪安抚、知识内容和专业求助资源\n- 匿名交流与同伴支持\n- AI 陪伴、复测提醒和内容推荐\n\n产品强调隐私保护、匿名使用和低门槛支持。",parentId:"work-fuchen",x:.5,y:.5},
+{id:"fuchen-result",kind:"file",title:"我的工作与成果",content:"> 参与大学生群体需求调研和产品定位，协助将心理学方法整理为可以在产品中使用的测评、练习和内容模块。\n\n## 我的工作\n- 参与访谈与资料整理，归纳使用者关注的问题\n- 参与功能讨论，明确测评、心理练习、内容推荐和支持入口\n- 协助整理量表、知识内容和产品说明\n- 负责产品视觉呈现和主要页面效果\n- 主导演示视频的内容结构、画面安排与后期制作\n\n项目完成了移动端、管理后台和多组 H5 测评原型，并制作了完整演示视频。",parentId:"work-fuchen",x:.5,y:.5},
+{id:"shimo-plan",kind:"file",title:"产品与 AI 功能",content:"> 大学生的课堂笔记、教材、文献和课程大纲通常分散在不同文件中，复习时需要花费大量时间重新整理。拾墨借助 AI 读取这些资料，将内容对应到课程章节，减少整理时间。\n\n使用者可以导入 PDF、图片、文本和课程大纲。系统通过 OCR 识别图片文字，提取课程大纲，拆分笔记内容，并将笔记匹配到相应章节；匹配不准确时可以手动修改。\n\n## 主要功能\n- 笔记、教材、文献和课程大纲导入\n- OCR 图片文字识别\n- 大纲提取、笔记分类和章节匹配\n- 章节进度与教材页码对应\n- 摘要、思维导图、知识问答和复习闪卡\n- 内容来源查看、手动修改和导出",parentId:"work-shimo",x:.5,y:.5},
+{id:"shimo-result",kind:"file",title:"我的工作与成果",content:"> 独立负责拾墨从需求调研到网页端 MVP 的主要工作，并使用真实课程资料进行测试。\n\n## 我的工作\n- 开展用户调研，整理学习资料管理与复习中的主要问题\n- 明确产品定位、使用流程和功能范围，输出 PRD\n- 设计资料导入、课程整理、章节查看和复习页面\n- 使用 Coze 搭建 AI 工作流并接入大模型 API\n- 实现 OCR 解析、大纲提取、笔记分类和复习闪卡生成\n- 完成网页端开发部署和完整演示视频\n\n项目跑通“资料导入—AI 读取与整理—章节对应—复习内容生成”的主要流程。",parentId:"work-shimo",x:.5,y:.5}
 ];const clone=v=>structuredClone(v);
 function load(k,f){try{const v=JSON.parse(localStorage.getItem(k));return Array.isArray(v)?v:clone(f)}catch{return clone(f)}}
 function loadOuterItems(){
@@ -67,6 +70,7 @@ function positionInteractionHintArrow(hint,config,r){
   arrow.setAttribute("d",`M ${sx} ${sy} C ${c1x} ${c1y} ${c2x} ${c2y} ${ex} ${ey} M ${ax-uy*wing} ${ay+ux*wing} L ${ex} ${ey} L ${ax+uy*wing} ${ay-ux*wing}`);
 }
 function showInteractionHint(target){
+  if(document.body.classList.contains("profile-open"))return hideInteractionHint();
   const config=hintForTarget(target);if(!config)return hideInteractionHint();
   const hint=ensureInteractionHint();cancelAnimationFrame(hint._followRaf);hint.dataset.key=config.key;hint.dataset.kind=config.kind;hint.dataset.place=config.place;hint.querySelector("span").textContent=config.text;hint.classList.add("is-visible");hint._target=target;
   const follow=()=>{if(hint._target!==target||!hint.classList.contains("is-visible"))return;const r=target.getBoundingClientRect();hint.style.left=`${r.left}px`;hint.style.top=`${r.top}px`;hint.style.width=`${r.width}px`;hint.style.height=`${r.height}px`;positionInteractionHintLabel(hint,config,r);positionInteractionHintArrow(hint,config,r);hint._followRaf=requestAnimationFrame(follow)};follow();
@@ -74,7 +78,7 @@ function showInteractionHint(target){
 function hideInteractionHint(){const hint=document.getElementById("interactionHint");if(hint){cancelAnimationFrame(hint._followRaf);hint.classList.remove("is-visible");hint._target=null}}
 function bindInteractionHints(){
   const selector=".desk-printer,.throwable-paper,.monitor-screen,.computer-tower,.mouse";
-  document.addEventListener("pointerover",e=>{const target=e.target.closest(selector);if(target&&!target.contains(e.relatedTarget))showInteractionHint(target)});
+  document.addEventListener("pointerover",e=>{if(document.body.classList.contains("profile-open"))return hideInteractionHint();const target=e.target.closest(selector);if(target&&!target.contains(e.relatedTarget))showInteractionHint(target)});
   document.addEventListener("pointerout",e=>{const target=e.target.closest(selector);if(target&&!target.contains(e.relatedTarget))hideInteractionHint()});
   document.addEventListener("pointermove",e=>{
     if(state.level!==0||interactionSeen("scroll-in"))return;
@@ -85,7 +89,8 @@ function bindInteractionHints(){
   });
   window.addEventListener("scroll",hideInteractionHint,{passive:true});
 }
-const state={level:0,outerItems:loadOuterItems(),innerItems:load(STORAGE.innerItems,defaultInnerItems),dialogContext:null,wheelAmount:0,wheelDirection:0,wheelLocked:false,activeFolderId:null,draggedInnerId:null,zIndex:60,codeMode:localStorage.getItem(STORAGE.desktopMode)==="code",noteImageData:"",noteDoodleData:"",noteDoodleDirty:false,printQueue:[]};
+localStorage.setItem(STORAGE.desktopMode,"code");
+const state={level:0,outerItems:loadOuterItems(),innerItems:load(STORAGE.innerItems,defaultInnerItems),dialogContext:null,wheelAmount:0,wheelDirection:0,wheelLocked:false,activeFolderId:null,draggedInnerId:null,zIndex:60,codeMode:true,noteImageData:"",noteDoodleData:"",noteDoodleDirty:false,printQueue:[]};
 const els={body:document.body,stage:document.getElementById("computerStage"),enterMouse:document.getElementById("enterMouse"),toolbar:document.getElementById("workspaceToolbar"),modeGuide:document.getElementById("modeGuide"),modeLabel:document.getElementById("modeLabel"),modeDescription:document.getElementById("modeDescription"),outerItems:document.getElementById("outerItems"),retroDesktop:document.getElementById("retroDesktop"),customInnerItems:document.getElementById("customInnerItems"),windowLayer:document.getElementById("windowLayer"),dialog:document.getElementById("itemDialog"),dialogTitle:document.getElementById("dialogTitle"),itemForm:document.getElementById("itemForm"),itemTitle:document.getElementById("itemTitle"),itemContent:document.getElementById("itemContent"),colorField:document.getElementById("colorField"),zoomMeter:document.querySelector("#zoomMeter span"),zoomLabel:document.querySelector("#zoomMeter small"),toast:document.getElementById("toast"),powerButton:document.getElementById("powerButton"),noteMediaTools:document.getElementById("noteMediaTools"),noteImageInput:document.getElementById("noteImageInput"),noteImagePreview:document.getElementById("noteImagePreview"),noteDoodle:document.getElementById("noteDoodle"),clearNoteImage:document.getElementById("clearNoteImage"),clearDoodle:document.getElementById("clearDoodle")};
 function persist(){localStorage.setItem(STORAGE.outerItems,JSON.stringify(state.outerItems));localStorage.setItem(STORAGE.innerItems,JSON.stringify(state.innerItems))}
 function esc(v=""){return String(v).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
@@ -293,7 +298,7 @@ function handleWheel(e){if(!wheelAllowed(e)||state.wheelLocked)return;const d=e.
 
 let printedCardCount=0,printedLayerOrder=1000;
 function stampPrintOrder(paper){const order=++printedLayerOrder;paper.dataset.printOrder=String(order);paper.style.zIndex=order}
-function businessCardHTML(index){return `<span class="card-index">\u4e2a\u4eba\u540d\u7247</span><strong>\u5b54\u7c73\u4e50</strong><span class="card-role">\u4ea7\u54c1\u7ecf\u7406 \u00b7 \u72ec\u7acb\u5f00\u53d1</span><span class="card-school">\u5357\u5f00\u5927\u5b66 \u00b7 \u5929\u6d25</span><span class="card-email">mlml2404@outlook.com</span>`}
+function businessCardHTML(index){return `<strong>\u5b54\u7c73\u4e50</strong><span class="card-role">\u4ea7\u54c1\u7ecf\u7406 \u00b7 \u72ec\u7acb\u5f00\u53d1</span><span class="card-school">\u5357\u5f00\u5927\u5b66 \u00b7 \u5929\u6d25</span><span class="card-email">mlml2404@outlook.com</span>`}
 function bindPrinter(){const printer=document.getElementById("deskPrinter");printer.onclick=()=>{markInteraction("printer");printBusinessCard(printer)}}
 function printBusinessCard(printer){
   const layer=document.getElementById("businessCardLayer"),slot=printer.querySelector(".printer-slot"),lr=layer.getBoundingClientRect(),sr=slot.getBoundingClientRect();
@@ -318,7 +323,7 @@ function trashAt(x,y){const trash=document.getElementById("deskTrash"),r=trash.g
 function discardBusinessCard(card,trash){const layer=card.parentElement.getBoundingClientRect(),r=trash.getBoundingClientRect();card.classList.remove("is-dragging-card","is-card-landing","is-expanded");card.classList.add("is-discarding");card.style.left=`${r.left+r.width/2-layer.left}px`;card.style.top=`${r.top+r.height*.48-layer.top}px`;trash.classList.remove("is-trash-target");setTimeout(()=>card.remove(),620)}
 function randomizePaperBall(card){
   const rand=(min,max)=>min+Math.random()*(max-min),points=[];
-  const sides=11+Math.floor(Math.random()*7),centerX=rand(47,53),centerY=rand(46,54);for(let i=0;i<sides;i++){const a=Math.PI*2*(i+rand(-.28,.28))/sides-Math.PI/2,r=rand(.34,.55);points.push(`${(centerX+Math.cos(a)*r*100).toFixed(1)}% ${(centerY+Math.sin(a)*r*100).toFixed(1)}%`)}
+  const sides=11+Math.floor(Math.random()*4),centerX=rand(49,51),centerY=rand(49,51);for(let i=0;i<sides;i++){const a=Math.PI*2*(i+rand(-.22,.22))/sides-Math.PI/2,dent=Math.random()<.28?rand(.05,.09):0,r=rand(.41,.49)-dent,x=Math.max(2,Math.min(98,centerX+Math.cos(a)*r*100)),y=Math.max(2,Math.min(98,centerY+Math.sin(a)*r*100));points.push(`${x.toFixed(1)}% ${y.toFixed(1)}%`)}
   card.style.setProperty("--ball-shape",`polygon(${points.join(",")})`);
   card.style.setProperty("--crease-a",`${rand(-68,68).toFixed(1)}deg`);
   card.style.setProperty("--crease-b",`${rand(78,154).toFixed(1)}deg`);
@@ -339,7 +344,7 @@ function randomizePaperBall(card){
 }
 function crumpleBusinessCard(card){
   if(card.classList.contains("is-paper-ball")||card.classList.contains("is-crumpling"))return;
-  const crumpleDuration=card.classList.contains("printed-document")?840:1080;
+  const crumpleDuration=840;
   randomizePaperBall(card);card.classList.remove("is-on-desk");card.classList.add("is-crumpling");
   setTimeout(()=>{card.classList.remove("is-crumpling");card.classList.add("is-paper-ball");card.setAttribute("aria-label","\u7eb8\u56e2\uff0c\u6309\u4f4f\u62d6\u52a8\u53ef\u629b\u51fa")},crumpleDuration);
 }
@@ -476,7 +481,20 @@ function bindBusinessCard(card){
 }
 function toggleBusinessCard(card){crumpleBusinessCard(card)}
 
-function applyDesktopMode(announce=false){els.body.classList.toggle("code-desktop-mode",state.codeMode);if(state.codeMode)els.windowLayer.querySelectorAll(".retro-window").forEach(w=>{if(state.innerItems.find(i=>i.id===w.dataset.itemId)?.kind==="folder")w.remove()});els.powerButton.setAttribute("aria-pressed",String(state.codeMode));els.powerButton.setAttribute("aria-label",state.codeMode?"切换为经典图形桌面":"切换为黑底绿字代码桌面");els.powerButton.title=state.codeMode?"当前：代码桌面｜点击切换经典桌面":"当前：经典桌面｜点击切换代码桌面";if(announce)toast(state.codeMode?"已切换到代码桌面":"已切换到经典桌面")}function togglePower(){state.codeMode=!state.codeMode;localStorage.setItem(STORAGE.desktopMode,state.codeMode?"code":"classic");els.body.classList.remove("desktop-mode-switching");void els.body.offsetWidth;els.body.classList.add("desktop-mode-switching");applyDesktopMode(true);setTimeout(()=>els.body.classList.remove("desktop-mode-switching"),520)}
+function applyDesktopMode(announce=false){state.codeMode=true;localStorage.setItem(STORAGE.desktopMode,"code");els.body.classList.add("code-desktop-mode");els.windowLayer.querySelectorAll(".retro-window").forEach(w=>{if(state.innerItems.find(i=>i.id===w.dataset.itemId)?.kind==="folder")w.remove()});const off=els.body.classList.contains("screen-off");els.powerButton.setAttribute("aria-pressed",String(!off));els.powerButton.setAttribute("aria-label",off?"打开电脑":"关闭电脑");els.powerButton.title=off?"开机":"关机";if(announce)toast("代码桌面已就绪")}
+function togglePower(){
+  if(els.body.classList.contains("powering-off")||els.body.classList.contains("powering-on"))return;
+  const turningOn=els.body.classList.contains("screen-off");
+  if(turningOn){
+    els.body.classList.remove("screen-off","powering-off");els.body.classList.add("powering-on");
+    els.powerButton.setAttribute("aria-pressed","true");els.powerButton.setAttribute("aria-label","关闭电脑");els.powerButton.title="关机";
+    setTimeout(()=>els.body.classList.remove("powering-on"),650);toast("电脑已开机");
+  }else{
+    els.body.classList.remove("powering-on");els.body.classList.add("powering-off");
+    els.powerButton.setAttribute("aria-pressed","false");els.powerButton.setAttribute("aria-label","打开电脑");els.powerButton.title="开机";
+    setTimeout(()=>{els.body.classList.remove("powering-off");els.body.classList.add("screen-off")},540);toast("电脑已关机");
+  }
+}
 function createDesktopItemInline(kind,x=.5,y=.5){
   const slot=nearestDesktopSlot(x,y),item={id:crypto.randomUUID(),kind,title:kind==="file"?"\u672a\u547d\u540d.md":"\u65b0\u5efa\u6587\u4ef6\u5939",content:kind==="file"?"> \u8fd9\u662f\u4e00\u4efd\u65b0\u5efa\u7684 Markdown \u6587\u4ef6\u3002\n\n## \u5f00\u59cb\u8bb0\u5f55\n- \u5728\u8fd9\u91cc\u5199\u4e0b\u60f3\u6cd5":"> \u7528\u4e8e\u6574\u7406 Markdown \u6587\u4ef6\u4e0e\u5b50\u6587\u4ef6\u5939\u3002",parentId:null,x:slot.x,y:slot.y};
   state.innerItems.push(item);persist();renderInnerItems();const node=els.customInnerItems.querySelector(`[data-inner-id="${item.id}"]`),label=node?.querySelector(":scope > span:last-child");if(!node||!label)return;
@@ -490,9 +508,30 @@ function systemWindow(title){
 function paginateMarkdown(content){
   const source=(content||"").trim();if(!source)return[""];
   const probe=document.createElement("article");probe.className="printed-document print-measure";probe.innerHTML='<div class="printed-document__content"></div>';document.body.append(probe);const box=probe.firstElementChild;
-  const fits=text=>{box.innerHTML=markdownToHTML(text);return box.scrollHeight<=box.clientHeight+1},raw=source.split(/\n\s*\n/),units=[];
-  raw.forEach(block=>{if(block.length<=260)units.push(block);else{const lines=block.split("\n");lines.forEach(line=>{if(line.length<=110)units.push(line);else for(let i=0;i<line.length;i+=90)units.push(line.slice(i,i+90))})}});
-  const pages=[];let current="";units.forEach(unit=>{const candidate=current?`${current}\n\n${unit}`:unit;if(current&&!fits(candidate)){pages.push(current);current=unit}else current=candidate});if(current)pages.push(current);probe.remove();return pages.length?pages:[source]
+  const fits=text=>{box.innerHTML=markdownToHTML(text);return box.scrollHeight<=box.clientHeight+1};
+  const blocks=source.split(/\n\s*\n/).map(block=>block.trim()).filter(Boolean),units=[];
+  const splitLongText=text=>{
+    const parts=text.split(/(?<=[。！？；：])(?=\S)/).map(part=>part.trim()).filter(Boolean);return parts.length>1?parts:[text]
+  };
+  blocks.forEach(block=>{
+    if(fits(block)){units.push(block);return}
+    const lines=block.split("\n").map(line=>line.trim()).filter(Boolean);
+    lines.forEach(line=>{
+      if(fits(line)){units.push(line);return}
+      const marker=line.match(/^(#{1,3}\s+|[-*+]\s+|\d+[.)]\s+|>\s*)/),prefix=marker?.[0]||"",body=marker?line.slice(prefix.length):line;
+      splitLongText(body).forEach((part,index)=>units.push(`${index===0?prefix:""}${part}`));
+    });
+  });
+  const pages=[];let current="";
+  const pushCurrent=()=>{if(current.trim())pages.push(current.trim());current=""};
+  units.forEach(unit=>{
+    const candidate=current?`${current}\n\n${unit}`:unit;
+    if(fits(candidate)){current=candidate;return}
+    pushCurrent();
+    if(fits(unit)){current=unit;return}
+    const chars=[...unit];let chunk="";chars.forEach(char=>{const next=chunk+char;if(chunk&&!fits(next)){pages.push(chunk.trim());chunk=char}else chunk=next});current=chunk
+  });
+  pushCurrent();probe.remove();return pages.length?pages:[source]
 }
 function printJobs(items){return items.flatMap(item=>{const pages=paginateMarkdown(item.content),total=pages.length;return pages.map((content,page)=>({...structuredClone(item),content,_pageNumber:page+1,_pageTotal:total,_longDocument:total>1}))})}
 function openPrinterWindow(){
@@ -522,7 +561,7 @@ function printMarkdownDocument(item){
   ],{duration:2500,fill:"forwards"});motion.onfinish=()=>{motion.commitStyles();motion.cancel();paper.classList.remove("is-printing-document");paper.classList.add("is-printed-document");requestAnimationFrame(()=>requestAnimationFrame(()=>paper.style.removeProperty("transform")))};
 }
 const profileMotion={current:null,busy:false,opener:null,raf:0,snapTimer:0};
-const profileOrder=["about","now","contact"];
+const profileOrder=["about","now"];
 const profileViewKey=name=>name?`profile:${name}`:"home";
 function selectProfileContent(name){
   const next=document.querySelector(`[data-profile-content="${name}"]`);if(!next)return;
@@ -586,25 +625,32 @@ function runPageSnapshotTransition(kind,update,views={}){
   return transition.finished.catch(()=>{}).finally(()=>delete document.documentElement.dataset.pageTransition);
 }
 function openProfilePage(name,opener){
-  const layer=document.getElementById("profileLayer");if(!layer)return;if(document.body.classList.contains("profile-open")){scrollProfileTo(name);return}if(profileMotion.busy)return;
+  const layer=document.getElementById("profileLayer"),track=document.getElementById("desk2dTrack");if(!layer||!track)return;
+  const index=Math.max(0,profileOrder.indexOf(name));
+  hideInteractionHint();
+  if(document.body.classList.contains("profile-open")){
+    track.style.setProperty("--desk2d-index",String(index));selectProfileContent(name);return;
+  }
+  if(profileMotion.busy)return;
   const begin=()=>{
     profileMotion.busy=true;profileMotion.opener=opener||document.activeElement;
-    runPageSnapshotTransition("forward",()=>{selectProfileContent(name);layer.inert=false;layer.setAttribute("aria-hidden","false");layer.classList.remove("is-exiting");layer.classList.add("is-active");document.body.classList.add("profile-transitioning","profile-open")},{fromKey:"home",toKey:profileViewKey(name)}).finally(()=>{revealProfileLongScroll(name);profileMotion.busy=false;document.getElementById("profileBack")?.focus({preventScroll:true})});
+    track.style.setProperty("--desk2d-index","0");selectProfileContent(name);layer.inert=false;layer.setAttribute("aria-hidden","false");layer.classList.remove("is-exiting");layer.classList.add("is-active");document.body.classList.add("profile-transitioning","profile-open","desk2d-open");
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{track.style.setProperty("--desk2d-index",String(index));profileMotion.busy=false;document.getElementById("profileBack")?.focus({preventScroll:true})}));
   };
   if(state.level!==0){setLevel(0);setTimeout(begin,1020)}else begin();
 }
 function closeProfilePage(){
   const layer=document.getElementById("profileLayer");if(!layer||!document.body.classList.contains("profile-open")||profileMotion.busy)return;profileMotion.busy=true;
   cancelAnimationFrame(profileMotion.raf);clearTimeout(profileMotion.snapTimer);window.pagePaperTransition?.clearProfileLongScroll?.();
-  const liveKey=`profile:live:${Date.now()}`;
-  runPageSnapshotTransition("back",()=>{layer.classList.remove("is-active","is-exiting");layer.setAttribute("aria-hidden","true");layer.inert=true;document.body.classList.remove("profile-open","profile-transitioning")},{fromKey:liveKey,toKey:"home"}).finally(()=>{profileMotion.busy=false;profileMotion.opener?.focus?.({preventScroll:true})});
+  layer.classList.remove("is-active","is-exiting");layer.setAttribute("aria-hidden","true");layer.inert=true;document.body.classList.remove("profile-open","profile-transitioning","desk2d-open");
+  setTimeout(()=>{profileMotion.busy=false;profileMotion.opener?.focus?.({preventScroll:true})},matchMedia("(prefers-reduced-motion:reduce)").matches?0:520);
 }
 function bindProfilePages(){
   document.querySelectorAll("[data-profile-page]").forEach(button=>button.onclick=()=>openProfilePage(button.dataset.profilePage,button));
   document.querySelectorAll("[data-profile-switch]").forEach(button=>button.onclick=()=>openProfilePage(button.dataset.profileSwitch,button));
   document.getElementById("profileBack").onclick=closeProfilePage;
   document.querySelector(".monogram")?.addEventListener("click",e=>{e.preventDefault();if(document.body.classList.contains("profile-open"))closeProfilePage()});
-  document.getElementById("copyEmail").onclick=async()=>{try{await navigator.clipboard.writeText("mlml2404@outlook.com");toast("邮箱已复制")}catch{toast("无法复制，请手动选择邮箱")}};
+  document.getElementById("copyEmail")?.addEventListener("click",async()=>{try{await navigator.clipboard.writeText("mlml2404@outlook.com");toast("邮箱已复制")}catch{toast("无法复制，请手动选择邮箱")}});
   document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.body.classList.contains("profile-open")){e.preventDefault();closeProfilePage()}});
   document.querySelector(".profile-pages")?.addEventListener("scroll",syncProfileLongScroll,{passive:true});
   window.addEventListener("resize",syncProfileLongScroll,{passive:true});

@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2712%27 fill=%27%23060706%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2710%27 fill=%27%23d7ff24%27/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="./tokens.css?v=20260810ak" />
     <link rel="stylesheet" href="./particle-transition.css?v=20260811d" />
-    <link rel="stylesheet" href="./styles.css?v=20260811b" />
+    <link rel="stylesheet" href="./styles.css?v=20260812n" />
   </head>
   <body>
     <svg class="crt-filter-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -24,19 +24,65 @@
         <nav aria-label="&#x4E3B;&#x8981;&#x5BFC;&#x822A;">
           <button type="button" data-profile-page="about">关于我</button>
           <button type="button" data-profile-page="now">此刻</button>
-          <button type="button" data-profile-page="contact">联系我</button>
         </nav>
       </header>
 
       <section id="profileLayer" class="profile-layer" aria-hidden="true" inert>
         <div class="profile-grid" aria-hidden="true"></div>
+        <div class="desk2d-viewport" aria-hidden="true">
+          <div id="desk2dTrack" class="desk2d-track">
+            <section class="desk2d-zone desk2d-zone--about">
+              <div class="desk2d-monitor" aria-hidden="true">
+                <span class="desk2d-crt-vents"></span><span class="desk2d-crt-seam"></span><span class="desk2d-screen"></span>
+                <i class="desk2d-monitor-led"></i><i class="desk2d-monitor-dial"></i>
+              </div>
+              <div class="desk2d-notes desk2d-notes--about"><i></i><i></i><i></i></div>
+              <svg class="desk2d-device-wires" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"><path class="desk2d-wire--tower" d="M 626 134 C 670 104 718 106 750 138"/><path class="desk2d-wire--mouse" d="M 635 140 C 682 148 708 220 711 330 C 714 401 725 447 746 468"/></svg>
+              <div class="desk2d-mouse"><i></i></div>
+              <div class="desk2d-tower" aria-hidden="true"><i class="desk2d-tower-seam"></i><i class="desk2d-tower-vents"></i><span></span><div class="desk2d-tower-face"><b></b><b></b><em></em><small></small></div></div>
+              <div class="desk2d-printer" aria-hidden="true"><div class="desk2d-printer-feeder"></div><div class="desk2d-printer-lid"></div><div class="desk2d-printer-controls"><i></i><i></i><b></b></div><div class="desk2d-printer-tray"></div></div>
+              <div class="desk2d-trash" aria-hidden="true"><i></i><span></span></div>
+            </section>
+            <section class="desk2d-zone desk2d-zone--now">
+              <div class="desk2d-laptop" aria-hidden="true">
+                <div class="desk2d-laptop-screen">
+                  <svg class="desk2d-laptop-display" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true">
+                    <defs><linearGradient id="laptopShell" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7f6f2"/><stop offset="1" stop-color="#aaa9a4"/></linearGradient></defs>
+                    <path class="laptop-display-shell" d="M38 2 Q18 3 21 24 L67 278 Q70 297 91 297 L909 297 Q930 297 933 278 L979 24 Q982 3 962 2 Z"/>
+                    <path class="laptop-display-black" d="M57 20 Q42 20 45 38 L82 258 Q85 276 103 276 L897 276 Q915 276 918 258 L955 38 Q958 20 943 20 Z"/>
+                  </svg>
+                  <div class="desk2d-laptop-ui" aria-hidden="true"></div>
+                </div>
+                <div class="desk2d-laptop-base">
+                  <div class="desk2d-laptop-keys">
+                    <div class="laptop-key-row laptop-key-row--function"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="laptop-power"></i></div>
+                    <div class="laptop-key-row"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="key-backspace"></i></div>
+                    <div class="laptop-key-row"><i class="key-tab"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="key-slim"></i></div>
+                    <div class="laptop-key-row"><i class="key-caps"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="key-enter"></i></div>
+                    <div class="laptop-key-row"><i class="key-shift"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="key-shift-right"></i></div>
+                    <div class="laptop-key-row laptop-key-row--bottom"><i class="key-medium"></i><i></i><i></i><i class="key-space"></i><i></i><i></i><i class="key-arrow key-arrow--left"></i><span class="key-arrow-stack"><i class="key-arrow--up"></i><i class="key-arrow--down"></i></span><i class="key-arrow key-arrow--right"></i></div>
+                  </div>
+                  <span class="desk2d-laptop-trackpad"></span>
+                </div>
+              </div>
+              <div class="desk2d-keyboard desk2d-keyboard--now" aria-hidden="true">
+                <div class="desk2d-keyboard-main">
+                  <div class="desk2d-key-row"><span>`</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>0</span><span>-</span><span>=</span><span class="key--back">⌫</span></div>
+                  <div class="desk2d-key-row"><span class="key--tab">Tab</span><span>Q</span><span>W</span><span>E</span><span>R</span><span>T</span><span>Y</span><span>U</span><span>I</span><span>O</span><span>P</span><span>[</span><span>]</span><span class="key--slash">\</span></div>
+                  <div class="desk2d-key-row"><span class="key--caps">Caps</span><span>A</span><span>S</span><span>D</span><span>F</span><span>G</span><span>H</span><span>J</span><span>K</span><span>L</span><span>;</span><span>'</span><span class="key--enter">Enter</span></div>
+                  <div class="desk2d-key-row"><span class="key--shift">Shift</span><span>Z</span><span>X</span><span>C</span><span>V</span><span>B</span><span>N</span><span>M</span><span>,</span><span>.</span><span>/</span><span class="key--shift">Shift</span></div>
+                  <div class="desk2d-key-row desk2d-key-row--bottom"><span>Ctrl</span><span>Alt</span><span class="key--space"></span><span>Alt</span><span>Ctrl</span></div>
+                </div>
+                <div class="desk2d-keyboard-pad"><span>Num</span><span>/</span><span>*</span><span>7</span><span>8</span><span>9</span><span>4</span><span>5</span><span>6</span><span>1</span><span>2</span><span>3</span><span class="key--zero">0</span><span>.</span></div>
+              </div>
+            </section>
+          </div>
+        </div>
         <header class="profile-chrome">
           <button id="profileBack" class="profile-back" type="button">← 返回首页</button>
-          <span>孔米乐 / 个人索引</span>
           <nav aria-label="个人页面">
             <button type="button" data-profile-switch="about">关于我</button>
             <button type="button" data-profile-switch="now">此刻</button>
-            <button type="button" data-profile-switch="contact">联系我</button>
           </nav>
         </header>
 
@@ -44,17 +90,18 @@
           <article class="profile-page profile-page--about" data-profile-content="about" hidden>
             <div class="profile-intro">
               <span class="profile-kicker">01 / 关于我</span>
-              <h2>把模糊的问题，<br>做成可以体验的答案。</h2>
-              <p>孔米乐，来自南开大学。游走在产品、开发与文化内容之间，喜欢从人的真实感受出发，把想法一步步做成能够运行、能够被使用的东西。</p>
+              <h2>在边界之间，<br>寻找改变发生的地方。</h2>
+              <p>孔米乐，来自南开大学。我从热爱的语言与文化出发，走向产品与 AI 开发：不是为了离开原来的领域，而是想获得一种更快把观察、判断与想法放进现实的方法。</p>
             </div>
             <div class="profile-details">
               <section class="profile-traits" aria-label="个人特质">
-                <div><b>先理解，再定义</b><p>比起立刻给答案，我更愿意先找到真正的问题。</p></div>
-                <div><b>从零搭起</b><p>面对模糊状态，先建立结构，再用行动持续校准。</p></div>
-                <div><b>跨过边界</b><p>产品、内容与开发不是三条线，而是同一次体验。</p></div>
+                <div><b>保持野心，也保持定力</b><p>对未来有期待，也允许能力在持续尝试与沉淀中自然生长。</p></div>
+                <div><b>跨越边界，主动学习</b><p>从文科走向产品与 AI，主动理解技术，也愿意进入陌生行业与不同的人对话。</p></div>
+                <div><b>从模糊中建立结构</b><p>面对没有标准答案的问题，先拆清目标、关系和风险，再一点点形成可执行路径。</p></div>
+                <div><b>把想法推向真实落地</b><p>不满足于停在概念和表达里，愿意亲手做原型、写代码，并在反馈中继续校准。</p></div>
               </section>
               <dl class="profile-facts">
-                <div><dt>角色</dt><dd>产品经理 / 独立开发</dd></div>
+                <div><dt>角色</dt><dd>产品实践 / AI 开发</dd></div>
                 <div><dt>坐标</dt><dd>天津</dd></div>
                 <div><dt>长期母题</dt><dd>人、文化与技术如何相遇</dd></div>
               </dl>
@@ -74,22 +121,6 @@
             </ol>
           </article>
 
-          <article class="profile-page profile-page--contact" data-profile-content="contact" hidden>
-            <div class="profile-intro">
-              <span class="profile-kicker">03 / 联系我</span>
-              <h2>如果你也在做有意思的事，欢迎来信。</h2>
-              <p>期待产品、人工智能、文化体验，以及内容与技术交叉方向的实习、合作与交流。</p>
-            </div>
-            <div class="contact-panel">
-              <span>邮箱</span>
-              <a href="mailto:mlml2404@outlook.com">mlml2404@outlook.com</a>
-              <div class="contact-actions">
-                <a class="contact-primary" href="mailto:mlml2404@outlook.com">写邮件</a>
-                <button id="copyEmail" type="button">复制邮箱</button>
-              </div>
-              <p>通常通过邮件联系。来信时可以简单介绍你正在做的事情，以及希望一起讨论的问题。</p>
-            </div>
-          </article>
         </div>
       </section>
 
@@ -109,7 +140,6 @@
                 <div class="desktop-intro">
                   <span class="pixel-kicker">&#x6210;&#x957F;&#x6863;&#x6848; / &#x9009;&#x62E9;&#x76EE;&#x5F55;</span>
                   <strong>经历、实践与作品，持续写入。</strong>
-                  <small>双击文件夹，进入内容档案</small>
                 </div>
                 <div class="desktop-icons">
                   <button class="desktop-icon" data-kind="folder" data-app="internships"><span class="pixel-icon pixel-folder"></span><span>实习经历</span></button>
@@ -206,6 +236,6 @@
     </main>
     <script src="./assets/vendor/html-to-image.js?v=1.11.13"></script>
     <script src="./particle-transition.js?v=20260811d"></script>
-    <script src="./app.js?v=20260811b"></script>
+    <script src="./app.js?v=20260812k"></script>
   </body>
 </html>
