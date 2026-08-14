@@ -7,7 +7,7 @@
     <title>&#x5B54;&#x7C73;&#x4E50; / &#x60F3;&#x6CD5;&#x6301;&#x7EED;&#x751F;&#x957F;</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2712%27 fill=%27%23060706%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2710%27 fill=%27%23d7ff24%27/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="./tokens.css?v=20260810ak" />
-    <link rel="stylesheet" href="./styles.css?v=20260812n" />
+    <link rel="stylesheet" href="./styles.css?v=20260814b" />
   </head>
   <body>
     <svg class="crt-filter-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -19,10 +19,11 @@
     <main id="app" class="app">
       <div class="ambient-grid" aria-hidden="true"></div>
 
+      <div id="outsideTrack" class="outside-track">
+      <div class="outside-panel outside-desk-panel">
       <section class="hero-copy" aria-labelledby="hero-title">
         <h1 id="hero-title">KEEP <br>BEING <br>AMBITIOUS.</h1>
       </section>
-
       <section id="computerStage" class="computer-stage" aria-label="&#x4EA4;&#x4E92;&#x5F0F;&#x4E2A;&#x4EBA;&#x7535;&#x8111;">
         <div id="outerItems" class="outer-items" aria-label="&#x5C4F;&#x5E55;&#x5916;&#x4FBF;&#x7B7E;&#x5C42;"></div>
 
@@ -69,7 +70,6 @@
         <button id="enterMouse" class="mouse" type="button" aria-label="&#x70B9;&#x51FB;&#x9F20;&#x6807;&#x8FDB;&#x5165;&#x5DE5;&#x4F5C;&#x53F0;"><span class="mouse-wheel"></span><span class="mouse-glow"></span></button>
       </section>
 
-
       <button id="deskPrinter" class="desk-printer" type="button" aria-label="&#x70B9;&#x51FB;&#x6253;&#x5370;&#x5B54;&#x7C73;&#x4E50;&#x7684;&#x4E2A;&#x4EBA;&#x540D;&#x7247;">
         <span class="printer-shadow" aria-hidden="true"></span>
         <span class="printer-top" aria-hidden="true"><i></i><i></i></span>
@@ -86,6 +86,17 @@
       <div id="businessCardLayer" class="business-card-layer" aria-label="&#x5DF2;&#x6253;&#x5370;&#x7684;&#x4E2A;&#x4EBA;&#x540D;&#x7247;"></div>
       <svg id="throwTrajectory" class="throw-trajectory" aria-hidden="true"><path></path></svg>
       <div id="confettiLayer" class="confetti-layer" aria-hidden="true"></div>
+      </div>
+
+      <section id="feltBoard" class="outside-panel felt-board" aria-labelledby="feltBoardTitle" aria-hidden="true">
+        <h2 id="feltBoardTitle" class="sr-only">可编辑的毛毡留言墙</h2>
+        <div class="felt-canvas-shell">
+          <canvas id="feltCanvas" aria-label="毛毡留言墙：撕取便签、编辑内容、拖动并用图钉固定"></canvas>
+          <button id="feltTearButton" class="felt-canvas-hotspot" type="button">撕下一张便签</button>
+          <button id="feltPinButton" class="felt-canvas-hotspot" type="button">取出一枚图钉</button>
+        </div>
+      </section>
+      </div>
 
       <aside id="workspaceToolbar" class="workspace-toolbar" aria-label="&#x4FBF;&#x7B7E;&#x5DE5;&#x5177;&#x680F;" hidden>
         <button id="addNote" type="button"><span class="tool-glyph">&#x25B0;</span>&#x4FBF;&#x7B7E;</button>
@@ -95,10 +106,49 @@
 
       <aside id="modeGuide" class="mode-guide" hidden>
         <span id="modeLabel">&#x5C4F;&#x5E55;&#x5916;&#x6A21;&#x5F0F;</span>
-        <p id="modeDescription">&#x6DFB;&#x52A0;&#x4FBF;&#x7B7E;&#x5E76;&#x62D6;&#x5230;&#x7535;&#x8111;&#x7684;&#x4EFB;&#x610F;&#x4F4D;&#x7F6E;&#xFF1B;&#x6EDA;&#x8F6E;&#x5411;&#x524D;&#x8FDB;&#x5165;&#x5C4F;&#x5E55;&#x3002;</p>
+        <p id="modeDescription">点击文件夹或鼠标进入屏幕，滑动前往留言</p>
       </aside>
 
       <div id="zoomMeter" class="zoom-meter" aria-hidden="true"><span></span><small>&#x6EDA;&#x52A8;&#x5207;&#x6362;&#x7A7A;&#x95F4;</small></div>
+
+      <dialog id="feltEditor" class="felt-editor">
+        <form method="dialog" id="feltEditorForm">
+          <header>
+            <div><span>MESSAGE / EDIT</span><h2>编辑留言</h2></div>
+            <button id="feltEditorClose" type="button" aria-label="关闭编辑器">×</button>
+          </header>
+          <div class="felt-editor-modes" role="tablist" aria-label="留言类型">
+            <button id="feltTabMarkdown" type="button" role="tab" data-felt-mode="md" aria-selected="true" aria-controls="feltMarkdownField" tabindex="0">Markdown</button>
+            <button id="feltTabDoodle" type="button" role="tab" data-felt-mode="doodle" aria-selected="false" aria-controls="feltDoodleField" tabindex="-1">涂鸦</button>
+            <button id="feltTabImage" type="button" role="tab" data-felt-mode="image" aria-selected="false" aria-controls="feltImageField" tabindex="-1">图片</button>
+          </div>
+          <div class="felt-editor-pages">
+            <label id="feltMarkdownField" class="felt-editor-page felt-markdown-field" role="tabpanel" aria-labelledby="feltTabMarkdown">留言内容
+              <textarea id="feltMarkdown" rows="9" maxlength="600" placeholder="# 写下一句话&#10;&#10;- 也可以使用简单的 Markdown"></textarea>
+            </label>
+            <section id="feltDoodleField" class="felt-editor-page felt-doodle-field" role="tabpanel" aria-labelledby="feltTabDoodle" hidden>
+              <div><button id="feltDoodleClear" type="button" aria-label="清空涂鸦">清空</button></div>
+              <canvas id="feltDoodleCanvas" width="720" height="720" aria-label="留言涂鸦画布"></canvas>
+            </section>
+            <section id="feltImageField" class="felt-editor-page felt-image-field" role="tabpanel" aria-labelledby="feltTabImage" hidden>
+              <label id="feltImageDropzone" class="felt-image-upload"><span>拖入图片或点击选择</span><small>JPG、PNG、WEBP</small><input id="feltImageInput" type="file" accept="image/*"></label>
+              <div id="feltImagePreview" class="felt-image-preview" hidden></div>
+            </section>
+          </div>
+          <fieldset class="felt-paper-colors">
+            <legend>纸张颜色</legend>
+            <label><input type="radio" name="feltColor" value="yellow" checked><span class="is-yellow">黄</span></label>
+            <label><input type="radio" name="feltColor" value="blue"><span class="is-blue">蓝</span></label>
+            <label><input type="radio" name="feltColor" value="pink"><span class="is-pink">粉</span></label>
+            <label><input type="radio" name="feltColor" value="mint"><span class="is-mint">薄荷</span></label>
+            <label><input type="radio" name="feltColor" value="lavender"><span class="is-lavender">紫</span></label>
+            <label><input type="radio" name="feltColor" value="bone"><span class="is-bone">米白</span></label>
+            <label><input type="radio" name="feltColor" value="coral"><span class="is-coral">橙</span></label>
+            <label class="felt-custom-color"><input type="radio" name="feltColor" value="custom"><span>自定</span><input id="feltCustomColor" type="color" value="#f6d365" aria-label="自定义便签颜色"></label>
+          </fieldset>
+          <footer><button id="feltEditorDelete" class="felt-editor-delete" type="button" hidden>删除便签</button><span class="felt-editor-footer-spacer"></span><button id="feltEditorCancel" type="button">取消</button><button class="felt-editor-save" value="default">放到留言墙</button></footer>
+        </form>
+      </dialog>
 
       <dialog id="itemDialog" class="item-dialog">
         <form method="dialog" id="itemForm">
@@ -130,6 +180,7 @@
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
     </main>
     <script src="./assets/vendor/html-to-image.js?v=1.11.13"></script>
-    <script src="./app.js?v=20260812k"></script>
+    <script src="./felt-board.js?v=20260814a"></script>
+    <script src="./app.js?v=20260814a"></script>
   </body>
 </html>

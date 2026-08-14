@@ -4667,6 +4667,125 @@ body.inner-mode:not(.screen-off) .retro-os {
     linear-gradient(180deg,rgba(255,255,255,.065),transparent 9%,transparent 88%,rgba(0,0,0,.3))!important;
 }
 
+/* One physical 200vw track: the message wall follows the complete desk instead of covering it. */
+.outside-track {
+  position:absolute;
+  inset:0 auto 0 0;
+  z-index:10;
+  display:flex;
+  width:200vw;
+  height:100vh;
+  transform:translate3d(0,0,0);
+  transition:transform 1.02s cubic-bezier(.22,.72,.18,1);
+  will-change:transform;
+}
+.outside-panel {
+  position:relative;
+  flex:0 0 100vw;
+  width:100vw;
+  height:100vh;
+}
+.outside-desk-panel { overflow:visible;z-index:2;opacity:1;transition:opacity .16s linear; }
+.felt-board { z-index:1; }
+body.message-board-open .outside-desk-panel { opacity:0;pointer-events:none;transition-delay:.84s; }
+body.message-board-open .outside-track { transform:translate3d(-100vw,0,0); }
+body.inner-mode .outside-track { transform:translate3d(0,0,0); }
+body.message-board-open .outside-desk-panel,
+body.message-board-open .felt-board { visibility:visible; }
+body.message-board-open .felt-board { opacity:1; }
+
+.felt-board { overflow:hidden;background:transparent; }
+.sr-only { position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important; }
+.felt-canvas-shell { position:absolute;inset:0; }
+#feltCanvas { display:block;width:100%;height:100%;touch-action:none;cursor:default; }
+.felt-canvas-hotspot {
+  position:absolute;
+  z-index:2;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  color:transparent;
+  cursor:pointer;
+}
+.felt-canvas-hotspot:focus-visible { outline:3px solid var(--lime);outline-offset:4px; }
+
+.felt-editor {
+  width:min(92vw,620px);
+  height:min(86dvh,680px);
+  max-height:680px;
+  overflow:hidden;
+  overscroll-behavior:contain;
+  padding:0;
+  border:0;
+  border-radius:18px;
+  background:#ece6d8;
+  color:#171918;
+  box-shadow:0 30px 90px rgba(0,0,0,.55);
+}
+.felt-editor::backdrop { background:rgba(11,14,14,.65);backdrop-filter:blur(7px); }
+.felt-editor form { box-sizing:border-box;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto auto;gap:16px;height:100%;padding:24px;overscroll-behavior:contain; }
+.felt-editor header,.felt-editor footer,.felt-doodle-field > div { display:flex;align-items:center;justify-content:space-between;gap:16px; }
+.felt-editor header span { color:#66703d;font:8px var(--pixel);letter-spacing:.18em; }
+.felt-editor h2 { margin:5px 0 0;font:600 30px var(--serif); }
+.felt-editor button { border:0;border-radius:9px;cursor:pointer;transition:transform 120ms ease,background-color 120ms ease,color 120ms ease; }
+.felt-editor button:active { transform:scale(.96); }
+#feltEditorClose { width:42px;height:42px;background:transparent;font-size:28px; }
+.felt-editor-modes { display:flex;gap:8px; }
+.felt-editor-modes button,.felt-editor-modes button[aria-selected="false"] { flex:1;padding:11px;background:rgba(19,23,22,.08);color:#59605d; }
+.felt-editor-modes button[aria-selected="true"] { background:#171b19;color:#eef2dd; }
+.felt-editor button:focus-visible,.felt-editor textarea:focus-visible,.felt-editor input:focus-visible { outline:2px solid #344522;outline-offset:3px; }
+.felt-editor-pages { position:relative;min-height:0;overflow:hidden;border-radius:13px;background:#f8f3e8;box-shadow:inset 0 0 0 1px rgba(20,23,22,.14); }
+.felt-editor-page { box-sizing:border-box;width:100%;height:100%;min-height:0;padding:16px;overflow:hidden; }
+.felt-editor-page[hidden] { display:none!important; }
+.felt-markdown-field { display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px;font-size:12px;font-weight:700; }
+#feltMarkdown { box-sizing:border-box;width:100%;height:100%;min-height:0;resize:none;padding:16px;border:0;border-radius:9px;background:#f0eadf;color:#171918;font:15px/1.7 var(--sans); }
+.felt-doodle-field { grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:8px;place-items:center; }
+.felt-doodle-field > div { width:100%; }
+.felt-doodle-field:not([hidden]) { display:grid; }
+.felt-image-field { position:relative;grid-template-columns:1fr;grid-template-rows:minmax(0,1fr);gap:0;align-items:stretch; }
+.felt-image-field:not([hidden]) { display:grid; }
+.felt-image-upload { display:grid;place-content:center;place-items:center;gap:9px;min-height:100%;padding:20px;border:2px dashed rgba(27,31,29,.28);border-radius:10px;background:#f0eadf;color:#232724;cursor:pointer;font-size:15px;font-weight:700;transition-property:background-color,border-color,scale;transition-duration:140ms; }
+.felt-image-upload small { color:#79756d;font-size:10px;font-weight:500;letter-spacing:.08em; }
+.felt-image-upload.is-dragover { border-color:#344522;background:#e1e9ce;scale:.99; }
+.felt-image-upload.has-image { opacity:.08; }
+.felt-image-upload input { position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%); }
+.felt-image-preview { pointer-events:none;position:absolute;inset:12px;display:grid;place-items:center;min-height:0;padding:0;overflow:hidden;border-radius:8px;background:transparent;color:#716c62;font-size:12px; }
+.felt-image-preview img { display:block;max-width:100%;max-height:100%;border-radius:7px;box-shadow:0 7px 18px rgba(25,20,15,.16),0 0 0 1px rgba(0,0,0,.1); }
+.felt-doodle-field button { padding:7px 10px;background:rgba(20,23,22,.08); }
+#feltDoodleCanvas { display:block;width:auto;height:100%;max-width:100%;max-height:100%;aspect-ratio:1;border-radius:9px;background:#f0eadf;touch-action:none;cursor:crosshair; }
+.felt-paper-colors { display:flex;flex-wrap:wrap;gap:10px;margin:0;padding:0;border:0; }
+.felt-paper-colors legend { margin-bottom:9px;font-size:12px;font-weight:700; }
+.felt-paper-colors input { position:absolute;opacity:0; }
+.felt-paper-colors span { display:grid;place-items:center;min-width:58px;height:38px;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(20,23,22,.12);cursor:pointer;font-size:11px; }
+.felt-paper-colors input:checked + span { outline:2px solid #171918;outline-offset:2px; }
+.felt-paper-colors .is-bone { background:#eee7d7; }.felt-paper-colors .is-coral { background:#ff7055; }.felt-paper-colors .is-lime { background:#d9ff39; }
+.felt-paper-colors .is-yellow { background:#f4dc52; }.felt-paper-colors .is-blue { background:#91c9e8; }.felt-paper-colors .is-pink { background:#efaaa8; }.felt-paper-colors .is-mint { background:#a9d9bd; }.felt-paper-colors .is-lavender { background:#c7b7df; }
+.felt-custom-color { position:relative;display:flex;align-items:center;gap:5px; }
+.felt-custom-color #feltCustomColor { position:static;width:38px;height:38px;padding:2px;opacity:1;border:0;border-radius:8px;background:transparent;cursor:pointer; }
+.felt-editor footer { justify-content:flex-end; }
+.felt-editor footer button { padding:12px 18px;background:rgba(20,23,22,.08); }
+.felt-editor footer .felt-editor-save { background:#171b19;color:#eff4dd; }
+
+body.workspace-entered:not(.inner-mode) .zoom-meter { display:block; }
+body.message-board-open .workspace-toolbar { display:none; }
+body.felt-editor-open { overflow:hidden; }
+.felt-editor footer { display:flex;align-items:center; }
+.felt-editor-footer-spacer { flex:1; }
+.felt-editor-delete { color:#a33f35;background:rgba(163,63,53,.08)!important;box-shadow:inset 0 0 0 1px rgba(163,63,53,.25)!important; }
+.felt-editor-delete:hover { background:rgba(163,63,53,.14)!important; }
+
+@media(max-width:560px) {
+  .mode-guide { left:20px;bottom:22px;max-width:calc(100vw - 40px); }
+  .felt-editor form { padding:18px; }
+  .felt-paper-colors span { min-width:58px; }
+  .felt-editor { height:min(90dvh,650px); }
+}
+@media(prefers-reduced-motion:reduce) {
+  .outside-track { transition-duration:.01ms; }
+}
+
 /* Print and business-card repair v24. */
 .printed-document:not(.is-paper-ball)::before,
 .printed-document.is-long-document:not(.is-paper-ball)::before {
