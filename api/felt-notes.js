@@ -21,7 +21,7 @@ function supabaseHeaders(extra = {}) {
   const key = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
   return {
     apikey: key,
-    authorization: `Bearer ${key}`,
+    ...(/^sb_secret_/i.test(key) ? {} : { authorization: `Bearer ${key}` }),
     "content-type": "application/json",
     ...extra
   };
