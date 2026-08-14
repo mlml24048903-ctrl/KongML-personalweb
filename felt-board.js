@@ -3,9 +3,12 @@
   if (!canvas) return;
 
   const ctx = canvas.getContext("2d");
+  canvas.tabIndex = 0;
+  canvas.setAttribute("aria-label", `${canvas.getAttribute("aria-label") || "Canvas message board"}; double-click a receipt to delete it, or select it and press Delete`);
   const shell = canvas.parentElement;
   const tearButton = document.getElementById("feltTearButton");
   const pinButton = document.getElementById("feltPinButton");
+  const receiptButton = document.getElementById("feltReceiptButton");
   const editor = document.getElementById("feltEditor");
   const form = document.getElementById("feltEditorForm");
   const markdown = document.getElementById("feltMarkdown");
@@ -15,11 +18,25 @@
   const imageInput = document.getElementById("feltImageInput");
   const imagePreview = document.getElementById("feltImagePreview");
   const imageDropzone = document.getElementById("feltImageDropzone");
+  const paperColorPicker = form.querySelector(".felt-paper-colors");
   const customColor = document.getElementById("feltCustomColor");
   const deleteButton = document.getElementById("feltEditorDelete");
   const doodleCanvas = document.getElementById("feltDoodleCanvas");
   const doodleCtx = doodleCanvas.getContext("2d");
+  const doodlePen = document.getElementById("feltDoodlePen");
+  const doodleUndo = document.getElementById("feltDoodleUndo");
+  const doodleEraser = document.getElementById("feltDoodleEraser");
+  const doodleExpand = document.getElementById("feltDoodleExpand");
+  const doodleClear = document.getElementById("feltDoodleClear");
+  const doodleSave = document.getElementById("feltDoodleSave");
+  const doodleSize = document.getElementById("feltDoodleSize");
+  const doodleSizeLabel = document.getElementById("feltDoodleSizeLabel");
+  const doodleSizeValue = document.getElementById("feltDoodleSizeValue");
   const storageKey = "km-felt-canvas-notes-v1";
+  const visitorKey = "km-portfolio-visitor-id-v1";
+  const visitorId = localStorage.getItem(visitorKey) || crypto.randomUUID();
+  localStorage.setItem(visitorKey, visitorId);
+  const canUsePublicApi = /^https?:$/.test(location.protocol) && (!["127.0.0.1", "localhost"].includes(location.hostname) || new URLSearchParams(location.search).has("api-preview"));
   const palette = {
     yellow: "#f4dc52", blue: "#91c9e8", pink: "#efaaa8", mint: "#a9d9bd",
     lavender: "#c7b7df", bone: "#eee7d7", coral: "#f38a64", lime: "#cde95d"
@@ -33,16 +50,18 @@
   const supplyPinLayout = [[.13,.18], [.39,.08], [.74,.16], [.91,.34], [.57,.30], [.25,.39], [.08,.61], [.43,.56], [.78,.53], [.94,.72], [.61,.76], [.31,.84], [.12,.91], [.47,.96], [.79,.93], [.24,.67]];
 
   const defaults = [
-    { id: "felt-profile", x: .19, y: .34, rotation: -.045, scale: 1.05, color: "bone", mode: "md", content: "# 孔米乐\n\n产品实践 · AI 开发 · 文化体验\n\n从人的感受出发，把判断做成真实的产品。", pinned: true, pinX: .52, pinY: .08, seed: 21, doodle: [] },
-    { id: "felt-structure", x: .51, y: .29, rotation: .035, scale: .94, color: "lime", mode: "md", content: "## 建立结构\n\n在模糊的问题里，找到一条清楚的路径。", pinned: true, pinX: .44, pinY: .09, seed: 46, doodle: [] },
-    { id: "felt-now", x: .42, y: .70, rotation: -.025, scale: 1, color: "coral", mode: "md", content: "## 此刻\n\n学习 AI 应用开发，也在寻找产品、技术与文化体验交会处的新实践。", pinned: true, pinX: .57, pinY: .08, seed: 73, doodle: [] }
+    { id: "felt-profile", owner: true, x: .19, y: .34, rotation: -.045, scale: 1.05, color: "bone", mode: "md", content: "# 孔米乐\n\n产品实践 · AI 开发 · 文化体验\n\n从人的感受出发，把判断做成真实的产品。", pinned: true, pinX: .52, pinY: .08, seed: 21, doodle: [] },
+    { id: "felt-structure", owner: true, x: .51, y: .29, rotation: .035, scale: .94, color: "lime", mode: "md", content: "## 建立结构\n\n在模糊的问题里，找到一条清楚的路径。", pinned: true, pinX: .44, pinY: .09, seed: 46, doodle: [] },
+    { id: "felt-now", owner: true, x: .42, y: .70, rotation: -.025, scale: 1, color: "coral", mode: "md", content: "## 此刻\n\n学习 AI 应用开发，也在寻找产品、技术与文化体验交会处的新实践。", pinned: true, pinX: .57, pinY: .08, seed: 73, doodle: [] }
   ];
 
   const clone = value => JSON.parse(JSON.stringify(value));
   function loadNotes() {
     try {
       const saved = JSON.parse(localStorage.getItem(storageKey));
-      const source = Array.isArray(saved) ? saved : clone(defaults);
+      const savedNotes = Array.isArray(saved) ? saved : [];
+      const ownerIds = new Set(defaults.map(note => note.id));
+      const source = [...defaults.map(note => ({ ...clone(savedNotes.find(item => item.id === note.id) || note), ...clone(note) })), ...savedNotes.filter(note => !ownerIds.has(note.id))];
       return source.map((note, index) => ({
         ...note,
         pins: Array.isArray(note.pins) ? note.pins : note.pinned ? [{ x: note.pinX ?? .5, y: note.pinY ?? .08, color: !note.pinColor || note.pinColor === "#222827" ? pinColors[index % pinColors.length] : note.pinColor, angle: ((note.seed || index) % 9 - 4) * .12 }] : [],
@@ -61,12 +80,14 @@
     content: null,
     pad: null,
     pinTray: null,
+    receiptRoll: null,
     draggingId: null,
     dragOffset: null,
     dragTarget: null,
     dragLast: null,
     dragRaf: 0,
     dragMoved: false,
+    activeNoteId: null,
     holdingPin: false,
     selectedPinColor: pinColors[0],
     pointer: { x: 0, y: 0 },
@@ -75,7 +96,13 @@
     editMode: "md",
     draftDoodle: [],
     draftImage: "",
+    draftImageAspect: 1,
     drawingStroke: null,
+    doodleTool: "pen",
+    doodlePenSize: 5,
+    doodleEraserSize: 38,
+    doodleSizeOpen: false,
+    clearedDoodle: null,
     tear: null,
     stackColor: initialStackColor,
     nextStackColor: initialNextStackColor,
@@ -89,6 +116,46 @@
 
   function saveNotes() {
     localStorage.setItem(storageKey, JSON.stringify(state.notes.map(({ birth, floatIn, returning, angularVelocity, ...note }) => note)));
+  }
+  function cleanNote(note) {
+    const { birth, floatIn, returning, angularVelocity, _image, ...clean } = note;
+    return clean;
+  }
+  async function publishPublicNote(note) {
+    if (note.owner) return;
+    note.public = true; note.visitorId = visitorId;
+    if (!canUsePublicApi) { note.pendingSync = true; saveNotes(); return; }
+    try {
+      const response = await fetch("/api/felt-notes", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ visitorId, note: cleanNote(note) }) });
+      const result = await response.json().catch(() => ({}));
+      if (response.status === 422) {
+        note.pendingSync = false; note.public = false; note.syncRejected = true; saveNotes();
+        window.dispatchEvent(new CustomEvent("feltboardnotice", { detail: { message: "这张留言已保存在本机，但未发布到公共留言板。" } }));
+        return;
+      }
+      if (!response.ok || result.configured === false) throw new Error(`HTTP ${response.status}`);
+      note.pendingSync = false; note.syncRejected = false; saveNotes();
+    } catch { note.pendingSync = true; saveNotes(); }
+  }
+  async function syncPublicNotes() {
+    if (!canUsePublicApi) return;
+    try {
+      const response = await fetch("/api/felt-notes", { headers: { accept: "application/json", "x-visitor-id": visitorId } });
+      if (!response.ok) return;
+      const payload = await response.json();
+      if (!Array.isArray(payload.notes)) return;
+      const ownerNotes = state.notes.filter(note => note.owner);
+      const localOnly = state.notes.filter(note => !note.owner && (!note.public || note.syncRejected));
+      const localPending = state.notes.filter(note => !note.owner && note.pendingSync);
+      const remoteNotes = payload.notes.map(note => ({ ...note, public: true, pendingSync: false, physicsAngle: note.rotation || 0, angularVelocity: 0, floatIn: 0, birth: undefined }));
+      const merged = new Map([...remoteNotes, ...localPending].map(note => [note.id, note]));
+      state.notes = [...ownerNotes, ...localOnly, ...merged.values()]; saveNotes(); scheduleRender();
+      localPending.forEach(publishPublicNote);
+    } catch { /* Local notes remain usable while the backend is not configured. */ }
+  }
+  async function deletePublicNote(note) {
+    if (!note?.public || note.visitorId !== visitorId) return;
+    try { await fetch(`/api/felt-notes?id=${encodeURIComponent(note.id)}&visitorId=${encodeURIComponent(visitorId)}`, { method: "DELETE" }); } catch { /* It stays removed locally for this browser. */ }
   }
   function scheduleRender() {
     if (state.renderRaf) return;
@@ -115,6 +182,14 @@
     const path = new Path2D();
     path.rect(0, 0, w, h);
     path.closePath();
+    return path;
+  }
+
+  function receiptNotePath(w, h) {
+    const path = new Path2D(), tooth = Math.max(3, w / 18);
+    path.moveTo(0, 0); path.lineTo(w, 0); path.lineTo(w, h - tooth * .58);
+    for (let x = w; x > 0; x -= tooth) { path.lineTo(Math.max(0, x - tooth / 2), h); path.lineTo(Math.max(0, x - tooth), h - tooth * .58); }
+    path.lineTo(0, 0); path.closePath();
     return path;
   }
 
@@ -176,10 +251,7 @@
 
     bctx.fillStyle = "#2d251d";
     bctx.font = `600 ${clamp(state.width * .025, 22, 36)}px "Noto Serif SC", serif`;
-    bctx.fillText("一些关于我的留言", inner.x + 34, inner.y + 47);
-    bctx.fillStyle = "rgba(45,37,29,.62)";
-    bctx.font = `500 ${clamp(state.width * .009, 10, 13)}px sans-serif`;
-    bctx.fillText("撕下一张，写完以后，再把它钉在合适的位置。", inner.x + 35, inner.y + 68);
+    bctx.fillText("留言板", inner.x + 34, inner.y + 47);
 
     bctx.strokeStyle = "rgba(40,29,21,.22)"; bctx.lineWidth = 1;
     bctx.beginPath(); bctx.moveTo(inner.x + inner.w - supplyW - 16, inner.y + 24); bctx.lineTo(inner.x + inner.w - supplyW - 16, inner.y + inner.h - 24); bctx.stroke();
@@ -189,9 +261,11 @@
   function layoutSupplies() {
     const board = state.board;
     const padW = clamp(state.content.w * .158, 104, 153), padH = padW;
-    state.pad = { x: board.x + board.w - padW - 66, y: board.y + board.h * .23, w: padW, h: padH };
-    state.pinTray = { x: board.x + board.w - 230, y: board.y + board.h * .58, w: 190, h: 150 };
-    for (const [button, rect] of [[tearButton, state.pad], [pinButton, state.pinTray]]) {
+    const supplyCenter = board.x + board.w - 121;
+    state.pad = { x: supplyCenter - padW / 2, y: board.y + board.h * .095, w: padW, h: padH };
+    state.receiptRoll = { x: supplyCenter - 75, y: board.y + board.h * .405, w: 150, h: 154 };
+    state.pinTray = { x: supplyCenter - 96, y: board.y + board.h * .70, w: 192, h: 142 };
+    for (const [button, rect] of [[tearButton, state.pad], [receiptButton, state.receiptRoll], [pinButton, state.pinTray]]) {
       button.style.left = `${rect.x}px`; button.style.top = `${rect.y}px`; button.style.width = `${rect.w}px`; button.style.height = `${rect.h}px`;
     }
   }
@@ -214,6 +288,7 @@
     }
     if (state.tear) drawFlyingSheet(pad, state.tear);
     drawStorageBasket(pad);
+    drawReceiptRoll(state.receiptRoll);
     supplyPins.forEach((color, index) => {
       const random = seeded(804 + index * 31), position = supplyPinLayout[index];
       const x = tray.x + 13 + position[0] * (tray.w - 26), y = tray.y + 10 + position[1] * (tray.h - 20);
@@ -223,21 +298,62 @@
     return false;
   }
 
+  function drawReceiptRoll(roll) {
+    const { x, y, w, h } = roll, cx = x + w / 2;
+    const backingW = 118, backingH = 57, backingX = cx - backingW / 2;
+    const rollX = cx - 50, rollY = y + 16, rollBodyW = 92, rollH = 42;
+    const capX = rollX + rollBodyW, capRadiusX = 8, axisY = rollY + rollH / 2;
+    const ticketLeft = rollX, ticketRight = capX + capRadiusX, bottom = y + h - 10;
+    ctx.save();
+    ctx.shadowColor = "rgba(35,23,16,.34)"; ctx.shadowBlur = 15; ctx.shadowOffsetY = 9;
+    const backing = ctx.createLinearGradient(backingX, y, backingX + backingW, y + backingH);
+    backing.addColorStop(0, "#5b3d2e"); backing.addColorStop(.55, "#38251e"); backing.addColorStop(1, "#6c4832");
+    ctx.fillStyle = backing; roundedRectPath(ctx, backingX, y + 3, backingW, backingH, 10); ctx.fill();
+    ctx.shadowColor = "transparent";
+    const metal = ctx.createLinearGradient(x, y, x + w, y); metal.addColorStop(0, "#74501f"); metal.addColorStop(.45, "#c7a45f"); metal.addColorStop(1, "#694719");
+    const paper = ctx.createLinearGradient(x, rollY + rollH, x + w, y + h);
+    paper.addColorStop(0, "#fffef9"); paper.addColorStop(.65, "#f1eee6"); paper.addColorStop(1, "#d9d4c9");
+    const tooth = 5;
+    ctx.fillStyle = paper; ctx.beginPath(); ctx.moveTo(ticketLeft, axisY); ctx.lineTo(ticketRight, axisY); ctx.lineTo(ticketRight, bottom - 3);
+    for (let zx = ticketRight; zx > ticketLeft; zx -= tooth) { ctx.lineTo(Math.max(ticketLeft, zx - tooth / 2), bottom); ctx.lineTo(Math.max(ticketLeft, zx - tooth), bottom - 3); }
+    ctx.lineTo(ticketLeft, axisY); ctx.closePath(); ctx.fill();
+    const paperRandom = seeded(992);
+    for (let index = 0; index < 54; index += 1) {
+      const px = ticketLeft + 4 + paperRandom() * (ticketRight - ticketLeft - 8), py = axisY + 5 + paperRandom() * Math.max(8, bottom - axisY - 13), length = 1 + paperRandom() * 4;
+      ctx.globalAlpha = .035 + paperRandom() * .04; ctx.strokeStyle = paperRandom() > .45 ? "#756d61" : "#ffffff"; ctx.lineWidth = .35;
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + length, py + (paperRandom() - .5) * 1.8); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = metal; roundedRectPath(ctx, backingX + 8, axisY - 2.5, backingW - 16, 5, 2.5); ctx.fill();
+    const rollGradient = ctx.createLinearGradient(0, rollY, 0, rollY + rollH);
+    rollGradient.addColorStop(0, "#fffef9"); rollGradient.addColorStop(.36, "#f2eee4"); rollGradient.addColorStop(.72, "#d7d1c5"); rollGradient.addColorStop(1, "#b9b2a5");
+    ctx.fillStyle = rollGradient; ctx.beginPath(); ctx.moveTo(rollX + 9, rollY); ctx.lineTo(capX, rollY); ctx.lineTo(capX, rollY + rollH); ctx.lineTo(rollX + 9, rollY + rollH); ctx.quadraticCurveTo(rollX, rollY + rollH, rollX, rollY + rollH - 9); ctx.lineTo(rollX, rollY + 9); ctx.quadraticCurveTo(rollX, rollY, rollX + 9, rollY); ctx.closePath(); ctx.fill();
+    const cap = ctx.createLinearGradient(capX - capRadiusX, 0, capX + capRadiusX, 0); cap.addColorStop(0, "#9a9387"); cap.addColorStop(1, "#6f6a62");
+    ctx.fillStyle = cap; ctx.beginPath(); ctx.ellipse(capX, axisY, capRadiusX, rollH / 2, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#574b3d"; ctx.beginPath(); ctx.ellipse(capX, axisY, 3.5, rollH * .27, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = metal; roundedRectPath(ctx, capX, axisY - 2.5, backingX + backingW - 8 - capX, 5, 2.5); ctx.fill();
+    ctx.restore();
+  }
+
   function drawStorageBasket(pad) {
     const x = pad.x - 20, y = pad.y + pad.h * .48, w = pad.w + 40, h = pad.h * .58;
     ctx.save();
-    ctx.shadowColor = "rgba(29,24,19,.23)"; ctx.shadowBlur = 13; ctx.shadowOffsetY = 9;
-    const plastic = ctx.createLinearGradient(x, y, x + w, y + h);
-    plastic.addColorStop(0, "rgba(244,249,247,.2)"); plastic.addColorStop(.45, "rgba(218,229,226,.09)"); plastic.addColorStop(1, "rgba(179,195,192,.27)");
-    ctx.fillStyle = plastic; roundedRectPath(ctx, x, y, w, h, 13); ctx.fill();
+    ctx.shadowColor = "rgba(27,22,18,.28)"; ctx.shadowBlur = 14; ctx.shadowOffsetY = 10;
+    const front = ctx.createLinearGradient(0, y, 0, y + h);
+    front.addColorStop(0, "rgba(235,244,242,.08)"); front.addColorStop(.48, "rgba(221,232,230,.16)"); front.addColorStop(1, "rgba(132,151,148,.34)");
+    ctx.fillStyle = front; roundedRectPath(ctx, x + 3, y + 2, w - 6, h - 3, 12); ctx.fill();
     ctx.shadowColor = "transparent";
-    const edge = ctx.createLinearGradient(x, y, x + w, y);
-    edge.addColorStop(0, "rgba(233,241,239,.92)"); edge.addColorStop(.5, "rgba(139,153,150,.52)"); edge.addColorStop(1, "rgba(244,249,247,.88)");
-    ctx.strokeStyle = edge; ctx.lineWidth = 3.4; roundedRectPath(ctx, x, y, w, h, 13); ctx.stroke();
-    ctx.strokeStyle = "rgba(255,255,255,.48)"; ctx.lineWidth = 1.2; roundedRectPath(ctx, x + 5, y + 5, w - 10, h - 10, 9); ctx.stroke();
-    const base = ctx.createLinearGradient(0, y + h - 20, 0, y + h);
-    base.addColorStop(0, "rgba(255,255,255,0)"); base.addColorStop(1, "rgba(124,143,139,.3)");
-    ctx.fillStyle = base; roundedRectPath(ctx, x + 5, y + h - 25, w - 10, 20, 7); ctx.fill();
+    const sideShade = ctx.createLinearGradient(x, 0, x + w, 0);
+    sideShade.addColorStop(0, "rgba(119,138,136,.30)"); sideShade.addColorStop(.12, "rgba(255,255,255,.12)"); sideShade.addColorStop(.88, "rgba(255,255,255,.08)"); sideShade.addColorStop(1, "rgba(105,124,122,.32)");
+    ctx.fillStyle = sideShade; roundedRectPath(ctx, x + 4, y + 7, w - 8, h - 10, 9); ctx.fill();
+    const lip = ctx.createLinearGradient(0, y, 0, y + 10);
+    lip.addColorStop(0, "rgba(255,255,255,.94)"); lip.addColorStop(.42, "rgba(211,224,221,.62)"); lip.addColorStop(1, "rgba(117,137,134,.52)");
+    ctx.strokeStyle = lip; ctx.lineWidth = 5; roundedRectPath(ctx, x, y, w, h, 13); ctx.stroke();
+    ctx.strokeStyle = "rgba(255,255,255,.58)"; ctx.lineWidth = 1.1; roundedRectPath(ctx, x + 6, y + 6, w - 12, h - 12, 8); ctx.stroke();
+    const base = ctx.createLinearGradient(0, y + h - 18, 0, y + h);
+    base.addColorStop(0, "rgba(255,255,255,0)"); base.addColorStop(1, "rgba(94,116,113,.38)");
+    ctx.fillStyle = base; roundedRectPath(ctx, x + 7, y + h - 23, w - 14, 17, 6); ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,.24)"; roundedRectPath(ctx, x + 10, y + 10, 3, h - 24, 2); ctx.fill();
     ctx.restore();
   }
 
@@ -254,7 +370,15 @@
 
   function noteGeometry(note) {
     const baseW = clamp(state.content.w * .158, 104, 153) * (note.scale || 1);
-    const w = baseW, h = baseW, angle = note.physicsAngle ?? note.rotation ?? 0;
+    let w = note.kind === "receipt" ? baseW * .76 : baseW;
+    let h = note.kind === "receipt" ? baseW * 1.48 : baseW;
+    if (note.mode === "image" && note.imageData) {
+      const aspect = Math.max(.12, Math.min(8, Number(note.imageAspect) || 1));
+      h = w / aspect;
+      const maxHeight = Math.max(190, state.content.h * .52);
+      if (h > maxHeight) { const fit = maxHeight / h; w *= fit; h *= fit; }
+    }
+    const angle = note.physicsAngle ?? note.rotation ?? 0;
     let cx = state.content.x + note.x * state.content.w, cy = state.content.y + note.y * state.content.h;
     const pivot = note.pins?.[0];
     if (pivot) {
@@ -331,29 +455,51 @@
   }
 
   function drawDoodle(note, w, h) {
-    ctx.save(); ctx.translate(17, 17); const scale = Math.min((w - 34) / 720, (h - 34) / 720); ctx.scale(scale, scale);
-    ctx.strokeStyle = "#252522"; ctx.lineCap = "round"; ctx.lineJoin = "round";
+    const layer = document.createElement("canvas"); layer.width = 720; layer.height = 720;
+    const layerCtx = layer.getContext("2d"); layerCtx.lineCap = "round"; layerCtx.lineJoin = "round";
     for (const stroke of note.doodle || []) {
       if (!stroke.points?.length) continue;
-      ctx.lineWidth = stroke.width || 5; ctx.beginPath(); ctx.moveTo(stroke.points[0][0], stroke.points[0][1]);
-      for (const point of stroke.points.slice(1)) ctx.lineTo(point[0], point[1]);
-      ctx.stroke();
+      layerCtx.save(); layerCtx.globalCompositeOperation = stroke.erase ? "destination-out" : "source-over";
+      layerCtx.strokeStyle = "#252522"; layerCtx.lineWidth = stroke.width || 5;
+      layerCtx.beginPath(); layerCtx.moveTo(stroke.points[0][0], stroke.points[0][1]);
+      for (const point of stroke.points.slice(1)) layerCtx.lineTo(point[0], point[1]);
+      layerCtx.stroke(); layerCtx.restore();
     }
-    ctx.restore();
+    ctx.drawImage(layer, 17, 17, w - 34, h - 34);
   }
 
   function drawNoteImage(note, w, h) {
     if (!note.imageData) return drawMarkdown({ content: "图片便签" }, w, h);
     note._image ||= new Image();
-    if (note._image.src !== note.imageData) { note._image.onload = scheduleRender; note._image.src = note.imageData; }
+    if (note._image.src !== note.imageData) {
+      note._image.onload = () => {
+        if (!note.imageAspect && note._image.naturalHeight) {
+          note.imageAspect = note._image.naturalWidth / note._image.naturalHeight;
+          saveNotes();
+        }
+        scheduleRender();
+      };
+      note._image.src = note.imageData;
+    }
     if (!note._image.complete) return;
-    const margin = 18, areaW = w - margin * 2, areaH = h - margin * 2;
-    const ratio = Math.min(areaW / note._image.naturalWidth, areaH / note._image.naturalHeight);
-    const dw = note._image.naturalWidth * ratio, dh = note._image.naturalHeight * ratio;
-    ctx.save();
-    ctx.shadowColor = "rgba(42,30,22,.2)"; ctx.shadowBlur = 5; ctx.shadowOffsetY = 3;
-    ctx.drawImage(note._image, margin + (areaW - dw) / 2, margin + (areaH - dh) / 2, dw, dh);
-    ctx.restore();
+    ctx.drawImage(note._image, 0, 0, w, h);
+    ctx.strokeStyle = "rgba(0,0,0,.1)"; ctx.lineWidth = 1;
+    ctx.strokeRect(.5, .5, Math.max(0, w - 1), Math.max(0, h - 1));
+  }
+
+  function drawReceiptNote(note, w, h) {
+    const data = note.receiptData || {}, pad = w * .13;
+    ctx.fillStyle = "rgba(41,42,38,.72)"; ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.font = `600 ${Math.max(5, w * .047)}px monospace`; ctx.fillText("KML / VISIT", w / 2, h * .08);
+    ctx.font = `700 ${Math.max(11, w * .12)}px "Noto Serif SC",serif`; ctx.fillText("访问小票", w / 2, h * .15);
+    ctx.strokeStyle = "rgba(45,46,41,.34)"; ctx.lineWidth = .7; ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.moveTo(pad, h * .27); ctx.lineTo(w - pad, h * .27); ctx.stroke(); ctx.setLineDash([]);
+    const rows = [["点击", data.clicks ?? 0], ["停留", `${data.minutes ?? 0}分`], ["打印", data.prints ?? 0], ["留言", data.notes ?? 0]];
+    ctx.textAlign = "left"; ctx.font = `500 ${Math.max(7, w * .075)}px sans-serif`;
+    rows.forEach((row, index) => { const y = h * (.34 + index * .105); ctx.fillStyle = "#373832"; ctx.fillText(row[0], pad, y); ctx.textAlign = "right"; ctx.fillText(String(row[1]), w - pad, y); ctx.textAlign = "left"; });
+    ctx.fillStyle = "rgba(42,43,39,.78)";
+    const barY = h * .79, barH = h * .09, random = seeded(Number(data.barcodeSeed) || note.seed || 1); let bx = pad;
+    while (bx < w - pad) { const gap = .7 + random() * 1.8, width = .7 + Math.floor(random() * 4) * .7; bx += gap; ctx.fillRect(bx, barY, width, barH); bx += width; }
+    ctx.textAlign = "center"; ctx.font = `600 ${Math.max(4, w * .038)}px monospace`; ctx.fillText("THANKS FOR STOPPING BY", w / 2, h * .91);
   }
 
   function drawNote(note, now) {
@@ -363,24 +509,30 @@
     const scale = .91 + age * .09, floatY = (1 - (1 - Math.pow(1 - floatAge, 3))) * 105;
     const pins = note.pins || [], pinned = pins.length > 0;
     ctx.save(); ctx.translate(g.cx, g.cy + floatY); ctx.rotate(g.angle); ctx.scale(scale, scale); ctx.translate(-g.w / 2, -g.h / 2);
-    const path = notePath(g.w, g.h);
+    const isPhoto = note.mode === "image" && Boolean(note.imageData);
+    const path = note.kind === "receipt" ? receiptNotePath(g.w, g.h) : notePath(g.w, g.h);
     ctx.shadowColor = "rgba(55,38,25,.31)"; ctx.shadowBlur = pinned ? 11 : 20; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = pinned ? 7 : 13;
-    ctx.fillStyle = note.color === "custom" ? note.customColor || "#f6d365" : palette[note.color] || palette.bone; ctx.fill(path);
+    ctx.fillStyle = isPhoto ? "rgba(255,255,255,.96)" : note.color === "custom" ? note.customColor || "#f6d365" : palette[note.color] || palette.bone; ctx.fill(path);
     ctx.shadowColor = "transparent";
 
     ctx.save(); ctx.clip(path);
-    const random = seeded((note.seed || 1) * 91);
-    for (let i = 0; i < 72; i++) {
-      const x = random() * g.w, y = random() * g.h, len = 2 + random() * 8;
-      ctx.strokeStyle = random() > .5 ? "rgba(255,255,255,.075)" : "rgba(65,52,40,.045)";
-      ctx.lineWidth = .5; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + len, y + (random() - .5) * 2); ctx.stroke();
+    if (!isPhoto) {
+      const random = seeded((note.seed || 1) * 91);
+      for (let i = 0; i < 72; i++) {
+        const x = random() * g.w, y = random() * g.h, len = 2 + random() * 8;
+        ctx.strokeStyle = random() > .5 ? "rgba(255,255,255,.075)" : "rgba(65,52,40,.045)";
+        ctx.lineWidth = .5; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + len, y + (random() - .5) * 2); ctx.stroke();
+      }
     }
-    if (note.mode === "doodle") drawDoodle(note, g.w, g.h);
+    if (note.kind === "receipt") drawReceiptNote(note, g.w, g.h);
+    else if (note.mode === "doodle") drawDoodle(note, g.w, g.h);
     else if (note.mode === "image") drawNoteImage(note, g.w, g.h);
     else drawMarkdown(note, g.w, g.h);
-    const paperLight = ctx.createLinearGradient(0, g.h * .56, 0, g.h + 8);
-    paperLight.addColorStop(0, "rgba(255,255,255,0)"); paperLight.addColorStop(.72, "rgba(255,255,255,.12)"); paperLight.addColorStop(1, "rgba(66,45,29,.11)");
-    ctx.fillStyle = paperLight; ctx.fillRect(0, g.h * .5, g.w, g.h * .55);
+    if (!isPhoto) {
+      const paperLight = ctx.createLinearGradient(0, g.h * .56, 0, g.h + 8);
+      paperLight.addColorStop(0, "rgba(255,255,255,0)"); paperLight.addColorStop(.72, "rgba(255,255,255,.12)"); paperLight.addColorStop(1, "rgba(66,45,29,.11)");
+      ctx.fillStyle = paperLight; ctx.fillRect(0, g.h * .5, g.w, g.h * .55);
+    }
     ctx.restore();
 
     ctx.restore();
@@ -471,53 +623,134 @@
       button.setAttribute("aria-selected", String(active)); button.tabIndex = active ? 0 : -1;
     });
     markdownField.hidden = mode !== "md"; doodleField.hidden = mode !== "doodle"; imageField.hidden = mode !== "image";
+    paperColorPicker.hidden = mode === "image";
     if (mode === "doodle") redrawDoodleEditor();
+    else setDoodleExpanded(false);
   }
 
   function redrawDoodleEditor() {
     doodleCtx.clearRect(0, 0, doodleCanvas.width, doodleCanvas.height);
-    doodleCtx.strokeStyle = "#252522"; doodleCtx.lineWidth = 5; doodleCtx.lineCap = "round"; doodleCtx.lineJoin = "round";
+    doodleCtx.lineCap = "round"; doodleCtx.lineJoin = "round";
     for (const stroke of state.draftDoodle) {
       if (!stroke.points?.length) continue;
+      doodleCtx.save(); doodleCtx.globalCompositeOperation = stroke.erase ? "destination-out" : "source-over";
+      doodleCtx.strokeStyle = "#252522"; doodleCtx.lineWidth = stroke.width || 5;
       doodleCtx.beginPath(); doodleCtx.moveTo(stroke.points[0][0], stroke.points[0][1]);
       for (const point of stroke.points.slice(1)) doodleCtx.lineTo(point[0], point[1]);
-      doodleCtx.stroke();
+      doodleCtx.stroke(); doodleCtx.restore();
     }
+    doodleUndo.disabled = state.draftDoodle.length === 0 && !state.clearedDoodle;
+  }
+
+  function updateDoodleSizeControl() {
+    const erasing = state.doodleTool === "eraser";
+    doodleSize.min = erasing ? "10" : "2";
+    doodleSize.max = erasing ? "80" : "24";
+    doodleSize.value = String(erasing ? state.doodleEraserSize : state.doodlePenSize);
+    doodleSizeLabel.textContent = erasing ? "橡皮大小" : "画笔粗细";
+    doodleSize.setAttribute("aria-label", doodleSizeLabel.textContent);
+    doodleSizeValue.value = doodleSize.value;
+    doodleSizeValue.textContent = doodleSize.value;
+  }
+
+  function setDoodleSizeOpen(open) {
+    state.doodleSizeOpen = Boolean(open);
+    const container = doodleSize.closest(".felt-tool-size");
+    container.classList.toggle("is-open", state.doodleSizeOpen);
+    container.setAttribute("aria-hidden", String(!state.doodleSizeOpen));
+    container.dataset.tool = state.doodleTool;
+    doodleSize.tabIndex = state.doodleSizeOpen ? 0 : -1;
+    if (state.doodleSizeOpen) requestAnimationFrame(() => doodleSize.focus({ preventScroll: true }));
+  }
+
+  function setDoodleTool(tool) {
+    state.doodleTool = tool;
+    const erasing = tool === "eraser";
+    doodlePen.setAttribute("aria-pressed", String(!erasing));
+    doodleEraser.setAttribute("aria-pressed", String(erasing));
+    doodleCanvas.classList.toggle("is-erasing", erasing);
+    updateDoodleSizeControl();
+  }
+
+  function activateDoodleTool(tool) {
+    if (state.doodleTool === tool) setDoodleSizeOpen(!state.doodleSizeOpen);
+    else { setDoodleTool(tool); setDoodleSizeOpen(false); }
+  }
+
+  function setDoodleExpanded(expanded) {
+    setDoodleSizeOpen(false);
+    editor.classList.toggle("is-doodle-expanded", expanded);
+    doodleExpand.setAttribute("aria-pressed", String(expanded));
+    doodleExpand.setAttribute("aria-label", expanded ? "退出全屏涂鸦" : "进入全屏涂鸦");
+    doodleExpand.title = expanded ? "退出全屏" : "全屏";
+    const label = doodleExpand.querySelector("span");
+    if (label) label.textContent = expanded ? "退出" : "全屏";
+    if (expanded) requestAnimationFrame(redrawDoodleEditor);
   }
 
   function createNote(color = state.stackColor) {
-    const note = { id: crypto.randomUUID(), x: .68, y: .57, rotation: (Math.random() - .5) * .06, physicsAngle: 0, angularVelocity: 0, scale: .96, color, mode: "md", content: "# 新留言\n\n写下一点此刻的想法。", pins: [], seed: Math.floor(Math.random() * 9000) + 100, doodle: [], imageData: "" };
+    const note = { id: crypto.randomUUID(), public: true, visitorId, pendingSync: true, x: .68, y: .57, rotation: (Math.random() - .5) * .06, physicsAngle: 0, angularVelocity: 0, scale: .96, color, mode: "md", content: "# 新留言\n\n写下一点此刻的想法。", pins: [], seed: Math.floor(Math.random() * 9000) + 100, doodle: [], imageData: "" };
     state.notes.push(note); state.editingIsNew = true; openEditor(note);
   }
 
+  function createReceiptNote(detail = {}) {
+    const direction = detail.direction || { x: 0, y: 1 }, length = Math.hypot(direction.x, direction.y) || 1;
+    const note = {
+      id: crypto.randomUUID(), owner: true, kind: "receipt", x: clamp(.55 + direction.x / length * .12, .18, .78), y: clamp(.45 + direction.y / length * .12, .22, .75),
+      rotation: clamp(Math.atan2(direction.y, direction.x) * .08, -.13, .13), physicsAngle: 0, angularVelocity: 0, scale: 1.02,
+      color: "bone", mode: "receipt", receiptData: detail.stats || {}, pins: [], seed: Math.floor(Math.random() * 9000) + 100,
+      birth: performance.now(), floatIn: performance.now()
+    };
+    state.notes.push(note); saveNotes(); scheduleRender();
+  }
+
+  function deleteReceiptNote(note) {
+    if (!note || note.kind !== "receipt") return false;
+    state.notes = state.notes.filter(item => item.id !== note.id);
+    if (state.activeNoteId === note.id) state.activeNoteId = null;
+    saveNotes(); scheduleRender();
+    return true;
+  }
+
+  function canEditNote(note) {
+    return Boolean(note && (note.owner || !note.public || note.visitorId === visitorId));
+  }
+
   function openEditor(note) {
-    state.editingId = note.id; state.editMode = note.mode || "md"; state.draftDoodle = clone(note.doodle || []); state.draftImage = note.imageData || ""; markdown.value = note.content || "";
+    if (!canEditNote(note)) return;
+    state.editingId = note.id; state.editMode = note.mode || "md"; state.draftDoodle = clone(note.doodle || []); state.draftImage = note.imageData || ""; state.draftImageAspect = Number(note.imageAspect) || 1; state.clearedDoodle = null; markdown.value = note.content || "";
     const radio = form.querySelector(`[name="feltColor"][value="${note.color || "bone"}"]`); if (radio) radio.checked = true;
     deleteButton.hidden = state.editingIsNew;
     customColor.value = note.customColor || "#f6d365";
-    updateImagePreview(); switchMode(state.editMode); editor.showModal(); document.body.classList.add("felt-editor-open");
+    setDoodleTool("pen"); setDoodleSizeOpen(false); setDoodleExpanded(false); updateImagePreview(); switchMode(state.editMode); editor.showModal(); document.body.classList.add("felt-editor-open");
     if (state.editMode === "md") setTimeout(() => markdown.focus(), 20);
   }
 
   function cancelEditor() {
     if (state.editingIsNew) state.notes = state.notes.filter(note => note.id !== state.editingId);
-    state.editingId = null; state.editingIsNew = false; editor.close(); document.body.classList.remove("felt-editor-open"); scheduleRender();
+    state.editingId = null; state.editingIsNew = false; setDoodleExpanded(false); editor.close(); document.body.classList.remove("felt-editor-open"); scheduleRender();
   }
 
-  form.addEventListener("submit", event => {
-    event.preventDefault();
+  function saveEditor() {
     const note = state.notes.find(item => item.id === state.editingId); if (!note) return cancelEditor();
-    note.mode = state.editMode; note.content = markdown.value.trim() || "一张空白留言"; note.doodle = clone(state.draftDoodle); note.imageData = state.draftImage;
+    if (!canEditNote(note)) return cancelEditor();
+    const wasNew = state.editingIsNew;
+    note.mode = state.editMode; note.content = markdown.value.trim() || "一张空白留言"; note.doodle = clone(state.draftDoodle); note.imageData = state.draftImage; note.imageAspect = state.draftImageAspect;
     note.color = new FormData(form).get("feltColor") || "bone"; note.birth = performance.now(); note.floatIn = performance.now();
     note.customColor = customColor.value;
-    state.editingId = null; state.editingIsNew = false; saveNotes(); editor.close(); document.body.classList.remove("felt-editor-open"); scheduleRender();
+    state.editingId = null; state.editingIsNew = false; saveNotes(); publishPublicNote(note); if(wasNew)window.dispatchEvent(new CustomEvent("portfolio-stat",{detail:{type:"notes",count:1}})); setDoodleExpanded(false); editor.close(); document.body.classList.remove("felt-editor-open"); scheduleRender();
+  }
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    saveEditor();
   });
   document.getElementById("feltEditorCancel").onclick = cancelEditor;
   document.getElementById("feltEditorClose").onclick = cancelEditor;
   deleteButton.onclick = () => {
     if (!state.editingId || state.editingIsNew) return;
-    state.notes = state.notes.filter(note => note.id !== state.editingId); saveNotes();
-    state.editingId = null; editor.close(); document.body.classList.remove("felt-editor-open"); scheduleRender();
+    const note = state.notes.find(item => item.id === state.editingId); if (!canEditNote(note)) return cancelEditor();
+    state.notes = state.notes.filter(item => item.id !== state.editingId); saveNotes(); deletePublicNote(note);
+    state.editingId = null; setDoodleExpanded(false); editor.close(); document.body.classList.remove("felt-editor-open"); scheduleRender();
   };
   editor.addEventListener("cancel", event => { event.preventDefault(); cancelEditor(); });
   const modeTabs = [...form.querySelectorAll("[data-felt-mode]")];
@@ -530,7 +763,30 @@
       switchMode(modeTabs[next].dataset.feltMode); modeTabs[next].focus();
     };
   });
-  document.getElementById("feltDoodleClear").onclick = () => { state.draftDoodle = []; redrawDoodleEditor(); };
+  doodlePen.onclick = () => activateDoodleTool("pen");
+  doodleEraser.onclick = () => activateDoodleTool("eraser");
+  doodleUndo.onclick = () => {
+    if (state.draftDoodle.length) state.draftDoodle.pop();
+    else if (state.clearedDoodle) { state.draftDoodle = state.clearedDoodle; state.clearedDoodle = null; }
+    redrawDoodleEditor();
+  };
+  doodleExpand.onclick = () => setDoodleExpanded(!editor.classList.contains("is-doodle-expanded"));
+  doodleClear.onclick = () => {
+    if (!state.draftDoodle.length) return;
+    state.clearedDoodle = clone(state.draftDoodle); state.draftDoodle = []; redrawDoodleEditor();
+  };
+  doodleSave.onclick = saveEditor;
+  doodleSize.addEventListener("input", () => {
+    const value = Number(doodleSize.value);
+    if (state.doodleTool === "eraser") state.doodleEraserSize = value;
+    else state.doodlePenSize = value;
+    doodleSizeValue.value = String(value); doodleSizeValue.textContent = String(value);
+  });
+  editor.addEventListener("keydown", event => {
+    if (event.key !== "Escape" || !state.doodleSizeOpen) return;
+    event.preventDefault(); event.stopPropagation(); setDoodleSizeOpen(false);
+    (state.doodleTool === "eraser" ? doodleEraser : doodlePen).focus();
+  }, true);
 
   function updateImagePreview() {
     imagePreview.hidden = !state.draftImage;
@@ -546,7 +802,7 @@
         const target = document.createElement("canvas"), max = 1100, ratio = Math.min(1, max / Math.max(image.width, image.height));
         target.width = Math.max(1, Math.round(image.width * ratio)); target.height = Math.max(1, Math.round(image.height * ratio));
         target.getContext("2d").drawImage(image, 0, 0, target.width, target.height);
-        state.draftImage = target.toDataURL("image/jpeg", .84); updateImagePreview();
+        state.draftImage = target.toDataURL("image/jpeg", .84); state.draftImageAspect = image.width / image.height; updateImagePreview();
       };
       image.src = reader.result;
     };
@@ -562,7 +818,11 @@
     const rect = doodleCanvas.getBoundingClientRect();
     return [(event.clientX - rect.left) * doodleCanvas.width / rect.width, (event.clientY - rect.top) * doodleCanvas.height / rect.height];
   }
-  doodleCanvas.addEventListener("pointerdown", event => { doodleCanvas.setPointerCapture(event.pointerId); state.drawingStroke = { points: [doodlePoint(event)], width: 5 }; state.draftDoodle.push(state.drawingStroke); });
+  doodleCanvas.addEventListener("pointerdown", event => {
+    setDoodleSizeOpen(false); doodleCanvas.setPointerCapture(event.pointerId); state.clearedDoodle = null;
+    state.drawingStroke = { points: [doodlePoint(event)], width: state.doodleTool === "eraser" ? state.doodleEraserSize : state.doodlePenSize, erase: state.doodleTool === "eraser" };
+    state.draftDoodle.push(state.drawingStroke); redrawDoodleEditor();
+  });
   doodleCanvas.addEventListener("pointermove", event => { if (!state.drawingStroke) return; state.drawingStroke.points.push(doodlePoint(event)); redrawDoodleEditor(); });
   doodleCanvas.addEventListener("pointerup", () => { state.drawingStroke = null; });
   doodleCanvas.addEventListener("pointercancel", () => { state.drawingStroke = null; });
@@ -591,6 +851,7 @@
     supplyPinLayout.forEach((position, index) => { const next = Math.hypot(nx - position[0], ny - position[1]); if (next < distance) { distance = next; nearest = index; } });
     state.selectedPinColor = supplyPins[nearest]; state.holdingPin = true; scheduleRender();
   };
+  receiptButton.onclick = () => window.dispatchEvent(new CustomEvent("openvisitorreceipt"));
 
   function canvasPoint(event) {
     const rect = canvas.getBoundingClientRect();
@@ -600,6 +861,9 @@
     const point = canvasPoint(event); state.pointer = point;
     const hit = hitNote(point.x, point.y); if (!hit) return;
     const { note, local } = hit;
+    state.activeNoteId = note.id;
+    canvas.focus({ preventScroll: true });
+    if (!canEditNote(note)) return;
     if (state.holdingPin) {
       note.pins ||= [];
       const pin = { x: clamp(local.x / local.g.w, .02, .98), y: clamp(local.y / local.g.h, .02, .98), color: state.selectedPinColor, angle: -.75 + Math.random() * 1.5 };
@@ -669,9 +933,20 @@
   };
   canvas.addEventListener("pointerup", releaseDrag);
   canvas.addEventListener("pointercancel", releaseDrag);
-  canvas.addEventListener("dblclick", event => { const point = canvasPoint(event), hit = hitNote(point.x, point.y); if (hit) openEditor(hit.note); });
+  canvas.addEventListener("dblclick", event => {
+    const point = canvasPoint(event), hit = hitNote(point.x, point.y);
+    if (!hit) return;
+    if (hit.note.kind === "receipt") deleteReceiptNote(hit.note);
+    else openEditor(hit.note);
+  });
+  canvas.addEventListener("keydown", event => {
+    if (event.key !== "Delete" && event.key !== "Backspace") return;
+    const note = state.notes.find(item => item.id === state.activeNoteId);
+    if (deleteReceiptNote(note)) event.preventDefault();
+  });
 
   new ResizeObserver(resize).observe(shell);
-  window.addEventListener("feltboardvisibility", () => requestAnimationFrame(resize));
-  resize();
+  window.addEventListener("feltboardvisibility", scheduleRender);
+  window.addEventListener("felt-receipt-torn", event => createReceiptNote(event.detail));
+  resize(); syncPublicNotes();
 })();

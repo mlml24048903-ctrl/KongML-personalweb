@@ -7,7 +7,7 @@
     <title>&#x5B54;&#x7C73;&#x4E50; / &#x60F3;&#x6CD5;&#x6301;&#x7EED;&#x751F;&#x957F;</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2712%27 fill=%27%23060706%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2710%27 fill=%27%23d7ff24%27/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="./tokens.css?v=20260810ak" />
-    <link rel="stylesheet" href="./styles.css?v=20260814b" />
+    <link rel="stylesheet" href="./styles.css?v=20260814n" />
   </head>
   <body>
     <svg class="crt-filter-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -22,7 +22,7 @@
       <div id="outsideTrack" class="outside-track">
       <div class="outside-panel outside-desk-panel">
       <section class="hero-copy" aria-labelledby="hero-title">
-        <h1 id="hero-title">KEEP <br>BEING <br>AMBITIOUS.</h1>
+        <h1 id="hero-title">THE WORLD<br>IS STILL<br>IN DRAFT.</h1>
       </section>
       <section id="computerStage" class="computer-stage" aria-label="&#x4EA4;&#x4E92;&#x5F0F;&#x4E2A;&#x4EBA;&#x7535;&#x8111;">
         <div id="outerItems" class="outer-items" aria-label="&#x5C4F;&#x5E55;&#x5916;&#x4FBF;&#x7B7E;&#x5C42;"></div>
@@ -89,10 +89,11 @@
       </div>
 
       <section id="feltBoard" class="outside-panel felt-board" aria-labelledby="feltBoardTitle" aria-hidden="true">
-        <h2 id="feltBoardTitle" class="sr-only">可编辑的毛毡留言墙</h2>
+        <h2 id="feltBoardTitle" class="sr-only">留言板</h2>
         <div class="felt-canvas-shell">
           <canvas id="feltCanvas" aria-label="毛毡留言墙：撕取便签、编辑内容、拖动并用图钉固定"></canvas>
           <button id="feltTearButton" class="felt-canvas-hotspot" type="button">撕下一张便签</button>
+          <button id="feltReceiptButton" class="felt-canvas-hotspot" type="button">查看访问小票</button>
           <button id="feltPinButton" class="felt-canvas-hotspot" type="button">取出一枚图钉</button>
         </div>
       </section>
@@ -111,6 +112,25 @@
 
       <div id="zoomMeter" class="zoom-meter" aria-hidden="true"><span></span><small>&#x6EDA;&#x52A8;&#x5207;&#x6362;&#x7A7A;&#x95F4;</small></div>
 
+      <section id="visitorReceipt" class="visitor-receipt" aria-live="polite" aria-hidden="true">
+        <div class="visitor-receipt__backing" aria-hidden="true"></div>
+        <div class="visitor-receipt__roller" aria-hidden="true"><i></i><span></span><i></i></div>
+        <div class="visitor-receipt__paper-reveal" role="button" tabindex="0" aria-label="访问小票，拖动可沿虚线撕下；按回车键也可撕下">
+        <div class="visitor-receipt__paper-stub" aria-hidden="true"></div>
+        <div class="visitor-receipt__paper">
+          <canvas class="visitor-receipt__texture" aria-hidden="true"></canvas>
+          <header><small>KML / VISIT RECEIPT</small><h2>这一程的访问小票</h2><p data-receipt-time></p></header>
+          <dl>
+            <div><dt>点击</dt><dd><b data-stat="clicks">0</b><span>次</span></dd></div>
+            <div><dt>停留</dt><dd><b data-stat="minutes">0</b><span>分钟</span></dd></div>
+            <div><dt>打印</dt><dd><b data-stat="prints">0</b><span>张纸</span></dd></div>
+            <div><dt>留言</dt><dd><b data-stat="notes">0</b><span>张便签</span></dd></div>
+          </dl>
+          <footer><span>THANKS FOR STOPPING BY</span><i aria-hidden="true"></i></footer>
+        </div>
+        </div>
+      </section>
+
       <dialog id="feltEditor" class="felt-editor">
         <form method="dialog" id="feltEditorForm">
           <header>
@@ -127,7 +147,32 @@
               <textarea id="feltMarkdown" rows="9" maxlength="600" placeholder="# 写下一句话&#10;&#10;- 也可以使用简单的 Markdown"></textarea>
             </label>
             <section id="feltDoodleField" class="felt-editor-page felt-doodle-field" role="tabpanel" aria-labelledby="feltTabDoodle" hidden>
-              <div><button id="feltDoodleClear" type="button" aria-label="清空涂鸦">清空</button></div>
+              <div class="felt-doodle-toolbar" role="toolbar" aria-label="涂鸦工具">
+                <button id="feltDoodlePen" class="felt-tool-button" type="button" aria-label="画笔" aria-pressed="true" title="画笔">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.4-1 10.7-10.7a2.1 2.1 0 0 0-3-3L5.4 16 4 20Z"/><path d="m14.7 6.7 2.6 2.6M5.4 16l3 3"/></svg><span>画笔</span>
+                </button>
+                <button id="feltDoodleEraser" class="felt-tool-button" type="button" aria-label="橡皮擦" aria-pressed="false" title="橡皮擦">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7.2 18.5-3.1-3.1a2 2 0 0 1 0-2.8l7.8-7.8a2 2 0 0 1 2.8 0l5.2 5.2a2 2 0 0 1 0 2.8l-5.7 5.7h-7Z"/><path d="m9.1 7.6 7.3 7.3M13.8 18.5H21"/></svg><span>橡皮</span>
+                </button>
+                <label class="felt-tool-size" for="feltDoodleSize" aria-hidden="true">
+                  <span id="feltDoodleSizeLabel">画笔粗细</span>
+                  <input id="feltDoodleSize" type="range" min="2" max="24" value="5" step="1" aria-label="画笔粗细" tabindex="-1">
+                  <output id="feltDoodleSizeValue" for="feltDoodleSize">5</output>
+                </label>
+                <span class="felt-tool-divider" aria-hidden="true"></span>
+                <button id="feltDoodleUndo" class="felt-tool-button" type="button" aria-label="撤销上一步" title="撤销">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7 4 12l5 5"/><path d="M5 12h8a6 6 0 0 1 6 6"/></svg><span>撤销</span>
+                </button>
+                <button id="feltDoodleClear" class="felt-tool-button" type="button" aria-label="清空涂鸦" title="清空">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/><path d="M10 11v5M14 11v5"/></svg><span>清空</span>
+                </button>
+                <button id="feltDoodleExpand" class="felt-tool-button" type="button" aria-label="进入全屏涂鸦" aria-pressed="false" title="全屏">
+                  <svg class="icon-expand" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg><svg class="icon-collapse" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg><span>全屏</span>
+                </button>
+                <button id="feltDoodleSave" class="felt-tool-button felt-doodle-save" type="button" aria-label="保存涂鸦并放到留言板" title="保存到留言板">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg><span>保存</span>
+                </button>
+              </div>
               <canvas id="feltDoodleCanvas" width="720" height="720" aria-label="留言涂鸦画布"></canvas>
             </section>
             <section id="feltImageField" class="felt-editor-page felt-image-field" role="tabpanel" aria-labelledby="feltTabImage" hidden>
@@ -164,14 +209,14 @@
             <label><input type="radio" name="color" value="orange" /><i class="orange"></i></label>
             <label><input type="radio" name="color" value="bone" /><i class="bone"></i></label>
           </div>
-          <section id="noteMediaTools" class="note-media-tools" aria-label="&#x4FBF;&#x7B7E;&#x56FE;&#x7247;&#x4E0E;&#x6D82;&#x9E26;">
+          <section id="noteMediaTools" class="note-media-tools" aria-label="&#x4FBF;&#x7B7E;&#x56FE;&#x7247;">
             <div class="note-media-row">
               <label class="media-upload">&#x5BFC;&#x5165;&#x56FE;&#x7247;<input id="noteImageInput" type="file" accept="image/*" /></label>
               <button id="clearNoteImage" type="button" class="media-ghost">&#x79FB;&#x9664;&#x56FE;&#x7247;</button>
             </div>
             <div id="noteImagePreview" class="note-image-preview" hidden></div>
-            <div class="doodle-heading"><span>&#x76F4;&#x63A5;&#x6D82;&#x9E26;</span><button id="clearDoodle" type="button" class="media-ghost">&#x6E05;&#x7A7A;</button></div>
-            <canvas id="noteDoodle" width="640" height="320" aria-label="&#x4FBF;&#x7B7E;&#x6D82;&#x9E26;&#x753B;&#x5E03;"></canvas>
+            <div class="doodle-heading" hidden><span>&#x76F4;&#x63A5;&#x6D82;&#x9E26;</span><button id="clearDoodle" type="button" class="media-ghost">&#x6E05;&#x7A7A;</button></div>
+            <canvas id="noteDoodle" width="640" height="320" aria-label="&#x4FBF;&#x7B7E;&#x6D82;&#x9E26;&#x753B;&#x5E03;" hidden></canvas>
           </section>
           <footer><button type="button" class="dialog-secondary dialog-close">&#x53D6;&#x6D88;</button><button id="saveItem" value="default" class="dialog-primary">&#x4FDD;&#x5B58;&#x5230;&#x5DE5;&#x4F5C;&#x53F0;</button></footer>
         </form>
@@ -180,7 +225,8 @@
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
     </main>
     <script src="./assets/vendor/html-to-image.js?v=1.11.13"></script>
-    <script src="./felt-board.js?v=20260814a"></script>
-    <script src="./app.js?v=20260814a"></script>
+    <script src="./visitor-stats.js?v=20260814g"></script>
+    <script src="./felt-board.js?v=20260814m"></script>
+    <script src="./app.js?v=20260814e"></script>
   </body>
 </html>

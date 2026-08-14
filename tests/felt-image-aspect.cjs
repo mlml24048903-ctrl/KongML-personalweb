@@ -1,0 +1,30 @@
+const { chromium } = require("C:/Users/mlml2/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright");
+
+(async () => {
+  const browser = await chromium.launch({ headless: true, executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe" });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  page.setDefaultTimeout(7000);
+  const errors = [];
+  page.on("pageerror", error => errors.push(error.message));
+  page.on("console", message => { if (message.type() === "error") errors.push(message.text()); });
+  await page.addInitScript(() => localStorage.clear());
+  await page.goto("http://127.0.0.1:4173/?view=photo-note-v1", { waitUntil: "networkidle" });
+  await page.mouse.wheel(0, -180); await page.waitForTimeout(900);
+  await page.mouse.wheel(0, -180); await page.waitForTimeout(900);
+  await page.locator("body.message-board-open").waitFor();
+  await page.locator("#feltTearButton").click();
+  await page.locator("#feltEditor[open]").waitFor();
+  await page.locator("#feltTabImage").click();
+  if (!(await page.locator(".felt-paper-colors").isHidden())) throw new Error("paper colors remain visible in image mode");
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400"><rect width="800" height="400" fill="#91c9e8"/><circle cx="400" cy="200" r="110" fill="#f38a64"/></svg>';
+  await page.locator("#feltImageInput").setInputFiles({ name: "wide.svg", mimeType: "image/svg+xml", buffer: Buffer.from(svg) });
+  await page.locator("#feltImagePreview img").waitFor();
+  await page.locator(".felt-editor-save").click();
+  await page.waitForTimeout(700);
+  const photo = await page.evaluate(() => JSON.parse(localStorage.getItem("km-felt-canvas-notes-v1") || "[]").find(note => note.mode === "image"));
+  if (!photo || Math.abs(photo.imageAspect - 2) > .02) throw new Error(`image aspect was not preserved: ${photo?.imageAspect}`);
+  await page.screenshot({ path: "tests/felt-image-aspect-v1.png", fullPage: true });
+  if (errors.length) throw new Error(errors.join("\n"));
+  console.log("FELT_IMAGE_ASPECT_OK");
+  await browser.close();
+})().catch(error => { console.error(error); process.exitCode = 1; });
