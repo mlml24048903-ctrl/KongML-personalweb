@@ -163,7 +163,7 @@ module.exports = async function handler(request, response) {
   try {
     if (request.method === "GET") {
       const result = await fetch(`${base}?select=id,visitor_id,payload,created_at&order=created_at.desc&limit=120`, { headers: supabaseHeaders() });
-      if (!result.ok) throw new Error(await result.text());
+      if (!result.ok) return send(response, 502, { error: "留言暂时没有同步成功", stage: "read_notes", upstreamStatus: result.status });
       const rows = await result.json();
       return send(response, 200, { configured: true, notes: rows.map(row => ({ ...row.payload, id: row.id, visitorId: visitorId && row.visitor_id === visitorId ? visitorId : "remote" })) });
     }
