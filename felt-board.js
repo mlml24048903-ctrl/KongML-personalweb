@@ -21,6 +21,7 @@
   const paperColorPicker = form.querySelector(".felt-paper-colors");
   const customColor = document.getElementById("feltCustomColor");
   const deleteButton = document.getElementById("feltEditorDelete");
+  const saveButton = form.querySelector(".felt-editor-save");
   const doodleCanvas = document.getElementById("feltDoodleCanvas");
   const doodleCtx = doodleCanvas.getContext("2d");
   const doodlePen = document.getElementById("feltDoodlePen");
@@ -96,6 +97,7 @@
     editMode: "md",
     draftDoodle: [],
     draftImage: "",
+    draftImageUrl: "",
     draftImageAspect: 1,
     drawingStroke: null,
     doodleTool: "pen",
@@ -122,20 +124,25 @@
     return clean;
   }
   async function publishPublicNote(note) {
-    if (note.owner) return;
+    if (note.owner) return true;
     note.public = true; note.visitorId = visitorId;
-    if (!canUsePublicApi) { note.pendingSync = true; saveNotes(); return; }
+    if (!canUsePublicApi) { note.pendingSync = true; saveNotes(); return false; }
     try {
       const response = await fetch("/api/felt-notes", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ visitorId, note: cleanNote(note) }) });
       const result = await response.json().catch(() => ({}));
       if (response.status === 422) {
         note.pendingSync = false; note.public = false; note.syncRejected = true; saveNotes();
         window.dispatchEvent(new CustomEvent("feltboardnotice", { detail: { message: "这张留言已保存在本机，但未发布到公共留言板。" } }));
-        return;
+        return false;
       }
       if (!response.ok || result.configured === false) throw new Error(`HTTP ${response.status}`);
-      note.pendingSync = false; note.syncRejected = false; saveNotes();
-    } catch { note.pendingSync = true; saveNotes(); }
+      if (result.note?.imageUrl) { note.imageUrl = result.note.imageUrl; note.imageData = ""; delete note._image; }
+      note.pendingSync = false; note.syncRejected = false; saveNotes(); scheduleRender(); return true;
+    } catch {
+      note.pendingSync = true; saveNotes();
+      window.dispatchEvent(new CustomEvent("feltboardnotice", { detail: { message: note.mode === "image" ? "图片暂时未上传，已保存在本机，稍后会自动重试。" : "留言暂时未同步，稍后会自动重试。" } }));
+      return false;
+    }
   }
   async function syncPublicNotes() {
     if (!canUsePublicApi) return;
@@ -144,10 +151,16 @@
       if (!response.ok) return;
       const payload = await response.json();
       if (!Array.isArray(payload.notes)) return;
+      const localById = new Map(state.notes.map(note => [note.id, note]));
       const ownerNotes = state.notes.filter(note => note.owner);
       const localOnly = state.notes.filter(note => !note.owner && (!note.public || note.syncRejected));
       const localPending = state.notes.filter(note => !note.owner && note.pendingSync);
-      const remoteNotes = payload.notes.map(note => ({ ...note, public: true, pendingSync: false, physicsAngle: note.rotation || 0, angularVelocity: 0, floatIn: 0, birth: undefined }));
+      const remoteNotes = payload.notes.map(note => {
+        const local = localById.get(note.id);
+        const needsImageMigration = note.visitorId === visitorId && note.mode === "image" && !note.imageUrl && Boolean(note.imageData || local?.imageData);
+        return { ...note, imageData: note.imageData || local?.imageData || "", imageAspect: note.imageAspect || local?.imageAspect || 1, public: true, pendingSync: needsImageMigration, physicsAngle: note.rotation || 0, angularVelocity: 0, floatIn: 0, birth: undefined };
+      });
+      for (const note of remoteNotes) if (note.pendingSync && !localPending.some(local => local.id === note.id)) localPending.push(note);
       const merged = new Map([...remoteNotes, ...localPending].map(note => [note.id, note]));
       state.notes = [...ownerNotes, ...localOnly, ...merged.values()]; saveNotes(); scheduleRender();
       localPending.forEach(publishPublicNote);
@@ -372,7 +385,7 @@
     const baseW = clamp(state.content.w * .158, 104, 153) * (note.scale || 1);
     let w = note.kind === "receipt" ? baseW * .76 : baseW;
     let h = note.kind === "receipt" ? baseW * 1.48 : baseW;
-    if (note.mode === "image" && note.imageData) {
+    if (note.mode === "image" && (note.imageUrl || note.imageData)) {
       const aspect = Math.max(.12, Math.min(8, Number(note.imageAspect) || 1));
       h = w / aspect;
       const maxHeight = Math.max(190, state.content.h * .52);
@@ -469,9 +482,11 @@
   }
 
   function drawNoteImage(note, w, h) {
-    if (!note.imageData) return drawMarkdown({ content: "图片便签" }, w, h);
+    const source = note.imageUrl || note.imageData;
+    if (!source) return drawMarkdown({ content: "图片正在同步" }, w, h);
     note._image ||= new Image();
-    if (note._image.src !== note.imageData) {
+    if (note._image.src !== source) {
+      note._image.crossOrigin = "anonymous";
       note._image.onload = () => {
         if (!note.imageAspect && note._image.naturalHeight) {
           note.imageAspect = note._image.naturalWidth / note._image.naturalHeight;
@@ -479,7 +494,7 @@
         }
         scheduleRender();
       };
-      note._image.src = note.imageData;
+      note._image.src = source;
     }
     if (!note._image.complete) return;
     ctx.drawImage(note._image, 0, 0, w, h);
@@ -509,7 +524,7 @@
     const scale = .91 + age * .09, floatY = (1 - (1 - Math.pow(1 - floatAge, 3))) * 105;
     const pins = note.pins || [], pinned = pins.length > 0;
     ctx.save(); ctx.translate(g.cx, g.cy + floatY); ctx.rotate(g.angle); ctx.scale(scale, scale); ctx.translate(-g.w / 2, -g.h / 2);
-    const isPhoto = note.mode === "image" && Boolean(note.imageData);
+    const isPhoto = note.mode === "image" && Boolean(note.imageUrl || note.imageData);
     const path = note.kind === "receipt" ? receiptNotePath(g.w, g.h) : notePath(g.w, g.h);
     ctx.shadowColor = "rgba(55,38,25,.31)"; ctx.shadowBlur = pinned ? 11 : 20; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = pinned ? 7 : 13;
     ctx.fillStyle = isPhoto ? "rgba(255,255,255,.96)" : note.color === "custom" ? note.customColor || "#f6d365" : palette[note.color] || palette.bone; ctx.fill(path);
@@ -718,7 +733,7 @@
 
   function openEditor(note) {
     if (!canEditNote(note)) return;
-    state.editingId = note.id; state.editMode = note.mode || "md"; state.draftDoodle = clone(note.doodle || []); state.draftImage = note.imageData || ""; state.draftImageAspect = Number(note.imageAspect) || 1; state.clearedDoodle = null; markdown.value = note.content || "";
+    state.editingId = note.id; state.editMode = note.mode || "md"; state.draftDoodle = clone(note.doodle || []); state.draftImage = note.imageData || ""; state.draftImageUrl = note.imageUrl || ""; state.draftImageAspect = Number(note.imageAspect) || 1; state.clearedDoodle = null; markdown.value = note.content || "";
     const radio = form.querySelector(`[name="feltColor"][value="${note.color || "bone"}"]`); if (radio) radio.checked = true;
     deleteButton.hidden = state.editingIsNew;
     customColor.value = note.customColor || "#f6d365";
@@ -731,14 +746,18 @@
     state.editingId = null; state.editingIsNew = false; setDoodleExpanded(false); editor.close(); document.body.classList.remove("felt-editor-open"); scheduleRender();
   }
 
-  function saveEditor() {
+  async function saveEditor() {
     const note = state.notes.find(item => item.id === state.editingId); if (!note) return cancelEditor();
     if (!canEditNote(note)) return cancelEditor();
     const wasNew = state.editingIsNew;
-    note.mode = state.editMode; note.content = markdown.value.trim() || "一张空白留言"; note.doodle = clone(state.draftDoodle); note.imageData = state.draftImage; note.imageAspect = state.draftImageAspect;
+    note.mode = state.editMode; note.content = markdown.value.trim() || "一张空白留言"; note.doodle = clone(state.draftDoodle); note.imageData = state.draftImage; note.imageUrl = state.draftImageUrl; note.imageAspect = state.draftImageAspect;
     note.color = new FormData(form).get("feltColor") || "bone"; note.birth = performance.now(); note.floatIn = performance.now();
     note.customColor = customColor.value;
-    state.editingId = null; state.editingIsNew = false; saveNotes(); publishPublicNote(note); if(wasNew)window.dispatchEvent(new CustomEvent("portfolio-stat",{detail:{type:"notes",count:1}})); setDoodleExpanded(false); editor.close(); document.body.classList.remove("felt-editor-open"); scheduleRender();
+    saveNotes();
+    const previousLabel = saveButton.textContent; saveButton.disabled = true; saveButton.textContent = note.mode === "image" && state.draftImage ? "上传中…" : "保存中…";
+    await publishPublicNote(note);
+    saveButton.disabled = false; saveButton.textContent = previousLabel;
+    state.editingId = null; state.editingIsNew = false; if(wasNew)window.dispatchEvent(new CustomEvent("portfolio-stat",{detail:{type:"notes",count:1}})); setDoodleExpanded(false); editor.close(); document.body.classList.remove("felt-editor-open"); scheduleRender();
   }
   form.addEventListener("submit", event => {
     event.preventDefault();
@@ -789,9 +808,10 @@
   }, true);
 
   function updateImagePreview() {
-    imagePreview.hidden = !state.draftImage;
-    imagePreview.innerHTML = state.draftImage ? `<img src="${state.draftImage}" alt="已选择的便签图片">` : "";
-    imageDropzone.classList.toggle("has-image", Boolean(state.draftImage));
+    const source = state.draftImage || state.draftImageUrl;
+    imagePreview.hidden = !source;
+    imagePreview.innerHTML = source ? `<img src="${source}" alt="已选择的便签图片">` : "";
+    imageDropzone.classList.toggle("has-image", Boolean(source));
   }
   function importImage(file) {
     if (!file?.type.startsWith("image/")) return;
@@ -802,7 +822,9 @@
         const target = document.createElement("canvas"), max = 1100, ratio = Math.min(1, max / Math.max(image.width, image.height));
         target.width = Math.max(1, Math.round(image.width * ratio)); target.height = Math.max(1, Math.round(image.height * ratio));
         target.getContext("2d").drawImage(image, 0, 0, target.width, target.height);
-        state.draftImage = target.toDataURL("image/jpeg", .84); state.draftImageAspect = image.width / image.height; updateImagePreview();
+        let quality = .84, encoded = target.toDataURL("image/jpeg", quality);
+        while (encoded.length > 2600000 && quality > .52) { quality -= .08; encoded = target.toDataURL("image/jpeg", quality); }
+        state.draftImage = encoded; state.draftImageUrl = ""; state.draftImageAspect = image.width / image.height; updateImagePreview();
       };
       image.src = reader.result;
     };

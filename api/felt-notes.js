@@ -2,6 +2,8 @@ const { createHash } = require("crypto");
 
 const allowedColors = new Set(["yellow", "blue", "pink", "mint", "lavender", "bone", "coral", "custom"]);
 const allowedModes = new Set(["md", "doodle", "image"]);
+const imageBucket = "felt-images";
+const maxImageBytes = 2 * 1024 * 1024;
 const recentWrites = new Map();
 
 function send(response, status, body) {
@@ -23,6 +25,63 @@ function supabaseHeaders(extra = {}) {
     "content-type": "application/json",
     ...extra
   };
+}
+
+function storageRoot() {
+  return `${process.env.SUPABASE_URL.replace(/\/$/, "")}/storage/v1`;
+}
+
+function safeImageUrl(value) {
+  if (typeof value !== "string" || !value) return "";
+  const root = process.env.SUPABASE_URL?.replace(/\/$/, "");
+  return root && value.startsWith(`${root}/storage/v1/object/public/${imageBucket}/`) ? value.slice(0, 1200) : "";
+}
+
+function decodeImage(value) {
+  if (typeof value !== "string" || !value) return null;
+  const match = value.match(/^data:(image\/(?:jpeg|png|webp));base64,([a-z0-9+/=]+)$/i);
+  if (!match) throw new Error("invalid image data");
+  const buffer = Buffer.from(match[2], "base64");
+  if (!buffer.length || buffer.length > maxImageBytes) throw new Error("image too large");
+  return { buffer, contentType: match[1].toLowerCase(), extension: match[1].split("/")[1].replace("jpeg", "jpg") };
+}
+
+async function ensureImageBucket() {
+  const root = storageRoot();
+  const check = await fetch(`${root}/bucket/${imageBucket}`, { headers: supabaseHeaders() });
+  if (check.ok) return;
+  if (check.status !== 404 && check.status !== 400) throw new Error(await check.text());
+  const created = await fetch(`${root}/bucket`, {
+    method: "POST",
+    headers: supabaseHeaders(),
+    body: JSON.stringify({ id: imageBucket, name: imageBucket, public: true, file_size_limit: maxImageBytes, allowed_mime_types: ["image/jpeg", "image/png", "image/webp"] })
+  });
+  if (!created.ok && created.status !== 409) throw new Error(await created.text());
+}
+
+async function uploadNoteImage(noteId, decoded) {
+  await ensureImageBucket();
+  const objectPath = `notes/${noteId}.${decoded.extension}`;
+  const uploaded = await fetch(`${storageRoot()}/object/${imageBucket}/${objectPath}`, {
+    method: "POST",
+    headers: supabaseHeaders({ "content-type": decoded.contentType, "cache-control": "3600", "x-upsert": "true" }),
+    body: decoded.buffer
+  });
+  if (!uploaded.ok) throw new Error(await uploaded.text());
+  return `${process.env.SUPABASE_URL.replace(/\/$/, "")}/storage/v1/object/public/${imageBucket}/${objectPath}`;
+}
+
+async function deleteNoteImage(imageUrl) {
+  const safeUrl = safeImageUrl(imageUrl);
+  if (!safeUrl) return;
+  const prefix = decodeURIComponent(safeUrl.split(`/object/public/${imageBucket}/`)[1] || "");
+  if (!prefix.startsWith("notes/")) return;
+  const removed = await fetch(`${storageRoot()}/object/${imageBucket}`, {
+    method: "DELETE",
+    headers: supabaseHeaders(),
+    body: JSON.stringify({ prefixes: [prefix] })
+  });
+  if (!removed.ok && removed.status !== 404) throw new Error(await removed.text());
 }
 
 function cleanText(value, max) {
@@ -75,7 +134,6 @@ async function exceedsDurableRate(restRoot, visitorId, now) {
 }
 
 function cleanNote(note, id) {
-  const imageData = typeof note.imageData === "string" && /^data:image\/(?:png|jpeg|webp);base64,/i.test(note.imageData) && note.imageData.length <= 900000 ? note.imageData : "";
   const doodle = Array.isArray(note.doodle) ? note.doodle.slice(0, 80).map(stroke => ({ width: Math.max(1, Math.min(80, Number(stroke.width) || 5)), erase: Boolean(stroke.erase), points: Array.isArray(stroke.points) ? stroke.points.slice(0, 1400).map(point => [Number(point[0]) || 0, Number(point[1]) || 0]) : [] })) : [];
   const pins = Array.isArray(note.pins) ? note.pins.slice(0, 12).map(pin => ({ x: Math.max(.02, Math.min(.98, Number(pin.x) || .5)), y: Math.max(.02, Math.min(.98, Number(pin.y) || .08)), color: /^#[0-9a-f]{6}$/i.test(pin.color) ? pin.color : "#1769aa", angle: Math.max(-1.5, Math.min(1.5, Number(pin.angle) || 0)) })) : [];
   return {
@@ -89,7 +147,7 @@ function cleanNote(note, id) {
     customColor: /^#[0-9a-f]{6}$/i.test(note.customColor) ? note.customColor : "#f6d365",
     mode: allowedModes.has(note.mode) ? note.mode : "md",
     content: cleanText(note.content, 600),
-    imageData,
+    imageUrl: safeImageUrl(note.imageUrl),
     imageAspect: Math.max(.12, Math.min(8, Number(note.imageAspect) || 1)),
     doodle,
     pins,
@@ -118,21 +176,34 @@ module.exports = async function handler(request, response) {
       const moderation = moderationReason(request.body?.note);
       if (moderation) return send(response, 422, { error: moderation });
       const payload = cleanNote(request.body.note, id);
-      const ownershipResult = await fetch(`${base}?id=eq.${encodeURIComponent(id)}&select=visitor_id&limit=1`, { headers: supabaseHeaders() });
+      const ownershipResult = await fetch(`${base}?id=eq.${encodeURIComponent(id)}&select=visitor_id,payload&limit=1`, { headers: supabaseHeaders() });
       if (!ownershipResult.ok) throw new Error(await ownershipResult.text());
       const existing = await ownershipResult.json();
       if (existing[0] && existing[0].visitor_id !== visitorId) return send(response, 403, { error: "note belongs to another visitor" });
+      const previousImageUrl = safeImageUrl(existing[0]?.payload?.imageUrl);
+      if (payload.mode === "image") {
+        const decodedImage = decodeImage(request.body?.note?.imageData);
+        if (decodedImage) payload.imageUrl = await uploadNoteImage(id, decodedImage);
+        else payload.imageUrl ||= previousImageUrl;
+        if (!payload.imageUrl) return send(response, 422, { error: "image upload required" });
+      }
       const result = existing[0]
         ? await fetch(`${base}?id=eq.${encodeURIComponent(id)}&visitor_id=eq.${encodeURIComponent(visitorId)}`, { method: "PATCH", headers: supabaseHeaders({ prefer: "return=minimal" }), body: JSON.stringify({ payload, updated_at: new Date().toISOString() }) })
         : await fetch(base, { method: "POST", headers: supabaseHeaders({ prefer: "return=minimal" }), body: JSON.stringify({ id, visitor_id: visitorId, payload }) });
       if (!result.ok) throw new Error(await result.text());
-      return send(response, 200, { ok: true });
+      if (payload.mode !== "image" && previousImageUrl) await deleteNoteImage(previousImageUrl).catch(() => {});
+      return send(response, 200, { ok: true, note: payload });
     }
     if (request.method === "DELETE") {
       const id = cleanText(request.query?.id, 80);
       if (!visitorId || !id) return send(response, 400, { error: "invalid request" });
+      const ownershipResult = await fetch(`${base}?id=eq.${encodeURIComponent(id)}&visitor_id=eq.${encodeURIComponent(visitorId)}&select=payload&limit=1`, { headers: supabaseHeaders() });
+      if (!ownershipResult.ok) throw new Error(await ownershipResult.text());
+      const existing = await ownershipResult.json();
+      if (!existing[0]) return send(response, 403, { error: "note belongs to another visitor" });
       const result = await fetch(`${base}?id=eq.${encodeURIComponent(id)}&visitor_id=eq.${encodeURIComponent(visitorId)}`, { method: "DELETE", headers: supabaseHeaders({ prefer: "return=minimal" }) });
       if (!result.ok) throw new Error(await result.text());
+      await deleteNoteImage(existing[0].payload?.imageUrl).catch(() => {});
       return send(response, 200, { ok: true });
     }
     response.setHeader("allow", "GET, POST, DELETE");
