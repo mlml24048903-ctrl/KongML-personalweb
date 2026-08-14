@@ -21,5 +21,19 @@ create index if not exists felt_note_rate_events_lookup_idx
 alter table public.felt_notes enable row level security;
 alter table public.felt_note_rate_events enable row level security;
 
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'felt-images',
+  'felt-images',
+  true,
+  2097152,
+  array['image/jpeg', 'image/png', 'image/webp']
+)
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
 -- 浏览器不会直接访问该表；网页只通过 Vercel API 读写。
 -- 因此无需为 anon / authenticated 用户建立公开策略。
+-- 图片同样只通过后端密钥上传和删除；公开桶仅用于展示已经发布的图片。
