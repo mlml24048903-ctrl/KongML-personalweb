@@ -21,6 +21,12 @@ create index if not exists felt_note_rate_events_lookup_idx
 alter table public.felt_notes enable row level security;
 alter table public.felt_note_rate_events enable row level security;
 
+revoke all on table public.felt_notes from anon, authenticated;
+revoke all on table public.felt_note_rate_events from anon, authenticated;
+grant select, insert, update, delete on table public.felt_notes to service_role;
+grant select, insert, update, delete on table public.felt_note_rate_events to service_role;
+grant usage, select on sequence public.felt_note_rate_events_id_seq to service_role;
+
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
   'felt-images',
