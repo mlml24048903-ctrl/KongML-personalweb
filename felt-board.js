@@ -117,11 +117,21 @@
   };
 
   function saveNotes() {
-    localStorage.setItem(storageKey, JSON.stringify(state.notes.map(({ birth, floatIn, returning, angularVelocity, ...note }) => note)));
+    localStorage.setItem(storageKey, JSON.stringify(state.notes.map(({ birth, floatIn, returning, angularVelocity, _image, _imageSource, _imageFailed, ...note }) => note)));
   }
   function cleanNote(note) {
-    const { birth, floatIn, returning, angularVelocity, _image, ...clean } = note;
+    const { birth, floatIn, returning, angularVelocity, _image, _imageSource, _imageFailed, ...clean } = note;
     return clean;
+  }
+  function preloadImage(source) {
+    return new Promise((resolve, reject) => {
+      if (!source) return reject(new Error("missing image"));
+      const image = new Image();
+      image.crossOrigin = "anonymous";
+      image.onload = () => image.naturalWidth >= 24 && image.naturalHeight >= 24 ? resolve(image) : reject(new Error("image too small"));
+      image.onerror = () => reject(new Error("image failed to load"));
+      image.src = source;
+    });
   }
   async function publishPublicNote(note) {
     if (note.owner) return true;
@@ -136,7 +146,10 @@
         return false;
       }
       if (!response.ok || result.configured === false) throw new Error(`HTTP ${response.status}`);
-      if (result.note?.imageUrl) { note.imageUrl = result.note.imageUrl; note.imageData = ""; delete note._image; }
+      if (result.note?.imageUrl) {
+        const remoteImage = await preloadImage(result.note.imageUrl);
+        note.imageUrl = result.note.imageUrl; note.imageData = ""; note._image = remoteImage; note._imageSource = result.note.imageUrl; note._imageFailed = "";
+      }
       note.pendingSync = false; note.syncRejected = false; saveNotes(); scheduleRender(); return true;
     } catch {
       note.pendingSync = true; saveNotes();
@@ -155,10 +168,16 @@
       const ownerNotes = state.notes.filter(note => note.owner);
       const localOnly = state.notes.filter(note => !note.owner && (!note.public || note.syncRejected));
       const localPending = state.notes.filter(note => !note.owner && note.pendingSync);
-      const remoteNotes = payload.notes.map(note => {
-        const local = localById.get(note.id);
-        const needsImageMigration = note.visitorId === visitorId && note.mode === "image" && !note.imageUrl && Boolean(note.imageData || local?.imageData);
-        return { ...note, imageData: note.imageData || local?.imageData || "", imageAspect: note.imageAspect || local?.imageAspect || 1, public: true, pendingSync: needsImageMigration, physicsAngle: note.rotation || 0, angularVelocity: 0, floatIn: 0, birth: undefined };
+      const remoteNotes = payload.notes.map(remote => {
+        const local = localById.get(remote.id);
+        const needsImageMigration = remote.visitorId === visitorId && remote.mode === "image" && !remote.imageUrl && Boolean(remote.imageData || local?.imageData);
+        const merged = { ...remote, imageData: remote.imageData || local?.imageData || "", imageAspect: remote.imageAspect || local?.imageAspect || 1, public: true, pendingSync: needsImageMigration, physicsAngle: local?.physicsAngle ?? remote.rotation ?? 0, angularVelocity: local?.angularVelocity || 0, floatIn: 0, birth: undefined };
+        if (!local) return merged;
+        const runtime = { image: local._image, source: local._imageSource, failed: local._imageFailed };
+        Object.assign(local, merged);
+        if (runtime.image && runtime.source === (local.imageUrl || local.imageData)) { local._image = runtime.image; local._imageSource = runtime.source; local._imageFailed = runtime.failed; }
+        else { delete local._image; delete local._imageSource; delete local._imageFailed; }
+        return local;
       });
       for (const note of remoteNotes) if (note.pendingSync && !localPending.some(local => local.id === note.id)) localPending.push(note);
       const merged = new Map([...remoteNotes, ...localPending].map(note => [note.id, note]));
@@ -482,21 +501,31 @@
   }
 
   function drawNoteImage(note, w, h) {
-    const source = note.imageUrl || note.imageData;
+    const preferredSource = note.imageUrl || note.imageData;
+    const source = note._imageFailed === note.imageUrl && note.imageData ? note.imageData : preferredSource;
     if (!source) return drawMarkdown({ content: "图片正在同步" }, w, h);
+    if (note._imageFailed === source) return drawMarkdown({ content: note.imageData && source === note.imageData ? "图片无法读取" : "图片需要重新上传" }, w, h);
     note._image ||= new Image();
-    if (note._image.src !== source) {
+    if (note._imageSource !== source) {
       note._image.crossOrigin = "anonymous";
       note._image.onload = () => {
+        if (note._image.naturalWidth < 24 || note._image.naturalHeight < 24) {
+          note._imageFailed = source; delete note._image; delete note._imageSource; scheduleRender(); return;
+        }
+        note._imageFailed = "";
         if (!note.imageAspect && note._image.naturalHeight) {
           note.imageAspect = note._image.naturalWidth / note._image.naturalHeight;
           saveNotes();
         }
         scheduleRender();
       };
+      note._image.onerror = () => { note._imageFailed = source; delete note._image; delete note._imageSource; scheduleRender(); };
+      note._imageSource = source;
       note._image.src = source;
     }
-    if (!note._image.complete) return;
+    if (!note._image.complete || note._image.naturalWidth < 24 || note._image.naturalHeight < 24) {
+      return drawMarkdown({ content: note.imageData ? "图片正在恢复" : "图片需要重新上传" }, w, h);
+    }
     ctx.drawImage(note._image, 0, 0, w, h);
     ctx.strokeStyle = "rgba(0,0,0,.1)"; ctx.lineWidth = 1;
     ctx.strokeRect(.5, .5, Math.max(0, w - 1), Math.max(0, h - 1));
@@ -819,6 +848,10 @@
     reader.onload = () => {
       const image = new Image();
       image.onload = () => {
+        if (image.width < 24 || image.height < 24) {
+          window.dispatchEvent(new CustomEvent("feltboardnotice", { detail: { message: "图片尺寸过小，请重新选择。" } }));
+          return;
+        }
         const target = document.createElement("canvas"), max = 1100, ratio = Math.min(1, max / Math.max(image.width, image.height));
         target.width = Math.max(1, Math.round(image.width * ratio)); target.height = Math.max(1, Math.round(image.height * ratio));
         target.getContext("2d").drawImage(image, 0, 0, target.width, target.height);

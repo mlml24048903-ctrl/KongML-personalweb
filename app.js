@@ -138,10 +138,21 @@ function alignOuterMonitorStand(){
   const delta=innerHeight-base.getBoundingClientRect().bottom;
   monitor.style.setProperty("--stand-shift-y",`${delta.toFixed(2)}px`);
 }
+let outsideSlideToken=0,outsideSlideTimer=0;
 function setOutsideBoard(open){
   if(state.level!==1)return;
-  state.outsideBoard=Boolean(open);
-  els.body.classList.toggle("message-board-open",state.outsideBoard);
+  const next=Boolean(open),changed=state.outsideBoard!==next,token=++outsideSlideToken;
+  state.outsideBoard=next;
+  const applyPosition=()=>{
+    if(token!==outsideSlideToken)return;
+    els.body.classList.toggle("message-board-open",state.outsideBoard);
+    clearTimeout(outsideSlideTimer);
+    outsideSlideTimer=setTimeout(()=>els.outsideTrack.classList.remove("is-sliding"),1120);
+  };
+  if(changed){
+    els.outsideTrack.classList.add("is-sliding");
+    requestAnimationFrame(()=>requestAnimationFrame(applyPosition));
+  }else applyPosition();
   els.feltBoard.setAttribute("aria-hidden",String(!state.outsideBoard));
   els.feltBoard.inert=!state.outsideBoard;
   els.toolbar.hidden=state.outsideBoard;

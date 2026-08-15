@@ -43,7 +43,39 @@ function decodeImage(value) {
   if (!match) throw new Error("invalid image data");
   const buffer = Buffer.from(match[2], "base64");
   if (!buffer.length || buffer.length > maxImageBytes) throw new Error("image too large");
+  const dimensions = imageDimensions(buffer, match[1].toLowerCase());
+  if (!dimensions || dimensions.width < 24 || dimensions.height < 24 || dimensions.width > 12000 || dimensions.height > 12000) throw new Error("invalid image dimensions");
   return { buffer, contentType: match[1].toLowerCase(), extension: match[1].split("/")[1].replace("jpeg", "jpg") };
+}
+
+function imageDimensions(buffer, contentType) {
+  if (contentType === "image/png" && buffer.length >= 24 && buffer.toString("ascii", 1, 4) === "PNG") {
+    return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
+  }
+  if (contentType === "image/jpeg" && buffer.length > 10 && buffer[0] === 0xff && buffer[1] === 0xd8) {
+    let offset = 2;
+    while (offset + 8 < buffer.length) {
+      if (buffer[offset] !== 0xff) { offset += 1; continue; }
+      const marker = buffer[offset + 1];
+      if ([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf].includes(marker)) {
+        return { width: buffer.readUInt16BE(offset + 7), height: buffer.readUInt16BE(offset + 5) };
+      }
+      if (marker === 0xd8 || marker === 0xd9 || (marker >= 0xd0 && marker <= 0xd7)) { offset += 2; continue; }
+      const size = buffer.readUInt16BE(offset + 2);
+      if (size < 2) return null;
+      offset += size + 2;
+    }
+  }
+  if (contentType === "image/webp" && buffer.length >= 30 && buffer.toString("ascii", 0, 4) === "RIFF" && buffer.toString("ascii", 8, 12) === "WEBP") {
+    const kind = buffer.toString("ascii", 12, 16);
+    if (kind === "VP8X") return { width: 1 + buffer.readUIntLE(24, 3), height: 1 + buffer.readUIntLE(27, 3) };
+    if (kind === "VP8 " && buffer.length >= 30) return { width: buffer.readUInt16LE(26) & 0x3fff, height: buffer.readUInt16LE(28) & 0x3fff };
+    if (kind === "VP8L" && buffer.length >= 25) {
+      const bits = buffer.readUInt32LE(21);
+      return { width: 1 + (bits & 0x3fff), height: 1 + ((bits >> 14) & 0x3fff) };
+    }
+  }
+  return null;
 }
 
 async function ensureImageBucket() {
@@ -61,7 +93,8 @@ async function ensureImageBucket() {
 
 async function uploadNoteImage(noteId, decoded) {
   await ensureImageBucket();
-  const objectPath = `notes/${noteId}.${decoded.extension}`;
+  const version = createHash("sha256").update(decoded.buffer).digest("hex").slice(0, 12);
+  const objectPath = `notes/${noteId}-${version}.${decoded.extension}`;
   const uploaded = await fetch(`${storageRoot()}/object/${imageBucket}/${objectPath}`, {
     method: "POST",
     headers: supabaseHeaders({ "content-type": decoded.contentType, "cache-control": "3600", "x-upsert": "true" }),
@@ -191,7 +224,7 @@ module.exports = async function handler(request, response) {
         ? await fetch(`${base}?id=eq.${encodeURIComponent(id)}&visitor_id=eq.${encodeURIComponent(visitorId)}`, { method: "PATCH", headers: supabaseHeaders({ prefer: "return=minimal" }), body: JSON.stringify({ payload, updated_at: new Date().toISOString() }) })
         : await fetch(base, { method: "POST", headers: supabaseHeaders({ prefer: "return=minimal" }), body: JSON.stringify({ id, visitor_id: visitorId, payload }) });
       if (!result.ok) throw new Error(await result.text());
-      if (payload.mode !== "image" && previousImageUrl) await deleteNoteImage(previousImageUrl).catch(() => {});
+      if (previousImageUrl && (payload.mode !== "image" || payload.imageUrl !== previousImageUrl)) await deleteNoteImage(previousImageUrl).catch(() => {});
       return send(response, 200, { ok: true, note: payload });
     }
     if (request.method === "DELETE") {
