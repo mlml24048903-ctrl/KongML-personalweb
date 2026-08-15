@@ -5393,6 +5393,12 @@ body { overflow-x:clip; }
 .scene-ready .outer-item { animation-delay:360ms; }
 @keyframes objectResolve { from { opacity:0;filter:blur(9px) saturate(.6); } to { opacity:1;filter:none; } }
 
+/* Once a note has been touched, its one-shot scene entrance must never replay after landing. */
+.scene-ready .outer-item.is-interaction-ready:not(.is-landing) {
+  animation:none!important;
+  opacity:1;
+}
+
 body.workspace-entered .hero-copy { opacity:.16!important;filter:blur(2px); }
 body.inner-mode .hero-copy { opacity:0!important; }
 body[data-scene="board"] .scene-chrome,body[data-scene="2"] .scene-chrome { color:var(--color-paper-soft); }

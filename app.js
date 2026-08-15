@@ -230,7 +230,7 @@ function bindOuterItem(n,item){
     if(e.target.closest(".delete-item"))return;
     const r=els.outerItems.getBoundingClientRect();
     d={sx:e.clientX,sy:e.clientY,x:item.x*r.width,y:item.y*r.height,r,lx:e.clientX,lt:e.timeStamp,cx:item.x,cy:item.y,tx:item.x,ty:item.y,sway:0,swayTarget:0};
-    n.style.setProperty("--sway","0deg");n.classList.remove("is-landing");n.classList.add("is-pressed","is-dragging");
+    n.style.setProperty("--sway","0deg");n.classList.remove("is-landing");n.classList.add("is-interaction-ready","is-pressed","is-dragging");
     n.setPointerCapture(e.pointerId);cancelAnimationFrame(raf);follow();
   });
   n.addEventListener("pointermove",e=>{
