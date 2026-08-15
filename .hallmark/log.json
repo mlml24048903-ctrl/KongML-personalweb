@@ -1,5 +1,23 @@
 [
   {
+    "date": "2026-08-15",
+    "scope": "homepage + shared scene motion",
+    "macrostructure": "asymmetric editorial workbench",
+    "theme": "studied-DNA",
+    "theme_axes": "saturated pastoral field / oversized grotesk / fluorescent lime + orange-red",
+    "vibe": "自娱自乐、醒目、可探索、带电影感",
+    "enrichment": "pointer-depth lighting + looping pastoral environment + restored solid-paper drag",
+    "brief": "参考四个公开设计作品重排首页，并为连续工作台空间建立统一动效语言",
+    "reference": "Kyle Anthony Miller, Arushi Upmanyu, Hewar and Alim Joldaspayev public X posts",
+    "qa": {
+      "desktop": "1440x900 homepage and workbench smoke passed",
+      "responsive": "320, 375, 390, 414 and 768px passed without horizontal overflow or wrapped scene controls",
+      "motion": "interruptible pointer depth, staged first entrance, slow landscape drift and light sweep, scene-state transitions and direct note release; foreground glyphs and CRT content reveal removed",
+      "consoleErrors": 0,
+      "layoutBoundary": "existing monitor, printer, mouse, notes, archive and message-wall behavior preserved"
+    }
+  },
+  {
     "date": "2026-08-10",
     "scope": "app",
     "macrostructure": "floating workbench",

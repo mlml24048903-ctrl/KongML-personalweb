@@ -15,6 +15,12 @@
   --color-focus: oklch(68% 0.2 37);
   --color-shadow: oklch(13% 0.026 167 / 0.18);
   --color-shadow-heavy: oklch(13% 0.026 167 / 0.32);
+  --color-scene-night: oklch(13% 0.025 167);
+  --color-scene-ink: oklch(22% 0.045 183);
+  --color-scene-cobalt: oklch(50% 0.23 258);
+  --color-scene-lime: var(--color-lime);
+  --color-scene-orange: var(--color-orange);
+  --color-scene-glow: oklch(96% 0.035 90 / 0.72);
 
   --font-display: "Noto Serif SC", "Songti SC", "STSong", "Times New Roman", serif;
   --font-body: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", sans-serif;
@@ -46,6 +52,8 @@
   --dur-page: 1550ms;
   --dur-profile-switch: 900ms;
   --dur-profile-settle: 360ms;
+  --dur-scene-enter: 960ms;
+  --dur-scene-shift: 1200ms;
   --radius-small: 3px;
   --radius-soft: 18px;
   --radius-pill: 999px;

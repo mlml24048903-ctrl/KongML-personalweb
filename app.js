@@ -147,10 +147,14 @@ function setOutsideBoard(open){
     if(token!==outsideSlideToken)return;
     els.body.classList.toggle("message-board-open",state.outsideBoard);
     clearTimeout(outsideSlideTimer);
-    outsideSlideTimer=setTimeout(()=>els.outsideTrack.classList.remove("is-sliding"),1120);
+    outsideSlideTimer=setTimeout(()=>{
+      els.outsideTrack.classList.remove("is-sliding");
+      els.body.classList.remove("scene-sliding");
+    },860);
   };
   if(changed){
     els.outsideTrack.classList.add("is-sliding");
+    els.body.classList.add("scene-sliding");
     requestAnimationFrame(()=>requestAnimationFrame(applyPosition));
   }else applyPosition();
   els.feltBoard.setAttribute("aria-hidden",String(!state.outsideBoard));
@@ -158,8 +162,8 @@ function setOutsideBoard(open){
   els.toolbar.hidden=state.outsideBoard;
   els.modeLabel.textContent=state.outsideBoard?"留言 / 02":"屏幕外模式 / 01";
   els.modeDescription.textContent=state.outsideBoard?"反向滑动回到桌面":"点击文件夹或鼠标进入屏幕，滑动前往留言";
+  updateSceneState();
   hideInteractionHint();
-  window.dispatchEvent(new CustomEvent("feltboardvisibility",{detail:{open:state.outsideBoard}}));
 }
 function setLevel(n,openId){
   const l=Math.max(0,Math.min(2,n));
@@ -167,7 +171,7 @@ function setLevel(n,openId){
   const firstStage=levelChanged?els.stage.getBoundingClientRect():null,firstMonitor=levelChanged?monitor.getBoundingClientRect():null;
   if(levelChanged){els.stage.getAnimations().forEach(animation=>animation.cancel());shell.getAnimations().forEach(animation=>animation.cancel());els.stage.classList.add("is-mode-traveling");shell.classList.add("is-mode-traveling");monitor.classList.add("is-mode-traveling")}
   state.level=l;
-  if(l!==1){state.outsideBoard=false;els.body.classList.remove("message-board-open");els.feltBoard.setAttribute("aria-hidden","true");els.feltBoard.inert=true}
+  if(l!==1){state.outsideBoard=false;els.body.classList.remove("message-board-open","scene-sliding");els.outsideTrack.classList.remove("is-sliding");els.feltBoard.setAttribute("aria-hidden","true");els.feltBoard.inert=true}
   els.body.classList.toggle("workspace-entered",l>0);
   els.body.classList.toggle("inner-mode",l===2);
   els.stage.classList.toggle("entered",l>0);
@@ -186,6 +190,7 @@ function setLevel(n,openId){
   }
   state.wheelAmount=0;
   els.zoomMeter.style.width="0";
+  updateSceneState();
 }
 function renderOuterItems(){
   els.outerItems.innerHTML="";
@@ -617,7 +622,43 @@ function bindDesktopContextMenu(){
   document.addEventListener("pointerdown",e=>{if(!e.target.closest(".retro-context-menu"))close()});document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});window.addEventListener("blur",close);
 }
 function bindEvents(){els.enterMouse.onclick=()=>{markInteraction("mouse");if(state.level<2)setLevel(2)};document.querySelectorAll("[data-open-app]").forEach(b=>b.onclick=()=>{setLevel(2);openItemWindow(b.dataset.openApp)});document.querySelectorAll(".desktop-icon").forEach(b=>b.onclick=()=>{setLevel(2);openItemWindow(b.dataset.app)});document.getElementById("addNote").onclick=()=>openItemDialog({scope:"outer",action:"create"});document.getElementById("newFile").onclick=()=>createDesktopItemInline("file");document.getElementById("newFolder").onclick=()=>createDesktopItemInline("folder");document.getElementById("resetWorkspace").onclick=resetAll;document.querySelectorAll(".dialog-close").forEach(b=>b.onclick=closeDialog);els.itemForm.onsubmit=saveDialog;els.dialog.oncancel=e=>{e.preventDefault();closeDialog()};els.retroDesktop.ondragover=e=>{if(state.draggedInnerId)e.preventDefault()};els.retroDesktop.ondrop=e=>{if(state.draggedInnerId){e.preventDefault();moveItem(e.dataTransfer.getData("text/plain")||state.draggedInnerId,null);state.draggedInnerId=null}};els.windowLayer.addEventListener("pointerdown",e=>{const w=e.target.closest(".retro-window");if(w){const i=state.innerItems.find(x=>x.id===w.dataset.itemId);state.activeFolderId=i?.kind==="folder"?i.id:null}});els.powerButton.onclick=e=>{e.stopPropagation();markInteraction("power");togglePower()};bindPrinter();bindDesktopContextMenu();bindInteractionHints();bindOutsideSwipe();window.addEventListener("wheel",handleWheel,{passive:false});window.onresize=alignOuterMonitorStand}
+function updateSceneState(){
+  const scene=state.outsideBoard?"board":String(state.level);
+  els.body.dataset.scene=scene;
+  document.querySelectorAll("[data-scene-target]").forEach(button=>{
+    const active=button.dataset.sceneTarget===scene;
+    if(active)button.setAttribute("aria-current","page");else button.removeAttribute("aria-current");
+  });
+}
+function bindSceneMotion(){
+  const app=document.getElementById("app"),reduce=matchMedia("(prefers-reduced-motion: reduce)"),fine=matchMedia("(hover:hover) and (pointer:fine)");
+  const hour=new Date().getHours();els.body.dataset.ambient=hour>=18||hour<6?"night":"day";
+  let targetX=0,targetY=0,currentX=0,currentY=0,frame=0;
+  const paint=()=>{
+    currentX+=(targetX-currentX)*.095;currentY+=(targetY-currentY)*.095;
+    app.style.setProperty("--pointer-x",currentX.toFixed(3));app.style.setProperty("--pointer-y",currentY.toFixed(3));
+    app.style.setProperty("--cursor-x",`${(50+currentX*42).toFixed(2)}%`);app.style.setProperty("--cursor-y",`${(48+currentY*38).toFixed(2)}%`);
+    if(Math.abs(targetX-currentX)+Math.abs(targetY-currentY)>.002)frame=requestAnimationFrame(paint);else frame=0;
+  };
+  const schedule=()=>{if(!frame)frame=requestAnimationFrame(paint)};
+  window.addEventListener("pointermove",event=>{if(reduce.matches||!fine.matches||els.body.classList.contains("scene-sliding"))return;targetX=Math.max(-1,Math.min(1,event.clientX/innerWidth*2-1));targetY=Math.max(-1,Math.min(1,event.clientY/innerHeight*2-1));schedule()},{passive:true});
+  document.documentElement.addEventListener("pointerleave",()=>{targetX=0;targetY=0;schedule()});
+  document.querySelectorAll("[data-scene-target]").forEach(button=>button.addEventListener("click",()=>{
+    const target=button.dataset.sceneTarget;
+    if(target==="board"){
+      if(state.level!==1)setLevel(1);
+      setOutsideBoard(true);
+      return;
+    }
+    const nextLevel=Number(target);
+    if(nextLevel===1&&state.level===1&&state.outsideBoard)setOutsideBoard(false);
+    else setLevel(nextLevel);
+  }));
+  document.querySelector(".scene-signature")?.addEventListener("click",event=>{event.preventDefault();setLevel(0)});
+  requestAnimationFrame(()=>{els.body.classList.add("scene-mounted");requestAnimationFrame(()=>els.body.classList.add("scene-ready"))});
+  updateSceneState();
+}
 function clock(){const c=document.getElementById("retroClock");if(c)c.textContent=new Intl.DateTimeFormat("zh-CN",{hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date())}
 els.itemForm.addEventListener("submit",()=>{if(state.dialogContext?.scope==="outer"){state.noteDoodleDirty=false;state.noteDoodleData=""}},{capture:true});
 window.addEventListener("feltboardnotice",event=>toast(event.detail?.message||"留言状态已更新"));
-bindNoteMedia();renderOuterItems();renderInnerItems();bindEvents();applyDesktopMode();clock();setLevel(0);setInterval(clock,30000);
+bindNoteMedia();renderOuterItems();renderInnerItems();bindEvents();bindSceneMotion();applyDesktopMode();clock();setLevel(0);setInterval(clock,30000);

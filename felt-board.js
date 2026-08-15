@@ -234,7 +234,10 @@
     bctx.clearRect(0, 0, state.width, state.height);
 
     const marginX = clamp(state.width * .055, 28, 82);
-    const marginTop = clamp(state.height * .055, 24, 52);
+    // Keep the wooden frame clear of the persistent scene header.
+    const marginTop = state.width <= 560
+      ? clamp(state.height * .085, 64, 76)
+      : clamp(state.height * .09, 76, 92);
     const bottom = clamp(state.height * .1, 70, 95);
     state.board = { x: marginX, y: marginTop, w: state.width - marginX * 2, h: state.height - marginTop - bottom };
     const board = state.board;

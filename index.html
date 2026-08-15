@@ -6,8 +6,8 @@
     <meta name="description" content="&#x5B54;&#x7C73;&#x4E50;&#x7684;&#x4E2A;&#x4EBA;&#x5DE5;&#x4F5C;&#x53F0;&#xFF1A;&#x4EA7;&#x54C1;&#x3001;&#x5F00;&#x53D1;&#x3001;&#x8BED;&#x8A00;&#x4E0E;&#x6301;&#x7EED;&#x751F;&#x957F;&#x7684;&#x60F3;&#x6CD5;&#x3002;" />
     <title>&#x5B54;&#x7C73;&#x4E50; / &#x60F3;&#x6CD5;&#x6301;&#x7EED;&#x751F;&#x957F;</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2712%27 fill=%27%23060706%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2710%27 fill=%27%23d7ff24%27/%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="./tokens.css?v=20260810ak" />
-    <link rel="stylesheet" href="./styles.css?v=20260814n" />
+    <link rel="stylesheet" href="./tokens.css?v=20260815a" />
+    <link rel="stylesheet" href="./styles.css?v=20260815b" />
   </head>
   <body>
     <svg class="crt-filter-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -19,11 +19,29 @@
     <main id="app" class="app">
       <div class="pastoral-background" aria-hidden="true"></div>
       <div class="ambient-grid" aria-hidden="true"></div>
+      <div class="scene-atmosphere" aria-hidden="true">
+        <span class="scene-beam scene-beam-a"></span>
+        <span class="scene-beam scene-beam-b"></span>
+        <span class="scene-cursor-light"></span>
+      </div>
+
+      <header class="scene-chrome">
+        <a class="scene-signature" href="#hero-title" aria-label="回到首页">
+          <span>KML</span><small>PERSONAL PLAYGROUND / 2026</small>
+        </a>
+        <nav class="scene-nav" aria-label="场景导航">
+          <button type="button" data-scene-target="0" aria-current="page">首页</button>
+          <button type="button" data-scene-target="1">工作台</button>
+          <button type="button" data-scene-target="2">档案</button>
+          <button type="button" data-scene-target="board">留言</button>
+        </nav>
+      </header>
 
       <div id="outsideTrack" class="outside-track">
       <div class="outside-panel outside-desk-panel">
       <section class="hero-copy" aria-labelledby="hero-title">
-        <h1 id="hero-title">THE WORLD<br>IS STILL<br>IN DRAFT.</h1>
+        <p class="hero-index"><span>FIELD NOTE / 001</span><span>38.9881° N · 117.3392° E</span></p>
+        <h1 id="hero-title"><span>THE WORLD</span><span>IS STILL</span><span>IN DRAFT.</span></h1>
       </section>
       <section id="computerStage" class="computer-stage" aria-label="&#x4EA4;&#x4E92;&#x5F0F;&#x4E2A;&#x4EBA;&#x7535;&#x8111;">
         <div id="outerItems" class="outer-items" aria-label="&#x5C4F;&#x5E55;&#x5916;&#x4FBF;&#x7B7E;&#x5C42;"></div>
@@ -227,7 +245,7 @@
     </main>
     <script src="./assets/vendor/html-to-image.js?v=1.11.13"></script>
     <script src="./visitor-stats.js?v=20260814g"></script>
-    <script src="./felt-board.js?v=20260814n"></script>
-    <script src="./app.js?v=20260814e"></script>
+    <script src="./felt-board.js?v=20260815b"></script>
+    <script src="./app.js?v=20260815b"></script>
   </body>
 </html>
