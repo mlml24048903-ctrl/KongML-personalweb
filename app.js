@@ -1,4 +1,4 @@
-const STORAGE={outerItems:"km-portfolio-outer-items-v4",innerItems:"km-portfolio-inner-items-v6",desktopMode:"km-portfolio-desktop-mode-v1"};
+const STORAGE={outerItems:"km-portfolio-outer-items-v4",innerItems:"km-portfolio-inner-items-v6",desktopMode:"km-portfolio-desktop-mode-v1",outerLayout:"km-portfolio-outer-layout-v1"};
 ["km-portfolio-outer-items-v2","km-portfolio-outer-items-v3","km-portfolio-inner-items-v2","km-portfolio-inner-items-v3","km-portfolio-inner-items-v4","km-portfolio-inner-items-v5","km-portfolio-connections-v3"].forEach(key=>localStorage.removeItem(key));
 const defaultOuterItems=[
 {id:"note-edge",color:"orange",title:"\u4fdd\u6301\u950b\u8292",content:"\u5bf9\u4e16\u754c\u4fdd\u6301\u654f\u611f\uff0c\u5bf9\u7b54\u6848\u4fdd\u6301\u6000\u7591\u3002",x:.205,y:.2,rotation:-6},
@@ -25,8 +25,11 @@ const defaultInnerItems=[
 function load(k,f){try{const v=JSON.parse(localStorage.getItem(k));return Array.isArray(v)?v:clone(f)}catch{return clone(f)}}
 function loadOuterItems(){
   const saved=load(STORAGE.outerItems,defaultOuterItems),defaults=new Map(defaultOuterItems.map(item=>[item.id,item]));
-  const fixed=defaultOuterItems.map(item=>{const current=saved.find(entry=>entry.id===item.id);return current?{...current,title:item.title,content:item.content,color:item.color,rotation:item.rotation}:clone(item)});
-  return [...fixed,...saved.filter(item=>!defaults.has(item.id))];
+  const migrateLayout=localStorage.getItem(STORAGE.outerLayout)!=="1";
+  const fixed=defaultOuterItems.map(item=>{const current=saved.find(entry=>entry.id===item.id);return current?{...current,title:item.title,content:item.content,color:item.color,rotation:item.rotation,...(migrateLayout?{x:item.x,y:item.y}:{})}:clone(item)});
+  const result=[...fixed,...saved.filter(item=>!defaults.has(item.id))];
+  if(migrateLayout){localStorage.setItem(STORAGE.outerItems,JSON.stringify(result));localStorage.setItem(STORAGE.outerLayout,"1")}
+  return result;
 }
 function loadInnerItems(){
   const saved=load(STORAGE.innerItems,defaultInnerItems),defaults=new Map(defaultInnerItems.map(item=>[item.id,item]));
@@ -148,6 +151,7 @@ function setOutsideBoard(open){
   if(state.level!==1)return;
   const next=Boolean(open),changed=state.outsideBoard!==next,token=++outsideSlideToken;
   state.outsideBoard=next;
+  window.dispatchEvent(new CustomEvent("feltboardvisibility",{detail:{visible:next}}));
   const applyPosition=()=>{
     if(token!==outsideSlideToken)return;
     els.body.classList.toggle("message-board-open",state.outsideBoard);

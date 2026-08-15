@@ -128,7 +128,9 @@
     serverHydrated: false,
     syncing: false,
     syncTimers: new Map(),
-    nextZ: 0
+    nextZ: 0,
+    boardVisible: false,
+    visibilitySyncTimer: 0
   };
   state.nextZ = state.notes.reduce((highest, note) => Math.max(highest, Number(note.z) || 0), 0);
 
@@ -274,6 +276,7 @@
     } catch { return false; }
   }
   function scheduleRender() {
+    if (!state.boardVisible) return;
     if (state.renderRaf) return;
     state.renderRaf = requestAnimationFrame(time => { state.renderRaf = 0; render(time); });
   }
@@ -760,6 +763,7 @@
     state.width = Math.max(1, rect.width); state.height = Math.max(1, rect.height); state.dpr = Math.min(2, devicePixelRatio || 1);
     state.sceneScale = clamp(state.width / 1440, 1, 1.38);
     canvas.dataset.sceneScale = state.sceneScale.toFixed(3);
+    if (!state.boardVisible) return;
     canvas.width = Math.round(state.width * state.dpr); canvas.height = Math.round(state.height * state.dpr);
     state.backgroundDirty = true; scheduleRender();
   }
@@ -1106,9 +1110,19 @@
     if (deleteReceiptNote(note)) event.preventDefault();
   });
 
+  function setBoardVisibility(event) {
+    state.boardVisible = event.detail?.visible === true;
+    clearTimeout(state.visibilitySyncTimer);
+    if (!state.boardVisible) {
+      cancelAnimationFrame(state.renderRaf); state.renderRaf = 0;
+      return;
+    }
+    resize(); scheduleRender();
+    state.visibilitySyncTimer = setTimeout(syncPublicNotes, 900);
+  }
   new ResizeObserver(resize).observe(shell);
-  window.addEventListener("feltboardvisibility", scheduleRender);
+  window.addEventListener("feltboardvisibility", setBoardVisibility);
   window.addEventListener("felt-receipt-torn", event => createReceiptNote(event.detail));
-  resize(); syncPublicNotes();
-  setInterval(() => { if (!document.hidden) syncPublicNotes(); }, 12000);
+  resize();
+  setInterval(() => { if (!document.hidden && state.boardVisible) syncPublicNotes(); }, 12000);
 })();
