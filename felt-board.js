@@ -83,6 +83,7 @@
     width: 0,
     height: 0,
     dpr: 1,
+    sceneScale: 1,
     board: null,
     content: null,
     pad: null,
@@ -309,7 +310,8 @@
     bctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
     bctx.clearRect(0, 0, state.width, state.height);
 
-    const marginX = clamp(state.width * .055, 28, 82);
+    const ui = state.sceneScale;
+    const marginX = clamp(state.width * .055, 28, 82 * ui);
     // Keep the wooden frame clear of the persistent scene header.
     const marginTop = state.width <= 560
       ? clamp(state.height * .085, 64, 76)
@@ -319,8 +321,8 @@
     const board = state.board;
     const frame = clamp(Math.min(board.w, board.h) * .026, 13, 24);
     const inner = { x: board.x + frame, y: board.y + frame, w: board.w - frame * 2, h: board.h - frame * 2 };
-    const supplyW = clamp(inner.w * .17, 145, 218);
-    state.content = { x: inner.x + 28, y: inner.y + 72, w: inner.w - supplyW - 62, h: inner.h - 96 };
+    const supplyW = clamp(inner.w * .17, 145 * ui, 218 * ui);
+    state.content = { x: inner.x + 28 * ui, y: inner.y + 72 * ui, w: inner.w - supplyW - 62 * ui, h: inner.h - 96 * ui };
 
     bctx.save();
     bctx.shadowColor = "rgba(0,0,0,.48)"; bctx.shadowBlur = 34; bctx.shadowOffsetY = 17;
@@ -361,21 +363,21 @@
     bctx.restore();
 
     bctx.fillStyle = "#2d251d";
-    bctx.font = `600 ${clamp(state.width * .025, 22, 36)}px "Noto Serif SC", serif`;
-    bctx.fillText("留言板", inner.x + 34, inner.y + 47);
+    bctx.font = `600 ${clamp(state.width * .025, 22 * ui, 36 * ui)}px "Noto Serif SC", serif`;
+    bctx.fillText("留言板", inner.x + 34 * ui, inner.y + 47 * ui);
 
     bctx.strokeStyle = "rgba(40,29,21,.22)"; bctx.lineWidth = 1;
-    bctx.beginPath(); bctx.moveTo(inner.x + inner.w - supplyW - 16, inner.y + 24); bctx.lineTo(inner.x + inner.w - supplyW - 16, inner.y + inner.h - 24); bctx.stroke();
+    bctx.beginPath(); bctx.moveTo(inner.x + inner.w - supplyW - 16 * ui, inner.y + 24 * ui); bctx.lineTo(inner.x + inner.w - supplyW - 16 * ui, inner.y + inner.h - 24 * ui); bctx.stroke();
     state.backgroundDirty = false;
   }
 
   function layoutSupplies() {
-    const board = state.board;
-    const padW = clamp(state.content.w * .158, 104, 153), padH = padW;
-    const supplyCenter = board.x + board.w - 121;
+    const board = state.board, ui = state.sceneScale;
+    const padW = clamp(state.content.w * .158, 104 * ui, 153 * ui), padH = padW;
+    const supplyCenter = board.x + board.w - 121 * ui;
     state.pad = { x: supplyCenter - padW / 2, y: board.y + board.h * .095, w: padW, h: padH };
-    state.receiptRoll = { x: supplyCenter - 75, y: board.y + board.h * .405, w: 150, h: 154 };
-    state.pinTray = { x: supplyCenter - 96, y: board.y + board.h * .70, w: 192, h: 142 };
+    state.receiptRoll = { x: supplyCenter - 75 * ui, y: board.y + board.h * .405, w: 150 * ui, h: 154 * ui };
+    state.pinTray = { x: supplyCenter - 96 * ui, y: board.y + board.h * .70, w: 192 * ui, h: 142 * ui };
     for (const [button, rect] of [[tearButton, state.pad], [receiptButton, state.receiptRoll], [pinButton, state.pinTray]]) {
       button.style.left = `${rect.x}px`; button.style.top = `${rect.y}px`; button.style.width = `${rect.w}px`; button.style.height = `${rect.h}px`;
     }
@@ -402,15 +404,18 @@
     drawReceiptRoll(state.receiptRoll);
     supplyPins.forEach((color, index) => {
       const random = seeded(804 + index * 31), position = supplyPinLayout[index];
-      const x = tray.x + 13 + position[0] * (tray.w - 26), y = tray.y + 10 + position[1] * (tray.h - 20);
-      drawPushPin(x, y, color, 10, -.58 + random() * 1.16);
+      const ui = state.sceneScale;
+      const x = tray.x + 13 * ui + position[0] * (tray.w - 26 * ui), y = tray.y + 10 * ui + position[1] * (tray.h - 20 * ui);
+      drawPushPin(x, y, color, 10 * ui, -.58 + random() * 1.16);
     });
     ctx.restore();
     return false;
   }
 
   function drawReceiptRoll(roll) {
-    const { x, y, w, h } = roll, cx = x + w / 2;
+    const ui = state.sceneScale;
+    ctx.save(); ctx.translate(roll.x, roll.y); ctx.scale(ui, ui);
+    const x = 0, y = 0, w = roll.w / ui, h = roll.h / ui, cx = w / 2;
     const backingW = 118, backingH = 57, backingX = cx - backingW / 2;
     const rollX = cx - 50, rollY = y + 16, rollBodyW = 92, rollH = 42;
     const capX = rollX + rollBodyW, capRadiusX = 8, axisY = rollY + rollH / 2;
@@ -444,10 +449,14 @@
     ctx.fillStyle = "#574b3d"; ctx.beginPath(); ctx.ellipse(capX, axisY, 3.5, rollH * .27, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = metal; roundedRectPath(ctx, capX, axisY - 2.5, backingX + backingW - 8 - capX, 5, 2.5); ctx.fill();
     ctx.restore();
+    ctx.restore();
   }
 
   function drawStorageBasket(pad) {
-    const x = pad.x - 20, y = pad.y + pad.h * .48, w = pad.w + 40, h = pad.h * .58;
+    const ui = state.sceneScale;
+    ctx.save(); ctx.translate(pad.x, pad.y); ctx.scale(ui, ui);
+    const virtualW = pad.w / ui, virtualH = pad.h / ui;
+    const x = -20, y = virtualH * .48, w = virtualW + 40, h = virtualH * .58;
     ctx.save();
     ctx.shadowColor = "rgba(27,22,18,.28)"; ctx.shadowBlur = 14; ctx.shadowOffsetY = 10;
     const front = ctx.createLinearGradient(0, y, 0, y + h);
@@ -466,6 +475,7 @@
     ctx.fillStyle = base; roundedRectPath(ctx, x + 7, y + h - 23, w - 14, 17, 6); ctx.fill();
     ctx.fillStyle = "rgba(255,255,255,.24)"; roundedRectPath(ctx, x + 10, y + 10, 3, h - 24, 2); ctx.fill();
     ctx.restore();
+    ctx.restore();
   }
 
   function drawFlyingSheet(pad, tear) {
@@ -480,7 +490,8 @@
   }
 
   function noteGeometry(note) {
-    const baseW = clamp(state.content.w * .158, 104, 153) * (note.scale || 1);
+    const ui = state.sceneScale;
+    const baseW = clamp(state.content.w * .158, 104 * ui, 153 * ui) * (note.scale || 1);
     let w = note.kind === "receipt" ? baseW * .76 : baseW;
     let h = note.kind === "receipt" ? baseW * 1.48 : baseW;
     if (note.mode === "image" && (note.imageUrl || note.imageData)) {
@@ -552,16 +563,17 @@
   }
 
   function drawMarkdown(note, w, h) {
-    const fontSize = clamp(w * .056 * (note.fontScale || 1), 11, 20), lines = wrapText(note.content || "一张空白留言", w - 40, fontSize, 8);
-    let y = 30;
+    const ui = state.sceneScale;
+    const fontSize = clamp(w * .056 * (note.fontScale || 1), 11 * ui, 20 * ui), lines = wrapText(note.content || "一张空白留言", w - 40 * ui, fontSize, 8);
+    let y = 30 * ui;
     ctx.fillStyle = "#24231f"; ctx.textBaseline = "top";
     for (const line of lines) {
       if (line.type === "space") { y += fontSize * .48; continue; }
       const size = line.type === "h1" ? fontSize * 1.42 : line.type === "h2" ? fontSize * 1.18 : fontSize;
       ctx.font = `${line.type.startsWith("h") ? 700 : 500} ${size}px "Noto Serif SC", serif`;
-      ctx.fillText(line.text, 21, y);
+      ctx.fillText(line.text, 21 * ui, y);
       y += size * (line.type.startsWith("h") ? 1.42 : 1.58);
-      if (y > h - 28) break;
+      if (y > h - 28 * ui) break;
     }
   }
 
@@ -576,7 +588,8 @@
       for (const point of stroke.points.slice(1)) layerCtx.lineTo(point[0], point[1]);
       layerCtx.stroke(); layerCtx.restore();
     }
-    ctx.drawImage(layer, 17, 17, w - 34, h - 34);
+    const inset = 17 * state.sceneScale;
+    ctx.drawImage(layer, inset, inset, w - inset * 2, h - inset * 2);
   }
 
   function drawNoteImage(note, w, h) {
@@ -634,7 +647,8 @@
     ctx.save(); ctx.translate(g.cx, g.cy + floatY); ctx.rotate(g.angle); ctx.scale(scale, scale); ctx.translate(-g.w / 2, -g.h / 2);
     const isPhoto = note.mode === "image" && Boolean(note.imageUrl || note.imageData);
     const path = note.kind === "receipt" ? receiptNotePath(g.w, g.h) : notePath(g.w, g.h);
-    ctx.shadowColor = "rgba(55,38,25,.31)"; ctx.shadowBlur = pinned ? 11 : 20; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = pinned ? 7 : 13;
+    const ui = state.sceneScale;
+    ctx.shadowColor = "rgba(55,38,25,.31)"; ctx.shadowBlur = (pinned ? 11 : 20) * ui; ctx.shadowOffsetX = 3 * ui; ctx.shadowOffsetY = (pinned ? 7 : 13) * ui;
     ctx.fillStyle = isPhoto ? "rgba(255,255,255,.96)" : note.color === "custom" ? note.customColor || "#f6d365" : palette[note.color] || palette.bone; ctx.fill(path);
     ctx.shadowColor = "transparent";
 
@@ -673,7 +687,8 @@
         x = g.cx + cos * vx - sin * vy; y = g.cy + sin * vx + cos * vy;
         pin.ax = x / state.width; pin.ay = y / state.height;
       }
-      drawPushPin(x, y, pin.color || pinColors[0], clamp(g.w * .065, 9, 12), pin.angle || 0);
+      const ui = state.sceneScale;
+      drawPushPin(x, y, pin.color || pinColors[0], clamp(g.w * .065, 9 * ui, 12 * ui), pin.angle || 0);
     }
   }
 
@@ -724,8 +739,9 @@
     for (const note of state.notes) animating = drawNote(note, time) || animating;
     animating = drawSupplies() || animating;
     if (state.holdingPin) {
-      drawPushPin(state.pointer.x, state.pointer.y, state.selectedPinColor, 9, -.55);
-      ctx.fillStyle = "rgba(30,26,22,.7)"; ctx.font = "600 12px sans-serif"; ctx.textAlign = "left"; ctx.fillText("点击一张便签固定", state.pointer.x + 16, state.pointer.y - 12);
+      const ui = state.sceneScale;
+      drawPushPin(state.pointer.x, state.pointer.y, state.selectedPinColor, 9 * ui, -.55);
+      ctx.fillStyle = "rgba(30,26,22,.7)"; ctx.font = `600 ${12 * ui}px sans-serif`; ctx.textAlign = "left"; ctx.fillText("点击一张便签固定", state.pointer.x + 16 * ui, state.pointer.y - 12 * ui);
     }
     state.continuous = animating;
     if (animating) scheduleRender();
@@ -735,6 +751,8 @@
   function resize() {
     const rect = shell.getBoundingClientRect();
     state.width = Math.max(1, rect.width); state.height = Math.max(1, rect.height); state.dpr = Math.min(2, devicePixelRatio || 1);
+    state.sceneScale = clamp(state.width / 1440, 1, 1.38);
+    canvas.dataset.sceneScale = state.sceneScale.toFixed(3);
     canvas.width = Math.round(state.width * state.dpr); canvas.height = Math.round(state.height * state.dpr);
     state.backgroundDirty = true; scheduleRender();
   }
@@ -980,7 +998,8 @@
   tearButton.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); animateTear(); } });
   pinButton.onclick = event => {
     const rect = pinButton.getBoundingClientRect();
-    const nx = (event.clientX - rect.left - 13) / Math.max(1, rect.width - 26), ny = (event.clientY - rect.top - 10) / Math.max(1, rect.height - 20);
+    const ui = state.sceneScale;
+    const nx = (event.clientX - rect.left - 13 * ui) / Math.max(1, rect.width - 26 * ui), ny = (event.clientY - rect.top - 10 * ui) / Math.max(1, rect.height - 20 * ui);
     let nearest = 0, distance = Infinity;
     supplyPinLayout.forEach((position, index) => { const next = Math.hypot(nx - position[0], ny - position[1]); if (next < distance) { distance = next; nearest = index; } });
     state.selectedPinColor = supplyPins[nearest]; state.holdingPin = true; scheduleRender();
@@ -1007,7 +1026,7 @@
     const pinIndex = (note.pins || []).findIndex(pin => {
       const px = pin.ax != null ? pin.ax * state.width : localToWorld(local.g, local.g.w * pin.x, local.g.h * pin.y).x;
       const py = pin.ay != null ? pin.ay * state.height : localToWorld(local.g, local.g.w * pin.x, local.g.h * pin.y).y;
-      return Math.hypot(point.x - px, point.y - py) < 20;
+      return Math.hypot(point.x - px, point.y - py) < 20 * state.sceneScale;
     });
     if (pinIndex >= 0) {
       const before = note.pins.length, removedFirst = pinIndex === 0, pose = noteGeometry(note); note.pins.splice(pinIndex, 1);
