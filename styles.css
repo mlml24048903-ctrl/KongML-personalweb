@@ -5394,7 +5394,7 @@ body.scene-sliding .scene-cursor-light { opacity:0; }
   inset:-5%;
   background:url("assets/pastoral-background-v2.png") center 48% / cover no-repeat;
   will-change:transform;
-  animation:pastoralLoop 18s var(--ease-in-out) infinite alternate;
+  animation:pastoralLoop 14s var(--ease-in-out) infinite alternate;
 }
 .pastoral-background::after {
   inset:-24% -36%;
@@ -5405,15 +5405,15 @@ body.scene-sliding .scene-cursor-light { opacity:0; }
   opacity:.34;
   filter:blur(24px);
   will-change:transform,opacity;
-  animation:pastoralLightLoop 22s var(--ease-in-out) infinite alternate;
+  animation:pastoralLightLoop 18s var(--ease-in-out) infinite alternate;
 }
 @keyframes pastoralLoop {
-  from { transform:translate3d(-1.8%,-.85%,0) scale(1.05); }
-  to { transform:translate3d(1.8%,1%,0) scale(1.085); }
+  from { transform:translate3d(-3.6%,-1.15%,0) scale(1.05); }
+  to { transform:translate3d(3.8%,1.35%,0) scale(1.095); }
 }
 @keyframes pastoralLightLoop {
-  from { transform:translate3d(-8%,0,0);opacity:.18; }
-  to { transform:translate3d(8%,-2.25%,0);opacity:.48; }
+  from { transform:translate3d(-11%,-.5%,0);opacity:.2; }
+  to { transform:translate3d(11%,-2.75%,0);opacity:.52; }
 }
 
 .mode-guide {
