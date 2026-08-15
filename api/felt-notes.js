@@ -1,10 +1,15 @@
 const { createHash } = require("crypto");
 
 const allowedColors = new Set(["yellow", "blue", "pink", "mint", "lavender", "bone", "coral", "custom"]);
-const allowedModes = new Set(["md", "doodle", "image"]);
+const allowedModes = new Set(["md", "doodle", "image", "receipt"]);
 const imageBucket = "felt-images";
 const maxImageBytes = 2 * 1024 * 1024;
 const recentWrites = new Map();
+const adminDeviceRecordId = "felt-admin-device";
+// This existing public note was created on the owner's browser. Its private
+// visitor_id is the one-time device proof; after the first verified request we
+// keep a hidden sentinel row so the device remains recognized if the note is deleted.
+const adminAnchorNoteId = process.env.FELT_ADMIN_ANCHOR_NOTE_ID || "25c4e84d-4206-4242-b69b-0c56c0aef124";
 
 function send(response, status, body) {
   response.statusCode = status;
@@ -166,7 +171,18 @@ async function exceedsDurableRate(restRoot, visitorId, now) {
   } catch { return false; }
 }
 
-function cleanNote(note, id) {
+function cleanReceiptData(value) {
+  if (!value || typeof value !== "object") return {};
+  return {
+    clicks: Math.max(0, Math.min(999999, Number(value.clicks) || 0)),
+    minutes: Math.max(0, Math.min(999999, Number(value.minutes) || 0)),
+    prints: Math.max(0, Math.min(999999, Number(value.prints) || 0)),
+    notes: Math.max(0, Math.min(999999, Number(value.notes) || 0)),
+    barcodeSeed: Math.max(1, Math.min(999999, Number(value.barcodeSeed) || 1))
+  };
+}
+
+function cleanNote(note, id, isAdmin = false) {
   const doodle = Array.isArray(note.doodle) ? note.doodle.slice(0, 80).map(stroke => ({ width: Math.max(1, Math.min(80, Number(stroke.width) || 5)), erase: Boolean(stroke.erase), points: Array.isArray(stroke.points) ? stroke.points.slice(0, 1400).map(point => [Number(point[0]) || 0, Number(point[1]) || 0]) : [] })) : [];
   const pins = Array.isArray(note.pins) ? note.pins.slice(0, 12).map(pin => ({ x: Math.max(.02, Math.min(.98, Number(pin.x) || .5)), y: Math.max(.02, Math.min(.98, Number(pin.y) || .08)), color: /^#[0-9a-f]{6}$/i.test(pin.color) ? pin.color : "#1769aa", angle: Math.max(-1.5, Math.min(1.5, Number(pin.angle) || 0)) })) : [];
   return {
@@ -176,6 +192,7 @@ function cleanNote(note, id) {
     y: Math.max(.06, Math.min(.94, Number(note.y) || .5)),
     rotation: Math.max(-.7, Math.min(.7, Number(note.rotation) || 0)),
     scale: Math.max(.72, Math.min(1.2, Number(note.scale) || .96)),
+    fontScale: Math.max(.75, Math.min(1.4, Number(note.fontScale) || 1)),
     color: allowedColors.has(note.color) ? note.color : "bone",
     customColor: /^#[0-9a-f]{6}$/i.test(note.customColor) ? note.customColor : "#f6d365",
     mode: allowedModes.has(note.mode) ? note.mode : "md",
@@ -184,8 +201,27 @@ function cleanNote(note, id) {
     imageAspect: Math.max(.12, Math.min(8, Number(note.imageAspect) || 1)),
     doodle,
     pins,
-    seed: Math.max(1, Math.min(999999, Number(note.seed) || 1))
+    seed: Math.max(1, Math.min(999999, Number(note.seed) || 1)),
+    ...(note.kind === "receipt" ? { kind: "receipt", receiptData: cleanReceiptData(note.receiptData) } : {}),
+    ...(isAdmin && note.owner ? { owner: true } : {})
   };
+}
+
+async function adminDevice(base, visitorId) {
+  if (!visitorId) return false;
+  const sentinel = await fetch(`${base}?id=eq.${adminDeviceRecordId}&visitor_id=eq.${encodeURIComponent(visitorId)}&select=id&limit=1`, { headers: supabaseHeaders() });
+  if (!sentinel.ok) throw new Error(await sentinel.text());
+  if ((await sentinel.json()).length) return true;
+  const anchor = await fetch(`${base}?id=eq.${encodeURIComponent(adminAnchorNoteId)}&visitor_id=eq.${encodeURIComponent(visitorId)}&select=id&limit=1`, { headers: supabaseHeaders() });
+  if (!anchor.ok) throw new Error(await anchor.text());
+  if (!(await anchor.json()).length) return false;
+  const created = await fetch(base, {
+    method: "POST",
+    headers: supabaseHeaders({ prefer: "resolution=merge-duplicates,return=minimal" }),
+    body: JSON.stringify({ id: adminDeviceRecordId, visitor_id: visitorId, payload: { hidden: true, kind: "admin-device" } })
+  });
+  if (!created.ok) throw new Error(await created.text());
+  return true;
 }
 
 module.exports = async function handler(request, response) {
@@ -194,25 +230,26 @@ module.exports = async function handler(request, response) {
   const base = `${restRoot}/felt_notes`;
   const visitorId = cleanText(request.headers["x-visitor-id"] || request.body?.visitorId || request.query?.visitorId, 80);
   try {
+    const isAdmin = await adminDevice(base, visitorId);
     if (request.method === "GET") {
       const result = await fetch(`${base}?select=id,visitor_id,payload,created_at&order=created_at.desc&limit=120`, { headers: supabaseHeaders() });
       if (!result.ok) return send(response, 502, { error: "留言暂时没有同步成功", stage: "read_notes", upstreamStatus: result.status });
       const rows = await result.json();
-      return send(response, 200, { configured: true, notes: rows.map(row => ({ ...row.payload, id: row.id, visitorId: visitorId && row.visitor_id === visitorId ? visitorId : "remote" })) });
+      return send(response, 200, { configured: true, admin: isAdmin, initialized: rows.some(row => row.id === adminDeviceRecordId), notes: rows.filter(row => !row.payload?.hidden).map(row => ({ ...row.payload, id: row.id, visitorId: visitorId && row.visitor_id === visitorId ? visitorId : "remote" })) });
     }
     if (request.method === "POST") {
       if (!visitorId || visitorId.length < 12) return send(response, 400, { error: "invalid visitor" });
       const now = Date.now(), ip = requestIp(request);
-      if (exceedsMemoryRate(visitorId, ip, now) || await exceedsDurableRate(restRoot, visitorId, now)) return send(response, 429, { error: "too many notes" });
+      if (!isAdmin && (exceedsMemoryRate(visitorId, ip, now) || await exceedsDurableRate(restRoot, visitorId, now))) return send(response, 429, { error: "too many notes" });
       const id = cleanText(request.body?.note?.id, 80);
-      if (!/^[a-z0-9-]{12,80}$/i.test(id)) return send(response, 400, { error: "invalid note" });
-      const moderation = moderationReason(request.body?.note);
+      if (!(isAdmin ? /^[a-z0-9-]{6,80}$/i : /^[a-z0-9-]{12,80}$/i).test(id) || id === adminDeviceRecordId) return send(response, 400, { error: "invalid note" });
+      const moderation = isAdmin ? "" : moderationReason(request.body?.note);
       if (moderation) return send(response, 422, { error: moderation });
-      const payload = cleanNote(request.body.note, id);
+      const payload = cleanNote(request.body.note, id, isAdmin);
       const ownershipResult = await fetch(`${base}?id=eq.${encodeURIComponent(id)}&select=visitor_id,payload&limit=1`, { headers: supabaseHeaders() });
       if (!ownershipResult.ok) throw new Error(await ownershipResult.text());
       const existing = await ownershipResult.json();
-      if (existing[0] && existing[0].visitor_id !== visitorId) return send(response, 403, { error: "note belongs to another visitor" });
+      if (!isAdmin && existing[0] && existing[0].visitor_id !== visitorId) return send(response, 403, { error: "note belongs to another visitor" });
       const previousImageUrl = safeImageUrl(existing[0]?.payload?.imageUrl);
       if (payload.mode === "image") {
         const decodedImage = decodeImage(request.body?.note?.imageData);
@@ -221,20 +258,21 @@ module.exports = async function handler(request, response) {
         if (!payload.imageUrl) return send(response, 422, { error: "image upload required" });
       }
       const result = existing[0]
-        ? await fetch(`${base}?id=eq.${encodeURIComponent(id)}&visitor_id=eq.${encodeURIComponent(visitorId)}`, { method: "PATCH", headers: supabaseHeaders({ prefer: "return=minimal" }), body: JSON.stringify({ payload, updated_at: new Date().toISOString() }) })
+        ? await fetch(`${base}?id=eq.${encodeURIComponent(id)}${isAdmin ? "" : `&visitor_id=eq.${encodeURIComponent(visitorId)}`}`, { method: "PATCH", headers: supabaseHeaders({ prefer: "return=minimal" }), body: JSON.stringify({ payload, updated_at: new Date().toISOString() }) })
         : await fetch(base, { method: "POST", headers: supabaseHeaders({ prefer: "return=minimal" }), body: JSON.stringify({ id, visitor_id: visitorId, payload }) });
       if (!result.ok) throw new Error(await result.text());
       if (previousImageUrl && (payload.mode !== "image" || payload.imageUrl !== previousImageUrl)) await deleteNoteImage(previousImageUrl).catch(() => {});
-      return send(response, 200, { ok: true, note: payload });
+      return send(response, 200, { ok: true, admin: isAdmin, note: payload });
     }
     if (request.method === "DELETE") {
       const id = cleanText(request.query?.id, 80);
       if (!visitorId || !id) return send(response, 400, { error: "invalid request" });
-      const ownershipResult = await fetch(`${base}?id=eq.${encodeURIComponent(id)}&visitor_id=eq.${encodeURIComponent(visitorId)}&select=payload&limit=1`, { headers: supabaseHeaders() });
+      if (id === adminDeviceRecordId) return send(response, 400, { error: "invalid note" });
+      const ownershipResult = await fetch(`${base}?id=eq.${encodeURIComponent(id)}${isAdmin ? "" : `&visitor_id=eq.${encodeURIComponent(visitorId)}`}&select=payload&limit=1`, { headers: supabaseHeaders() });
       if (!ownershipResult.ok) throw new Error(await ownershipResult.text());
       const existing = await ownershipResult.json();
       if (!existing[0]) return send(response, 403, { error: "note belongs to another visitor" });
-      const result = await fetch(`${base}?id=eq.${encodeURIComponent(id)}&visitor_id=eq.${encodeURIComponent(visitorId)}`, { method: "DELETE", headers: supabaseHeaders({ prefer: "return=minimal" }) });
+      const result = await fetch(`${base}?id=eq.${encodeURIComponent(id)}${isAdmin ? "" : `&visitor_id=eq.${encodeURIComponent(visitorId)}`}`, { method: "DELETE", headers: supabaseHeaders({ prefer: "return=minimal" }) });
       if (!result.ok) throw new Error(await result.text());
       await deleteNoteImage(existing[0].payload?.imageUrl).catch(() => {});
       return send(response, 200, { ok: true });
@@ -242,6 +280,6 @@ module.exports = async function handler(request, response) {
     response.setHeader("allow", "GET, POST, DELETE");
     return send(response, 405, { error: "method not allowed" });
   } catch (error) {
-    return send(response, 502, { error: "留言暂时没有同步成功" });
+    return send(response, 502, { error: "留言暂时没有同步成功", ...(process.env.NODE_ENV === "test" ? { detail: String(error?.message || error) } : {}) });
   }
 };

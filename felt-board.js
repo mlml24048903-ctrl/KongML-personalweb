@@ -35,6 +35,7 @@
   const doodleSizeValue = document.getElementById("feltDoodleSizeValue");
   const storageKey = "km-felt-canvas-notes-v1";
   const visitorKey = "km-portfolio-visitor-id-v1";
+  const adminMigrationKey = "km-felt-admin-migrated-v3";
   const visitorId = localStorage.getItem(visitorKey) || crypto.randomUUID();
   localStorage.setItem(visitorKey, visitorId);
   const canUsePublicApi = /^https?:$/.test(location.protocol) && (!["127.0.0.1", "localhost"].includes(location.hostname) || new URLSearchParams(location.search).has("api-preview"));
@@ -62,7 +63,7 @@
       const saved = JSON.parse(localStorage.getItem(storageKey));
       const savedNotes = Array.isArray(saved) ? saved : [];
       const ownerIds = new Set(defaults.map(note => note.id));
-      const source = [...defaults.map(note => ({ ...clone(savedNotes.find(item => item.id === note.id) || note), ...clone(note) })), ...savedNotes.filter(note => !ownerIds.has(note.id))];
+      const source = [...defaults.map(note => ({ ...clone(note), ...clone(savedNotes.find(item => item.id === note.id) || {}), id: note.id, owner: true })), ...savedNotes.filter(note => !ownerIds.has(note.id))];
       return source.map((note, index) => ({
         ...note,
         pins: Array.isArray(note.pins) ? note.pins : note.pinned ? [{ x: note.pinX ?? .5, y: note.pinY ?? .08, color: !note.pinColor || note.pinColor === "#222827" ? pinColors[index % pinColors.length] : note.pinColor, angle: ((note.seed || index) % 9 - 4) * .12 }] : [],
@@ -113,7 +114,12 @@
     lastFrame: performance.now(),
     renderRaf: 0,
     continuous: false,
-    tearPointer: null
+    tearPointer: null,
+    isAdmin: false,
+    boardInitialized: false,
+    serverHydrated: false,
+    syncing: false,
+    syncTimers: new Map()
   };
 
   function saveNotes() {
@@ -122,6 +128,15 @@
   function cleanNote(note) {
     const { birth, floatIn, returning, angularVelocity, _image, _imageSource, _imageFailed, ...clean } = note;
     return clean;
+  }
+  function schedulePublicNoteSync(note, delay = 180) {
+    if (!note || !canUsePublicApi || !canEditNote(note)) return;
+    note.public = true; note.visitorId ||= visitorId; note.pendingSync = true; saveNotes();
+    clearTimeout(state.syncTimers.get(note.id));
+    state.syncTimers.set(note.id, setTimeout(() => {
+      state.syncTimers.delete(note.id);
+      publishPublicNote(note);
+    }, delay));
   }
   function preloadImage(source) {
     return new Promise((resolve, reject) => {
@@ -134,7 +149,6 @@
     });
   }
   async function publishPublicNote(note) {
-    if (note.owner) return true;
     note.public = true; note.visitorId = visitorId;
     if (!canUsePublicApi) { note.pendingSync = true; saveNotes(); return false; }
     try {
@@ -146,6 +160,7 @@
         return false;
       }
       if (!response.ok || result.configured === false) throw new Error(`HTTP ${response.status}`);
+      state.isAdmin = state.isAdmin || result.admin === true;
       if (result.note?.imageUrl) {
         const remoteImage = await preloadImage(result.note.imageUrl);
         note.imageUrl = result.note.imageUrl; note.imageData = ""; note._image = remoteImage; note._imageSource = result.note.imageUrl; note._imageFailed = "";
@@ -158,16 +173,32 @@
     }
   }
   async function syncPublicNotes() {
-    if (!canUsePublicApi) return;
+    if (!canUsePublicApi || state.syncing || state.draggingId || state.editingId) return;
+    state.syncing = true;
     try {
       const response = await fetch("/api/felt-notes", { headers: { accept: "application/json", "x-visitor-id": visitorId } });
       if (!response.ok) return;
       const payload = await response.json();
       if (!Array.isArray(payload.notes)) return;
+      state.isAdmin = payload.admin === true;
+      state.boardInitialized = payload.initialized === true;
+      const localSnapshot = state.notes.map(note => cleanNote(note));
+      if (state.isAdmin && !localStorage.getItem(adminMigrationKey)) {
+        const migrationResults = await Promise.all(localSnapshot.map(note => {
+          note.owner = true; note.public = true; note.visitorId = visitorId; note.pendingSync = true;
+          const live = state.notes.find(item => item.id === note.id);
+          if (live) Object.assign(live, note);
+          return publishPublicNote(live || note);
+        }));
+        if (migrationResults.every(Boolean)) {
+          localStorage.setItem(adminMigrationKey, "1");
+          saveNotes(); scheduleRender(); setTimeout(syncPublicNotes, 600); return;
+        }
+      }
       const localById = new Map(state.notes.map(note => [note.id, note]));
-      const ownerNotes = state.notes.filter(note => note.owner);
-      const localOnly = state.notes.filter(note => !note.owner && (!note.public || note.syncRejected));
-      const localPending = state.notes.filter(note => !note.owner && note.pendingSync);
+      const remoteIds = new Set(payload.notes.map(note => note.id));
+      const localOnly = state.notes.filter(note => (!note.public || note.syncRejected) && !remoteIds.has(note.id) && !(state.boardInitialized && note.owner));
+      const localPending = state.notes.filter(note => note.pendingSync);
       const remoteNotes = payload.notes.map(remote => {
         const local = localById.get(remote.id);
         const needsImageMigration = remote.visitorId === visitorId && remote.mode === "image" && !remote.imageUrl && Boolean(remote.imageData || local?.imageData);
@@ -181,12 +212,13 @@
       });
       for (const note of remoteNotes) if (note.pendingSync && !localPending.some(local => local.id === note.id)) localPending.push(note);
       const merged = new Map([...remoteNotes, ...localPending].map(note => [note.id, note]));
-      state.notes = [...ownerNotes, ...localOnly, ...merged.values()]; saveNotes(); scheduleRender();
+      state.notes = [...localOnly, ...merged.values()]; state.serverHydrated = true; saveNotes(); scheduleRender();
       localPending.forEach(publishPublicNote);
     } catch { /* Local notes remain usable while the backend is not configured. */ }
+    finally { state.syncing = false; }
   }
   async function deletePublicNote(note) {
-    if (!note?.public || note.visitorId !== visitorId) return;
+    if (!note?.public || (!state.isAdmin && note.visitorId !== visitorId)) return;
     try { await fetch(`/api/felt-notes?id=${encodeURIComponent(note.id)}&visitorId=${encodeURIComponent(visitorId)}`, { method: "DELETE" }); } catch { /* It stays removed locally for this browser. */ }
   }
   function scheduleRender() {
@@ -476,7 +508,7 @@
   }
 
   function drawMarkdown(note, w, h) {
-    const fontSize = clamp(w * .056, 11, 16), lines = wrapText(note.content || "一张空白留言", w - 40, fontSize, 8);
+    const fontSize = clamp(w * .056 * (note.fontScale || 1), 11, 20), lines = wrapText(note.content || "一张空白留言", w - 40, fontSize, 8);
     let y = 30;
     ctx.fillStyle = "#24231f"; ctx.textBaseline = "top";
     for (const line of lines) {
@@ -743,24 +775,24 @@
   function createReceiptNote(detail = {}) {
     const direction = detail.direction || { x: 0, y: 1 }, length = Math.hypot(direction.x, direction.y) || 1;
     const note = {
-      id: crypto.randomUUID(), owner: true, kind: "receipt", x: clamp(.55 + direction.x / length * .12, .18, .78), y: clamp(.45 + direction.y / length * .12, .22, .75),
+      id: crypto.randomUUID(), public: true, visitorId, pendingSync: true, kind: "receipt", x: clamp(.55 + direction.x / length * .12, .18, .78), y: clamp(.45 + direction.y / length * .12, .22, .75),
       rotation: clamp(Math.atan2(direction.y, direction.x) * .08, -.13, .13), physicsAngle: 0, angularVelocity: 0, scale: 1.02,
       color: "bone", mode: "receipt", receiptData: detail.stats || {}, pins: [], seed: Math.floor(Math.random() * 9000) + 100,
       birth: performance.now(), floatIn: performance.now()
     };
-    state.notes.push(note); saveNotes(); scheduleRender();
+    state.notes.push(note); saveNotes(); scheduleRender(); schedulePublicNoteSync(note, 0);
   }
 
   function deleteReceiptNote(note) {
-    if (!note || note.kind !== "receipt") return false;
+    if (!note || note.kind !== "receipt" || !canEditNote(note)) return false;
     state.notes = state.notes.filter(item => item.id !== note.id);
     if (state.activeNoteId === note.id) state.activeNoteId = null;
-    saveNotes(); scheduleRender();
+    saveNotes(); deletePublicNote(note); scheduleRender();
     return true;
   }
 
   function canEditNote(note) {
-    return Boolean(note && (note.owner || !note.public || note.visitorId === visitorId));
+    return Boolean(note && (state.isAdmin || (!canUsePublicApi && note.owner) || (!note.owner && (!note.public || note.visitorId === visitorId))));
   }
 
   function openEditor(note) {
@@ -926,7 +958,7 @@
       note.pins ||= [];
       const pin = { x: clamp(local.x / local.g.w, .02, .98), y: clamp(local.y / local.g.h, .02, .98), color: state.selectedPinColor, angle: -.75 + Math.random() * 1.5 };
       if (!note.pins.length) { pin.ax = point.x / state.width; pin.ay = point.y / state.height; note.physicsAngle = local.g.angle; note.angularVelocity = 0; }
-      note.pins.push(pin); state.holdingPin = false; saveNotes(); scheduleRender(); return;
+      note.pins.push(pin); state.holdingPin = false; saveNotes(); schedulePublicNoteSync(note); scheduleRender(); return;
     }
     const pinIndex = (note.pins || []).findIndex(pin => {
       const px = pin.ax != null ? pin.ax * state.width : localToWorld(local.g, local.g.w * pin.x, local.g.h * pin.y).x;
@@ -948,7 +980,7 @@
         note.y = (centerY * state.height - state.content.y) / state.content.h;
         note.returning = false; note.angularVelocity = 0;
       }
-      saveNotes(); scheduleRender(); return;
+      saveNotes(); schedulePublicNoteSync(note); scheduleRender(); return;
     }
     if (note.pins?.length) return;
     note.returning = true; note.floatIn = 0;
@@ -984,7 +1016,7 @@
   const releaseDrag = () => {
     if (state.draggingId) {
       const note = state.notes.find(item => item.id === state.draggingId);
-      if (note) { note.returning = true; note.angularVelocity = 0; }
+      if (note) { note.returning = true; note.angularVelocity = 0; schedulePublicNoteSync(note, 0); }
       saveNotes();
     }
     state.draggingId = null; state.dragOffset = null; state.dragTarget = null; state.dragLast = null; state.dragMoved = false; cancelAnimationFrame(state.dragRaf); state.dragRaf = 0; scheduleRender();
@@ -1007,4 +1039,5 @@
   window.addEventListener("feltboardvisibility", scheduleRender);
   window.addEventListener("felt-receipt-torn", event => createReceiptNote(event.detail));
   resize(); syncPublicNotes();
+  setInterval(() => { if (!document.hidden) syncPublicNotes(); }, 12000);
 })();
