@@ -245,7 +245,7 @@ function bindOuterItem(n,item){
     if(!d)return;
     const trash=e&&trashAt(e.clientX,e.clientY);document.getElementById("deskTrash").classList.remove("is-trash-target");
     if(trash){cancelAnimationFrame(raf);d=null;n.classList.remove("is-pressed","is-dragging");n.classList.add("is-note-discarding");setTimeout(()=>{state.outerItems=state.outerItems.filter(x=>x.id!==item.id);persist();renderOuterItems()},520);return}
-    const targetX=d.tx,targetY=d.ty,releaseSway=d.sway,landedRotation=Math.max(-13,Math.min(13,(item.rotation||0)+releaseSway*.72));
+    const targetX=d.cx,targetY=d.cy,releaseSway=d.sway,landedRotation=Math.max(-13,Math.min(13,(item.rotation||0)+releaseSway*.72));
     cancelAnimationFrame(raf);d=null;
     item.x=targetX;item.y=targetY;item.rotation=landedRotation;
     n.style.setProperty("--rotation",`${landedRotation.toFixed(2)}deg`);n.style.setProperty("--sway","0deg");
