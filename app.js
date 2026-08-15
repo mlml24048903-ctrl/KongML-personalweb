@@ -229,15 +229,15 @@ function bindOuterItem(n,item){
   n.addEventListener("pointerdown",e=>{
     if(e.target.closest(".delete-item"))return;
     const r=els.outerItems.getBoundingClientRect();
-    d={sx:e.clientX,sy:e.clientY,x:item.x*r.width,y:item.y*r.height,r,lx:e.clientX,lt:e.timeStamp,cx:item.x,cy:item.y,tx:item.x,ty:item.y,sway:0,swayTarget:0};
+    d={sx:e.clientX,sy:e.clientY,x:item.x*r.width,y:item.y*r.height,r,lx:e.clientX,ly:e.clientY,lt:e.timeStamp,cx:item.x,cy:item.y,tx:item.x,ty:item.y,sway:0,swayTarget:0,releaseVX:0,releaseVY:0};
     n.style.setProperty("--sway","0deg");n.classList.remove("is-landing");n.classList.add("is-interaction-ready","is-pressed","is-dragging");
     n.setPointerCapture(e.pointerId);cancelAnimationFrame(raf);follow();
   });
   n.addEventListener("pointermove",e=>{
     if(!d)return;
-    const dt=Math.max(8,e.timeStamp-d.lt),dx=e.clientX-d.lx,vx=dx/dt;
+    const dt=Math.max(8,e.timeStamp-d.lt),dx=e.clientX-d.lx,dy=e.clientY-d.ly,vx=dx/dt,vy=dy/dt;
     d.swayTarget=Math.max(-10.5,Math.min(10.5,vx*18+Math.sign(dx||1)*1.6));
-    d.lx=e.clientX;d.lt=e.timeStamp;
+    d.releaseVX=vx;d.releaseVY=vy;d.lx=e.clientX;d.ly=e.clientY;d.lt=e.timeStamp;
     d.tx=Math.max(.035,Math.min(.965,(d.x+e.clientX-d.sx)/d.r.width));
     d.ty=Math.max(.04,Math.min(.94,(d.y+e.clientY-d.sy)/d.r.height));document.getElementById("deskTrash").classList.toggle("is-trash-target",!!trashAt(e.clientX,e.clientY));
   });
@@ -245,7 +245,8 @@ function bindOuterItem(n,item){
     if(!d)return;
     const trash=e&&trashAt(e.clientX,e.clientY);document.getElementById("deskTrash").classList.remove("is-trash-target");
     if(trash){cancelAnimationFrame(raf);d=null;n.classList.remove("is-pressed","is-dragging");n.classList.add("is-note-discarding");setTimeout(()=>{state.outerItems=state.outerItems.filter(x=>x.id!==item.id);persist();renderOuterItems()},520);return}
-    const targetX=d.cx,targetY=d.cy,releaseSway=d.sway,landedRotation=Math.max(-13,Math.min(13,(item.rotation||0)+releaseSway*.72));
+    const releaseAge=Math.max(0,(e?.timeStamp||d.lt)-d.lt),velocityFade=Math.max(0,1-releaseAge/320),vx=d.releaseVX*velocityFade,vy=d.releaseVY*velocityFade,speed=Math.hypot(vx,vy),travel=speed<.05?0:Math.min(18,3+speed*9),inertiaX=speed?vx/speed*travel:0,inertiaY=speed?vy/speed*travel:0;
+    const targetX=Math.max(.035,Math.min(.965,d.cx+inertiaX/d.r.width)),targetY=Math.max(.04,Math.min(.94,d.cy+inertiaY/d.r.height)),releaseSway=d.sway,landedRotation=Math.max(-13,Math.min(13,(item.rotation||0)+releaseSway*.72));
     cancelAnimationFrame(raf);d=null;
     item.x=targetX;item.y=targetY;item.rotation=landedRotation;
     n.style.setProperty("--rotation",`${landedRotation.toFixed(2)}deg`);n.style.setProperty("--sway","0deg");
