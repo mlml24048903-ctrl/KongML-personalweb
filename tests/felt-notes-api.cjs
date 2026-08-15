@@ -54,7 +54,7 @@ function request(note, visitorId, ownerClaim = "") {
   if (forbidden.status !== 403) throw new Error(`ownership protection failed: ${JSON.stringify(forbidden)}`);
 
   const ownerDevice = "owner-device-12345";
-  const adminEdit = await request({ ...base, id: "felt-profile", owner: true, mode: "receipt", fontScale: 1.25, kind: "receipt", receiptData: { clicks: 8, minutes: 3 } }, ownerDevice, testOwnerClaim);
-  if (adminEdit.status !== 200 || adminEdit.body.admin !== true || writtenPayload?.owner !== true || writtenPayload?.fontScale !== 1.25 || writtenPayload?.kind !== "receipt" || writtenPayload?.receiptData?.clicks !== 8) throw new Error(`admin device update failed: ${JSON.stringify({ adminEdit, writtenPayload })}`);
+  const adminEdit = await request({ ...base, id: "felt-profile", owner: true, mode: "receipt", color: "lime", fontScale: 1.25, z: 17, updatedAt: 1700000000000, pins: [{ x: .4, y: .1, ax: .22, ay: .31, color: "#1769aa" }], kind: "receipt", receiptData: { clicks: 8, minutes: 3 } }, ownerDevice, testOwnerClaim);
+  if (adminEdit.status !== 200 || adminEdit.body.admin !== true || writtenPayload?.owner !== true || writtenPayload?.color !== "lime" || writtenPayload?.z !== 17 || writtenPayload?.updatedAt !== 1700000000000 || writtenPayload?.pins?.[0]?.ax !== .22 || writtenPayload?.pins?.[0]?.ay !== .31 || writtenPayload?.fontScale !== 1.25 || writtenPayload?.kind !== "receipt" || writtenPayload?.receiptData?.clicks !== 8) throw new Error(`admin device update failed: ${JSON.stringify({ adminEdit, writtenPayload })}`);
   console.log("FELT_NOTES_API_OK");
 })().catch(error => { console.error(error); process.exitCode = 1; });

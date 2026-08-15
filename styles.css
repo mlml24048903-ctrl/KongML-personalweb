@@ -5179,6 +5179,35 @@ body.felt-editor-open { overflow:hidden; }
   .felt-editor::backdrop { backdrop-filter:none; }
 }
 
+/* Wide desktop parity: grow the computer and its physical notes together. */
+@media (min-width:1600px) {
+  body:not(.workspace-entered) .monitor-wrap,
+  body.workspace-entered:not(.inner-mode) .monitor-wrap {
+    width:min(68vw,1220px)!important;
+  }
+  body.workspace-entered:not(.inner-mode) .outer-item {
+    width:218px!important;
+    min-height:218px!important;
+  }
+  body.workspace-entered:not(.inner-mode) .outer-item .sticky-copy {
+    padding:27px 25px 43px!important;
+  }
+  body.workspace-entered:not(.inner-mode) .outer-item h3 {
+    font-size:23px!important;
+  }
+  body.workspace-entered:not(.inner-mode) .outer-item p {
+    font-size:17px!important;
+  }
+  body.workspace-entered:not(.inner-mode) .outer-item small {
+    left:25px!important;
+    bottom:17px!important;
+    font-size:10px!important;
+  }
+  body.inner-mode .monitor-wrap {
+    width:min(78vw,1420px)!important;
+  }
+}
+
 @media (prefers-reduced-motion:reduce) {
   .code-tree-branch,
   .code-file-content { animation:none!important; }

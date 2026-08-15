@@ -1,6 +1,6 @@
 const { createHash, timingSafeEqual } = require("crypto");
 
-const allowedColors = new Set(["yellow", "blue", "pink", "mint", "lavender", "bone", "coral", "custom"]);
+const allowedColors = new Set(["yellow", "blue", "pink", "mint", "lavender", "bone", "coral", "lime", "custom"]);
 const allowedModes = new Set(["md", "doodle", "image", "receipt"]);
 const imageBucket = "felt-images";
 const maxImageBytes = 2 * 1024 * 1024;
@@ -185,7 +185,14 @@ function cleanReceiptData(value) {
 
 function cleanNote(note, id, isAdmin = false) {
   const doodle = Array.isArray(note.doodle) ? note.doodle.slice(0, 80).map(stroke => ({ width: Math.max(1, Math.min(80, Number(stroke.width) || 5)), erase: Boolean(stroke.erase), points: Array.isArray(stroke.points) ? stroke.points.slice(0, 1400).map(point => [Number(point[0]) || 0, Number(point[1]) || 0]) : [] })) : [];
-  const pins = Array.isArray(note.pins) ? note.pins.slice(0, 12).map(pin => ({ x: Math.max(.02, Math.min(.98, Number(pin.x) || .5)), y: Math.max(.02, Math.min(.98, Number(pin.y) || .08)), color: /^#[0-9a-f]{6}$/i.test(pin.color) ? pin.color : "#1769aa", angle: Math.max(-1.5, Math.min(1.5, Number(pin.angle) || 0)) })) : [];
+  const pins = Array.isArray(note.pins) ? note.pins.slice(0, 12).map(pin => ({
+    x: Math.max(.02, Math.min(.98, Number(pin.x) || .5)),
+    y: Math.max(.02, Math.min(.98, Number(pin.y) || .08)),
+    color: /^#[0-9a-f]{6}$/i.test(pin.color) ? pin.color : "#1769aa",
+    angle: Math.max(-1.5, Math.min(1.5, Number(pin.angle) || 0)),
+    ...(Number.isFinite(Number(pin.ax)) ? { ax: Math.max(0, Math.min(1, Number(pin.ax))) } : {}),
+    ...(Number.isFinite(Number(pin.ay)) ? { ay: Math.max(0, Math.min(1, Number(pin.ay))) } : {})
+  })) : [];
   return {
     id,
     public: true,
@@ -202,6 +209,8 @@ function cleanNote(note, id, isAdmin = false) {
     imageAspect: Math.max(.12, Math.min(8, Number(note.imageAspect) || 1)),
     doodle,
     pins,
+    z: Math.max(1, Math.min(1000000, Math.round(Number(note.z) || 1))),
+    updatedAt: Math.max(0, Math.min(Date.now() + 60000, Math.round(Number(note.updatedAt) || 0))),
     seed: Math.max(1, Math.min(999999, Number(note.seed) || 1)),
     ...(note.kind === "receipt" ? { kind: "receipt", receiptData: cleanReceiptData(note.receiptData) } : {}),
     ...(isAdmin && note.owner ? { owner: true } : {})

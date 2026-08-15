@@ -35,9 +35,9 @@
   const doodleSizeValue = document.getElementById("feltDoodleSizeValue");
   const storageKey = "km-felt-canvas-notes-v1";
   const visitorKey = "km-portfolio-visitor-id-v1";
-  const adminMigrationKey = "km-felt-admin-migrated-v3";
+  const adminMigrationKey = "km-felt-admin-migrated-v4";
   const backupKey = "km-felt-canvas-notes-backups-v1";
-  const recoveryKey = "km-felt-owner-recovery-v1";
+  const recoveryKey = "km-felt-owner-recovery-v2";
   const obsoleteRecoveryNoteId = "25c4e84d-4206-4242-b69b-0c56c0aef124";
   const pageParams = new URLSearchParams(location.search);
   const ownerClaim = pageParams.get("owner") || "";
@@ -71,6 +71,8 @@
       const source = [...defaults.map(note => ({ ...clone(note), ...clone(savedNotes.find(item => item.id === note.id) || {}), id: note.id, owner: true })), ...savedNotes.filter(note => !ownerIds.has(note.id))];
       return source.map((note, index) => ({
         ...note,
+        z: Number.isFinite(Number(note.z)) ? Number(note.z) : index + 1,
+        updatedAt: Number(note.updatedAt) || 0,
         pins: Array.isArray(note.pins) ? note.pins : note.pinned ? [{ x: note.pinX ?? .5, y: note.pinY ?? .08, color: !note.pinColor || note.pinColor === "#222827" ? pinColors[index % pinColors.length] : note.pinColor, angle: ((note.seed || index) % 9 - 4) * .12 }] : [],
         pinned: undefined, pinX: undefined, pinY: undefined, pinColor: undefined,
         physicsAngle: note.rotation || 0, angularVelocity: 0, floatIn: 0, birth: undefined
@@ -125,8 +127,10 @@
     boardInitialized: false,
     serverHydrated: false,
     syncing: false,
-    syncTimers: new Map()
+    syncTimers: new Map(),
+    nextZ: 0
   };
+  state.nextZ = state.notes.reduce((highest, note) => Math.max(highest, Number(note.z) || 0), 0);
 
   function saveNotes() {
     localStorage.setItem(storageKey, JSON.stringify(state.notes.map(({ birth, floatIn, returning, angularVelocity, _image, _imageSource, _imageFailed, ...note }) => note)));
@@ -149,7 +153,7 @@
   }
   function schedulePublicNoteSync(note, delay = 180) {
     if (!note || !canUsePublicApi || !canEditNote(note)) return;
-    note.public = true; note.visitorId ||= visitorId; note.pendingSync = true; saveNotes();
+    note.public = true; note.visitorId ||= visitorId; note.pendingSync = true; note.updatedAt = Date.now(); saveNotes();
     clearTimeout(state.syncTimers.get(note.id));
     state.syncTimers.set(note.id, setTimeout(() => {
       state.syncTimers.delete(note.id);
@@ -201,11 +205,12 @@
     const recovered = await response.json();
     if (!Array.isArray(recovered) || recovered.length < 7) throw new Error("owner recovery is incomplete");
     backupNotes("before-owner-recovery");
-    state.notes = recovered.map(note => ({ ...note, owner: true, public: true, visitorId, pendingSync: true, remoteConfirmed: false, physicsAngle: note.rotation || 0, angularVelocity: 0, floatIn: 0, birth: undefined }));
+    state.notes = recovered.map((note, index) => ({ ...note, z: index + 1, updatedAt: Date.now(), owner: true, public: true, visitorId, pendingSync: true, remoteConfirmed: false, physicsAngle: note.rotation || 0, angularVelocity: 0, floatIn: 0, birth: undefined }));
+    state.nextZ = state.notes.length;
     localStorage.setItem(recoveryKey, "1"); saveNotes(); scheduleRender();
   }
   async function syncPublicNotes() {
-    if (!canUsePublicApi || state.syncing || state.draggingId || state.editingId) return;
+    if (!canUsePublicApi || state.syncing || state.draggingId || state.editingId || state.syncTimers.size) return;
     state.syncing = true;
     try {
       const response = await fetch("/api/felt-notes", { headers: apiHeaders({ accept: "application/json", "x-visitor-id": visitorId }) });
@@ -240,10 +245,10 @@
       const remoteIds = new Set(payload.notes.map(note => note.id));
       const localOnly = state.notes.filter(note => !remoteIds.has(note.id) && (!note.remoteConfirmed || note.pendingSync || note.syncRejected));
       const localPending = state.notes.filter(note => note.pendingSync);
-      const remoteNotes = payload.notes.map(remote => {
+      const remoteNotes = payload.notes.map((remote, remoteIndex) => {
         const local = localById.get(remote.id);
         const needsImageMigration = remote.visitorId === visitorId && remote.mode === "image" && !remote.imageUrl && Boolean(remote.imageData || local?.imageData);
-        const merged = { ...remote, imageData: remote.imageData || local?.imageData || "", imageAspect: remote.imageAspect || local?.imageAspect || 1, public: true, remoteConfirmed: true, pendingSync: needsImageMigration, physicsAngle: local?.physicsAngle ?? remote.rotation ?? 0, angularVelocity: local?.angularVelocity || 0, floatIn: 0, birth: undefined };
+        const merged = { ...remote, z: Number(remote.z) || remoteIndex + 1, updatedAt: Number(remote.updatedAt) || 0, imageData: remote.imageData || local?.imageData || "", imageAspect: remote.imageAspect || local?.imageAspect || 1, public: true, remoteConfirmed: true, pendingSync: needsImageMigration, physicsAngle: local?.physicsAngle ?? remote.rotation ?? 0, angularVelocity: local?.angularVelocity || 0, floatIn: 0, birth: undefined };
         if (!local) return merged;
         const runtime = { image: local._image, source: local._imageSource, failed: local._imageFailed };
         Object.assign(local, merged);
@@ -254,7 +259,9 @@
       for (const note of remoteNotes) if (note.pendingSync && !localPending.some(local => local.id === note.id)) localPending.push(note);
       const merged = new Map([...remoteNotes, ...localPending].map(note => [note.id, note]));
       backupNotes("before-remote-merge");
-      state.notes = [...localOnly, ...merged.values()]; state.serverHydrated = true; saveNotes(); scheduleRender();
+      state.notes = [...localOnly, ...merged.values()].sort((left, right) => (Number(left.z) || 0) - (Number(right.z) || 0));
+      state.nextZ = state.notes.reduce((highest, note) => Math.max(highest, Number(note.z) || 0), 0);
+      state.serverHydrated = true; saveNotes(); scheduleRender();
       localPending.forEach(publishPublicNote);
     } catch { /* Local notes remain usable while the backend is not configured. */ }
     finally { state.syncing = false; }
@@ -831,7 +838,7 @@
 
   function createNote(color = state.stackColor) {
     const note = { id: crypto.randomUUID(), public: true, visitorId, pendingSync: true, x: .68, y: .57, rotation: (Math.random() - .5) * .06, physicsAngle: 0, angularVelocity: 0, scale: .96, color, mode: "md", content: "# 新留言\n\n写下一点此刻的想法。", pins: [], seed: Math.floor(Math.random() * 9000) + 100, doodle: [], imageData: "" };
-    state.notes.push(note); state.editingIsNew = true; openEditor(note);
+    note.z = ++state.nextZ; note.updatedAt = Date.now(); state.notes.push(note); state.editingIsNew = true; openEditor(note);
   }
 
   function createReceiptNote(detail = {}) {
@@ -842,7 +849,7 @@
       color: "bone", mode: "receipt", receiptData: detail.stats || {}, pins: [], seed: Math.floor(Math.random() * 9000) + 100,
       birth: performance.now(), floatIn: performance.now()
     };
-    state.notes.push(note); saveNotes(); scheduleRender(); schedulePublicNoteSync(note, 0);
+    note.z = ++state.nextZ; note.updatedAt = Date.now(); state.notes.push(note); saveNotes(); scheduleRender(); schedulePublicNoteSync(note, 0);
   }
 
   function deleteReceiptNote(note) {
@@ -1049,6 +1056,7 @@
     note.returning = true; note.floatIn = 0;
     state.draggingId = note.id; state.dragOffset = { x: point.x - local.g.cx, y: point.y - local.g.cy }; state.dragTarget = point; state.dragLast = { x: point.x, time: event.timeStamp }; canvas.setPointerCapture(event.pointerId);
     state.dragMoved = false;
+    note.z = ++state.nextZ;
     state.notes = state.notes.filter(item => item.id !== note.id); state.notes.push(note); scheduleRender();
   });
   canvas.addEventListener("pointermove", event => {
