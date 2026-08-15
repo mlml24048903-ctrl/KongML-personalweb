@@ -36,9 +36,14 @@
   const storageKey = "km-felt-canvas-notes-v1";
   const visitorKey = "km-portfolio-visitor-id-v1";
   const adminMigrationKey = "km-felt-admin-migrated-v3";
+  const backupKey = "km-felt-canvas-notes-backups-v1";
+  const recoveryKey = "km-felt-owner-recovery-v1";
+  const obsoleteRecoveryNoteId = "25c4e84d-4206-4242-b69b-0c56c0aef124";
+  const pageParams = new URLSearchParams(location.search);
+  const ownerClaim = pageParams.get("owner") || "";
   const visitorId = localStorage.getItem(visitorKey) || crypto.randomUUID();
   localStorage.setItem(visitorKey, visitorId);
-  const canUsePublicApi = /^https?:$/.test(location.protocol) && (!["127.0.0.1", "localhost"].includes(location.hostname) || new URLSearchParams(location.search).has("api-preview"));
+  const canUsePublicApi = /^https?:$/.test(location.protocol) && (!["127.0.0.1", "localhost"].includes(location.hostname) || pageParams.has("api-preview"));
   const palette = {
     yellow: "#f4dc52", blue: "#91c9e8", pink: "#efaaa8", mint: "#a9d9bd",
     lavender: "#c7b7df", bone: "#eee7d7", coral: "#f38a64", lime: "#cde95d"
@@ -125,6 +130,18 @@
   function saveNotes() {
     localStorage.setItem(storageKey, JSON.stringify(state.notes.map(({ birth, floatIn, returning, angularVelocity, _image, _imageSource, _imageFailed, ...note }) => note)));
   }
+  function backupNotes(reason = "sync") {
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return;
+    try {
+      const backups = JSON.parse(localStorage.getItem(backupKey) || "[]");
+      if (backups[0]?.data === raw) return;
+      localStorage.setItem(backupKey, JSON.stringify([{ at: new Date().toISOString(), reason, data: raw }, ...backups].slice(0, 3)));
+    } catch { /* A backup must never block normal use. */ }
+  }
+  function apiHeaders(extra = {}) {
+    return { ...extra, ...(ownerClaim ? { "x-owner-claim": ownerClaim } : {}) };
+  }
   function cleanNote(note) {
     const { birth, floatIn, returning, angularVelocity, _image, _imageSource, _imageFailed, ...clean } = note;
     return clean;
@@ -152,7 +169,7 @@
     note.public = true; note.visitorId = visitorId;
     if (!canUsePublicApi) { note.pendingSync = true; saveNotes(); return false; }
     try {
-      const response = await fetch("/api/felt-notes", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ visitorId, note: cleanNote(note) }) });
+      const response = await fetch("/api/felt-notes", { method: "POST", headers: apiHeaders({ "content-type": "application/json" }), body: JSON.stringify({ visitorId, note: cleanNote(note) }) });
       const result = await response.json().catch(() => ({}));
       if (response.status === 422) {
         note.pendingSync = false; note.public = false; note.syncRejected = true; saveNotes();
@@ -161,48 +178,71 @@
       }
       if (!response.ok || result.configured === false) throw new Error(`HTTP ${response.status}`);
       state.isAdmin = state.isAdmin || result.admin === true;
+      note.pendingSync = false; note.syncRejected = false; note.remoteConfirmed = true;
       if (result.note?.imageUrl) {
-        const remoteImage = await preloadImage(result.note.imageUrl);
-        note.imageUrl = result.note.imageUrl; note.imageData = ""; note._image = remoteImage; note._imageSource = result.note.imageUrl; note._imageFailed = "";
+        note.imageUrl = result.note.imageUrl;
+        try {
+          const remoteImage = await preloadImage(result.note.imageUrl);
+          note.imageData = ""; note._image = remoteImage; note._imageSource = result.note.imageUrl; note._imageFailed = "";
+        } catch { /* Keep local imageData until the public object is readable. */ }
       }
-      note.pendingSync = false; note.syncRejected = false; saveNotes(); scheduleRender(); return true;
+      saveNotes(); scheduleRender(); return true;
     } catch {
       note.pendingSync = true; saveNotes();
       window.dispatchEvent(new CustomEvent("feltboardnotice", { detail: { message: note.mode === "image" ? "图片暂时未上传，已保存在本机，稍后会自动重试。" : "留言暂时未同步，稍后会自动重试。" } }));
       return false;
     }
   }
+  async function restoreOwnerNotes() {
+    if (!state.isAdmin || localStorage.getItem(recoveryKey)) return;
+    const response = await fetch("/assets/owner-notes-recovery-v1.json", { headers: { accept: "application/json" } });
+    if (!response.ok) throw new Error("owner recovery unavailable");
+    const recovered = await response.json();
+    if (!Array.isArray(recovered) || recovered.length < 7) throw new Error("owner recovery is incomplete");
+    backupNotes("before-owner-recovery");
+    state.notes = recovered.map(note => ({ ...note, owner: true, public: true, visitorId, pendingSync: true, remoteConfirmed: false, physicsAngle: note.rotation || 0, angularVelocity: 0, floatIn: 0, birth: undefined }));
+    localStorage.setItem(recoveryKey, "1"); saveNotes(); scheduleRender();
+  }
   async function syncPublicNotes() {
     if (!canUsePublicApi || state.syncing || state.draggingId || state.editingId) return;
     state.syncing = true;
     try {
-      const response = await fetch("/api/felt-notes", { headers: { accept: "application/json", "x-visitor-id": visitorId } });
+      const response = await fetch("/api/felt-notes", { headers: apiHeaders({ accept: "application/json", "x-visitor-id": visitorId }) });
       if (!response.ok) return;
       const payload = await response.json();
       if (!Array.isArray(payload.notes)) return;
       state.isAdmin = payload.admin === true;
       state.boardInitialized = payload.initialized === true;
+      if (state.isAdmin && ownerClaim) {
+        const cleanUrl = new URL(location.href); cleanUrl.searchParams.delete("owner"); history.replaceState(null, "", cleanUrl);
+      }
+      await restoreOwnerNotes();
       const localSnapshot = state.notes.map(note => cleanNote(note));
       if (state.isAdmin && !localStorage.getItem(adminMigrationKey)) {
-        const migrationResults = await Promise.all(localSnapshot.map(note => {
+        backupNotes("before-owner-migration");
+        const migrationResults = [];
+        for (const note of localSnapshot) {
           note.owner = true; note.public = true; note.visitorId = visitorId; note.pendingSync = true;
           const live = state.notes.find(item => item.id === note.id);
           if (live) Object.assign(live, note);
-          return publishPublicNote(live || note);
-        }));
+          migrationResults.push(await publishPublicNote(live || note));
+        }
         if (migrationResults.every(Boolean)) {
+          await deletePublicNote({ id: obsoleteRecoveryNoteId, public: true, visitorId });
           localStorage.setItem(adminMigrationKey, "1");
+          window.dispatchEvent(new CustomEvent("feltboardnotice", { detail: { message: `已将 ${migrationResults.length} 张便签完整同步到公网。` } }));
           saveNotes(); scheduleRender(); setTimeout(syncPublicNotes, 600); return;
         }
+        window.dispatchEvent(new CustomEvent("feltboardnotice", { detail: { message: `已同步 ${migrationResults.filter(Boolean).length}/${migrationResults.length} 张，失败内容仍安全保存在本机。` } }));
       }
       const localById = new Map(state.notes.map(note => [note.id, note]));
       const remoteIds = new Set(payload.notes.map(note => note.id));
-      const localOnly = state.notes.filter(note => (!note.public || note.syncRejected) && !remoteIds.has(note.id) && !(state.boardInitialized && note.owner));
+      const localOnly = state.notes.filter(note => !remoteIds.has(note.id) && (!note.remoteConfirmed || note.pendingSync || note.syncRejected));
       const localPending = state.notes.filter(note => note.pendingSync);
       const remoteNotes = payload.notes.map(remote => {
         const local = localById.get(remote.id);
         const needsImageMigration = remote.visitorId === visitorId && remote.mode === "image" && !remote.imageUrl && Boolean(remote.imageData || local?.imageData);
-        const merged = { ...remote, imageData: remote.imageData || local?.imageData || "", imageAspect: remote.imageAspect || local?.imageAspect || 1, public: true, pendingSync: needsImageMigration, physicsAngle: local?.physicsAngle ?? remote.rotation ?? 0, angularVelocity: local?.angularVelocity || 0, floatIn: 0, birth: undefined };
+        const merged = { ...remote, imageData: remote.imageData || local?.imageData || "", imageAspect: remote.imageAspect || local?.imageAspect || 1, public: true, remoteConfirmed: true, pendingSync: needsImageMigration, physicsAngle: local?.physicsAngle ?? remote.rotation ?? 0, angularVelocity: local?.angularVelocity || 0, floatIn: 0, birth: undefined };
         if (!local) return merged;
         const runtime = { image: local._image, source: local._imageSource, failed: local._imageFailed };
         Object.assign(local, merged);
@@ -212,6 +252,7 @@
       });
       for (const note of remoteNotes) if (note.pendingSync && !localPending.some(local => local.id === note.id)) localPending.push(note);
       const merged = new Map([...remoteNotes, ...localPending].map(note => [note.id, note]));
+      backupNotes("before-remote-merge");
       state.notes = [...localOnly, ...merged.values()]; state.serverHydrated = true; saveNotes(); scheduleRender();
       localPending.forEach(publishPublicNote);
     } catch { /* Local notes remain usable while the backend is not configured. */ }
@@ -219,7 +260,10 @@
   }
   async function deletePublicNote(note) {
     if (!note?.public || (!state.isAdmin && note.visitorId !== visitorId)) return;
-    try { await fetch(`/api/felt-notes?id=${encodeURIComponent(note.id)}&visitorId=${encodeURIComponent(visitorId)}`, { method: "DELETE" }); } catch { /* It stays removed locally for this browser. */ }
+    try {
+      const response = await fetch(`/api/felt-notes?id=${encodeURIComponent(note.id)}&visitorId=${encodeURIComponent(visitorId)}`, { method: "DELETE", headers: apiHeaders() });
+      return response.ok;
+    } catch { return false; }
   }
   function scheduleRender() {
     if (state.renderRaf) return;

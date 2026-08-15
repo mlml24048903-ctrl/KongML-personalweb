@@ -1,4 +1,4 @@
-const { createHash } = require("crypto");
+const { createHash, timingSafeEqual } = require("crypto");
 
 const allowedColors = new Set(["yellow", "blue", "pink", "mint", "lavender", "bone", "coral", "custom"]);
 const allowedModes = new Set(["md", "doodle", "image", "receipt"]);
@@ -6,6 +6,7 @@ const imageBucket = "felt-images";
 const maxImageBytes = 2 * 1024 * 1024;
 const recentWrites = new Map();
 const adminDeviceRecordId = "felt-admin-device";
+const adminClaimHash = process.env.FELT_ADMIN_CLAIM_HASH || "66be51ee59d51c26813942703602d2cbf544926bed0f5fc5a2396b4ea19f2d4a";
 // This existing public note was created on the owner's browser. Its private
 // visitor_id is the one-time device proof; after the first verified request we
 // keep a hidden sentinel row so the device remains recognized if the note is deleted.
@@ -207,20 +208,35 @@ function cleanNote(note, id, isAdmin = false) {
   };
 }
 
-async function adminDevice(base, visitorId) {
-  if (!visitorId) return false;
-  const sentinel = await fetch(`${base}?id=eq.${adminDeviceRecordId}&visitor_id=eq.${encodeURIComponent(visitorId)}&select=id&limit=1`, { headers: supabaseHeaders() });
-  if (!sentinel.ok) throw new Error(await sentinel.text());
-  if ((await sentinel.json()).length) return true;
-  const anchor = await fetch(`${base}?id=eq.${encodeURIComponent(adminAnchorNoteId)}&visitor_id=eq.${encodeURIComponent(visitorId)}&select=id&limit=1`, { headers: supabaseHeaders() });
-  if (!anchor.ok) throw new Error(await anchor.text());
-  if (!(await anchor.json()).length) return false;
+function validAdminClaim(value) {
+  if (typeof value !== "string" || value.length < 20 || value.length > 80) return false;
+  const actual = Buffer.from(createHash("sha256").update(value).digest("hex"));
+  const expected = Buffer.from(adminClaimHash);
+  return actual.length === expected.length && timingSafeEqual(actual, expected);
+}
+
+async function createAdminDevice(base, visitorId) {
   const created = await fetch(base, {
     method: "POST",
     headers: supabaseHeaders({ prefer: "resolution=merge-duplicates,return=minimal" }),
     body: JSON.stringify({ id: adminDeviceRecordId, visitor_id: visitorId, payload: { hidden: true, kind: "admin-device" } })
   });
   if (!created.ok) throw new Error(await created.text());
+}
+
+async function adminDevice(base, visitorId, claimCode = "") {
+  if (!visitorId) return false;
+  const sentinel = await fetch(`${base}?id=eq.${adminDeviceRecordId}&visitor_id=eq.${encodeURIComponent(visitorId)}&select=id&limit=1`, { headers: supabaseHeaders() });
+  if (!sentinel.ok) throw new Error(await sentinel.text());
+  if ((await sentinel.json()).length) return true;
+  if (validAdminClaim(claimCode)) {
+    await createAdminDevice(base, visitorId);
+    return true;
+  }
+  const anchor = await fetch(`${base}?id=eq.${encodeURIComponent(adminAnchorNoteId)}&visitor_id=eq.${encodeURIComponent(visitorId)}&select=id&limit=1`, { headers: supabaseHeaders() });
+  if (!anchor.ok) throw new Error(await anchor.text());
+  if (!(await anchor.json()).length) return false;
+  await createAdminDevice(base, visitorId);
   return true;
 }
 
@@ -229,8 +245,9 @@ module.exports = async function handler(request, response) {
   const restRoot = `${process.env.SUPABASE_URL.replace(/\/$/, "")}/rest/v1`;
   const base = `${restRoot}/felt_notes`;
   const visitorId = cleanText(request.headers["x-visitor-id"] || request.body?.visitorId || request.query?.visitorId, 80);
+  const claimCode = cleanText(request.headers["x-owner-claim"] || request.body?.ownerClaim || request.query?.ownerClaim, 80);
   try {
-    const isAdmin = await adminDevice(base, visitorId);
+    const isAdmin = await adminDevice(base, visitorId, claimCode);
     if (request.method === "GET") {
       const result = await fetch(`${base}?select=id,visitor_id,payload,created_at&order=created_at.desc&limit=120`, { headers: supabaseHeaders() });
       if (!result.ok) return send(response, 502, { error: "留言暂时没有同步成功", stage: "read_notes", upstreamStatus: result.status });

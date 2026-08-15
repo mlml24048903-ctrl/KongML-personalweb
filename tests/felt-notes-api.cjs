@@ -1,6 +1,8 @@
 process.env.SUPABASE_URL = "https://example.supabase.co";
 process.env.SUPABASE_SECRET_KEY = "sb_secret_test-key";
 process.env.NODE_ENV = "test";
+const testOwnerClaim = "test-owner-claim-code-12345";
+process.env.FELT_ADMIN_CLAIM_HASH = require("crypto").createHash("sha256").update(testOwnerClaim).digest("hex");
 
 const handler = require("../api/felt-notes.js");
 let ownership = [];
@@ -21,14 +23,14 @@ global.fetch = async (url, options = {}) => {
   return { ok: true, json: async () => [] };
 };
 
-function request(note, visitorId) {
+function request(note, visitorId, ownerClaim = "") {
   return new Promise(resolve => {
     const response = {
       headers: {},
       setHeader(name, value) { this.headers[name] = value; },
       end(body) { resolve({ status: this.statusCode, body: JSON.parse(body) }); }
     };
-    handler({ method: "POST", headers: { "x-forwarded-for": "203.0.113.7" }, socket: {}, body: { visitorId, note }, query: {} }, response);
+    handler({ method: "POST", headers: { "x-forwarded-for": "203.0.113.7" }, socket: {}, body: { visitorId, ownerClaim, note }, query: {} }, response);
   });
 }
 
@@ -51,8 +53,8 @@ function request(note, visitorId) {
   const forbidden = await request({ ...base, id: "32345678-1234-1234-1234-123456789abc" }, "visitor-owner-12345");
   if (forbidden.status !== 403) throw new Error(`ownership protection failed: ${JSON.stringify(forbidden)}`);
 
-  adminVisitor = "owner-device-12345";
-  const adminEdit = await request({ ...base, id: "felt-profile", owner: true, mode: "receipt", fontScale: 1.25, kind: "receipt", receiptData: { clicks: 8, minutes: 3 } }, adminVisitor);
+  const ownerDevice = "owner-device-12345";
+  const adminEdit = await request({ ...base, id: "felt-profile", owner: true, mode: "receipt", fontScale: 1.25, kind: "receipt", receiptData: { clicks: 8, minutes: 3 } }, ownerDevice, testOwnerClaim);
   if (adminEdit.status !== 200 || adminEdit.body.admin !== true || writtenPayload?.owner !== true || writtenPayload?.fontScale !== 1.25 || writtenPayload?.kind !== "receipt" || writtenPayload?.receiptData?.clicks !== 8) throw new Error(`admin device update failed: ${JSON.stringify({ adminEdit, writtenPayload })}`);
   console.log("FELT_NOTES_API_OK");
 })().catch(error => { console.error(error); process.exitCode = 1; });

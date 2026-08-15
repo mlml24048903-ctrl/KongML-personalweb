@@ -24,15 +24,17 @@ const { chromium } = require("C:/Users/mlml2/.cache/codex-runtimes/codex-primary
   await page.addInitScript(() => {
     localStorage.setItem("km-portfolio-visitor-id-v1", "owner-device-browser-test");
     localStorage.setItem("km-felt-canvas-notes-v1", JSON.stringify([
-      { id: "felt-profile", owner: true, x: .23, y: .31, rotation: 0, scale: 1.2, fontScale: 1.15, color: "bone", mode: "md", content: "# 本地作者便签", pins: [], seed: 21 },
-      { id: "local-contact-note", x: .3, y: .62, rotation: 0, scale: .88, color: "pink", mode: "md", content: "## 联系我", pins: [], seed: 82 }
+      { id: "felt-profile", owner: true, x: .19, y: .34, rotation: 0, scale: 1.05, color: "bone", mode: "md", content: "# 当前残缺版本", pins: [], seed: 21 }
     ]));
   });
 
-  await page.goto("http://127.0.0.1:4173/?api-preview=1", { waitUntil: "networkidle" });
+  await page.goto("http://127.0.0.1:4173/?api-preview=1&owner=test-owner-claim-code-12345", { waitUntil: "networkidle" });
   await page.waitForFunction(() => localStorage.getItem("km-felt-admin-migrated-v3") === "1");
-  if (!posts.some(note => note.id === "felt-profile" && note.scale === 1.2 && note.fontScale === 1.15 && note.content.includes("本地作者便签"))) throw new Error("saved owner geometry/text was not migrated");
-  if (!posts.some(note => note.id === "local-contact-note")) throw new Error("local-only note was not migrated");
+  if (posts.length < 7) throw new Error(`only ${posts.length} recovered notes were migrated`);
+  if (!posts.some(note => note.id === "felt-profile" && note.scale === 1.05 && note.content.includes("孔米乐"))) throw new Error("recovered owner note was not migrated");
+  if (!posts.some(note => note.id === "e3c3e165-bdd6-41a7-8a00-ded228063d7f" && note.content.includes("联系我"))) throw new Error("recovered contact note was not migrated");
+  if (!posts.some(note => note.id === "a3e91573-4a87-400c-98b5-f805f8dd6cbe" && note.imageData?.length > 180000)) throw new Error("recovered image data was not migrated");
+  if (!await page.evaluate(() => localStorage.getItem("km-felt-canvas-notes-backups-v1"))) throw new Error("local backup was not created before migration");
 
   await page.evaluate(() => window.dispatchEvent(new CustomEvent("felt-receipt-torn", { detail: { stats: { clicks: 7, minutes: 2, prints: 1, notes: 3 } } })));
   await page.waitForFunction(() => JSON.parse(localStorage.getItem("km-felt-canvas-notes-v1") || "[]").some(note => note.kind === "receipt" && note.pendingSync === false));
