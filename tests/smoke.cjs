@@ -22,6 +22,15 @@ const { chromium } = require("C:/Users/mlml2/.cache/codex-runtimes/codex-primary
   });
 
   await page.goto(pathToFileURL(path.resolve(__dirname, "..", "index.html")).href);
+  const siteIdentity = await page.evaluate(() => ({
+    title: document.title,
+    description: document.querySelector('meta[name="description"]')?.content,
+    shareTitle: document.querySelector('meta[property="og:title"]')?.content,
+    shareDescription: document.querySelector('meta[property="og:description"]')?.content
+  }));
+  if (siteIdentity.title !== "Kikimy / 想法持续生长" || siteIdentity.description !== "Kikimy的个人工作台：产品、开发、语言与持续生长的想法。" || siteIdentity.shareTitle !== siteIdentity.title || siteIdentity.shareDescription !== siteIdentity.description) {
+    throw Error(`site identity mismatch: ${JSON.stringify(siteIdentity)}`);
+  }
   if (await page.locator("#entryHint").count()) throw Error("entry hint remains");
   if ((await page.locator("#hero-title").textContent()) !== "THE WORLDIS STILLIN DRAFT.") throw Error("slogan");
   if (await page.locator("#profileLayer,[data-profile-page]").count()) throw Error("retired profile pages remain");
