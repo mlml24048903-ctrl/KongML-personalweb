@@ -6,9 +6,14 @@ const { chromium } = require("C:/Users/mlml2/.cache/codex-runtimes/codex-primary
   const remote = new Map();
   const posts = [];
   let gets = 0;
+  let accessGets = 0;
 
   await page.route("**/api/felt-notes**", async route => {
     const request = route.request();
+    if (request.method() === "GET" && new URL(request.url()).searchParams.get("access") === "1") {
+      accessGets += 1;
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ configured: true, admin: true }) });
+    }
     if (request.method() === "POST") {
       const body = request.postDataJSON();
       posts.push(body.note);
@@ -31,8 +36,9 @@ const { chromium } = require("C:/Users/mlml2/.cache/codex-runtimes/codex-primary
   });
 
   await page.goto("http://127.0.0.1:4173/?api-preview=1&owner=test-owner-claim-code-12345", { waitUntil: "networkidle" });
+  if (accessGets !== 1 || await page.locator("body.portfolio-readonly").count()) throw new Error("owner portfolio access was not unlocked");
   if (gets !== 0) throw new Error("message-board API ran during the home scene");
-  await page.locator("[data-scene-target='1']").click(); await page.waitForTimeout(1100);
+  await page.locator("[data-scene-target='1']").click(); await page.waitForTimeout(1400);
   const monitor = await page.locator(".monitor-wrap").boundingBox();
   if (Math.abs(monitor.x - (1440 - monitor.width) / 2) > 2) throw new Error(`workbench monitor did not settle: ${JSON.stringify(monitor)}`);
   if (gets !== 0) throw new Error("message-board API blocked the workbench transition");

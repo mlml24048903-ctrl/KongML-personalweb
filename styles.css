@@ -4876,6 +4876,19 @@ body.felt-editor-open { overflow:hidden; }
   .visitor-receipt__paper { height:calc(100% - 40px); }
 }
 
+/* Portfolio content is read-only until this device is verified as the owner. */
+body.portfolio-readonly #workspaceToolbar,
+body.portfolio-readonly .retro-actions,
+body.portfolio-readonly .code-tree-actions,
+body.portfolio-readonly .window-file-tools > div,
+body.portfolio-readonly .retro-context-menu {
+  display:none!important;
+}
+body.portfolio-readonly .outer-item,
+body.portfolio-readonly .outer-item:hover {
+  cursor:default!important;
+}
+
 /* Print and business-card repair v24. */
 .printed-document:not(.is-paper-ball)::before,
 .printed-document.is-long-document:not(.is-paper-ball)::before {

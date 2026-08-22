@@ -1,4 +1,6 @@
 const STORAGE={outerItems:"km-portfolio-outer-items-v4",innerItems:"km-portfolio-inner-items-v6",desktopMode:"km-portfolio-desktop-mode-v1",outerLayout:"km-portfolio-outer-layout-v1"};
+const PORTFOLIO_VISITOR_KEY="km-portfolio-visitor-id-v1",portfolioParams=new URLSearchParams(location.search),portfolioOwnerClaim=portfolioParams.get("owner")||"",portfolioVisitorId=localStorage.getItem(PORTFOLIO_VISITOR_KEY)||crypto.randomUUID(),isLocalPortfolio=location.protocol==="file:"||(["127.0.0.1","localhost"].includes(location.hostname)&&!portfolioParams.has("api-preview"));
+localStorage.setItem(PORTFOLIO_VISITOR_KEY,portfolioVisitorId);
 ["km-portfolio-outer-items-v2","km-portfolio-outer-items-v3","km-portfolio-inner-items-v2","km-portfolio-inner-items-v3","km-portfolio-inner-items-v4","km-portfolio-inner-items-v5","km-portfolio-connections-v3"].forEach(key=>localStorage.removeItem(key));
 const defaultOuterItems=[
 {id:"note-edge",color:"orange",title:"\u4fdd\u6301\u950b\u8292",content:"\u5bf9\u4e16\u754c\u4fdd\u6301\u654f\u611f\uff0c\u5bf9\u7b54\u6848\u4fdd\u6301\u6000\u7591\u3002",x:.205,y:.2,rotation:-6},
@@ -97,9 +99,20 @@ function bindInteractionHints(){
   window.addEventListener("scroll",hideInteractionHint,{passive:true});
 }
 localStorage.setItem(STORAGE.desktopMode,"code");
-const state={level:0,outsideBoard:false,swipeStartX:0,swipeStartY:0,outerItems:loadOuterItems(),innerItems:loadInnerItems(),dialogContext:null,wheelAmount:0,wheelDirection:0,wheelLocked:false,activeFolderId:null,draggedInnerId:null,zIndex:60,codeMode:true,noteImageData:"",noteDoodleData:"",noteDoodleDirty:false,printQueue:[]};
+const state={level:0,outsideBoard:false,swipeStartX:0,swipeStartY:0,outerItems:loadOuterItems(),innerItems:loadInnerItems(),dialogContext:null,wheelAmount:0,wheelDirection:0,wheelLocked:false,activeFolderId:null,draggedInnerId:null,zIndex:60,codeMode:true,noteImageData:"",noteDoodleData:"",noteDoodleDirty:false,printQueue:[],canEditPortfolio:isLocalPortfolio,portfolioAccessReady:isLocalPortfolio};
 const els={body:document.body,stage:document.getElementById("computerStage"),outsideTrack:document.getElementById("outsideTrack"),outsideDesk:document.querySelector(".outside-desk-panel"),feltBoard:document.getElementById("feltBoard"),enterMouse:document.getElementById("enterMouse"),toolbar:document.getElementById("workspaceToolbar"),modeGuide:document.getElementById("modeGuide"),modeLabel:document.getElementById("modeLabel"),modeDescription:document.getElementById("modeDescription"),outerItems:document.getElementById("outerItems"),retroDesktop:document.getElementById("retroDesktop"),customInnerItems:document.getElementById("customInnerItems"),windowLayer:document.getElementById("windowLayer"),dialog:document.getElementById("itemDialog"),dialogTitle:document.getElementById("dialogTitle"),itemForm:document.getElementById("itemForm"),itemTitle:document.getElementById("itemTitle"),itemContent:document.getElementById("itemContent"),colorField:document.getElementById("colorField"),zoomMeter:document.querySelector("#zoomMeter span"),zoomLabel:document.querySelector("#zoomMeter small"),toast:document.getElementById("toast"),powerButton:document.getElementById("powerButton"),noteMediaTools:document.getElementById("noteMediaTools"),noteImageInput:document.getElementById("noteImageInput"),noteImagePreview:document.getElementById("noteImagePreview"),noteDoodle:document.getElementById("noteDoodle"),clearNoteImage:document.getElementById("clearNoteImage"),clearDoodle:document.getElementById("clearDoodle")};
 function persist(){localStorage.setItem(STORAGE.outerItems,JSON.stringify(state.outerItems));localStorage.setItem(STORAGE.innerItems,JSON.stringify(state.innerItems))}
+function setPortfolioEditAccess(allowed,{canonical=false}={}){
+  state.canEditPortfolio=allowed===true;state.portfolioAccessReady=true;
+  els.body.classList.toggle("portfolio-readonly",!state.canEditPortfolio);els.body.classList.toggle("portfolio-owner",state.canEditPortfolio);
+  if(canonical&&!state.canEditPortfolio){state.outerItems=clone(defaultOuterItems);state.innerItems=clone(defaultInnerItems);desktopGridReady=false;els.windowLayer.innerHTML=""}
+  renderOuterItems();renderInnerItems();refreshWindows();
+}
+async function verifyPortfolioEditAccess(){
+  if(isLocalPortfolio){setPortfolioEditAccess(true);return}
+  try{const headers={accept:"application/json","x-visitor-id":portfolioVisitorId,...(portfolioOwnerClaim?{"x-owner-claim":portfolioOwnerClaim}:{})},response=await fetch("/api/felt-notes?access=1",{headers}),payload=await response.json();setPortfolioEditAccess(response.ok&&payload.admin===true,{canonical:payload.admin!==true})}
+  catch{setPortfolioEditAccess(false,{canonical:true})}
+}
 function esc(v=""){return String(v).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
 function inlineMd(v){return esc(v).replace(/\[([^\]]+)\]\(((?:https?:\/\/|\.\/assets\/)[^\s)]+)\)/g,(_,label,rawHref)=>{const download=rawHref.endsWith("#download"),href=download?rawHref.slice(0,-9):rawHref;return `<a href="${href}" target="_blank" rel="noreferrer"${download?" download":""}>${label}</a>`}).replace(/`([^`]+)`/g,'<span class="md-tag">$1</span>').replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/(^|[^*])\*([^*]+)\*/g,"$1<em>$2</em>")}
 function markdownToHTML(md=""){const lines=String(md).replace(/\r/g,"").split("\n");let h="",list=null;const close=()=>{if(list){h+=`</${list}>`;list=null}};for(const line of lines){const hd=line.match(/^(#{1,3})\s+(.+)$/),ul=line.match(/^[-*]\s+(.+)$/),ol=line.match(/^\d+\.\s+(.+)$/);if(hd){close();h+=`<h${hd[1].length}>${inlineMd(hd[2])}</h${hd[1].length}>`}else if(line.startsWith("> ")){close();h+=`<blockquote>${inlineMd(line.slice(2))}</blockquote>`}else if(ul){if(list!=="ul"){close();list="ul";h+="<ul>"}h+=`<li>${inlineMd(ul[1])}</li>`}else if(ol){if(list!=="ol"){close();list="ol";h+="<ol>"}h+=`<li>${inlineMd(ol[1])}</li>`}else if(!line.trim())close();else{close();h+=`<p>${inlineMd(line)}</p>`}}close();return h||"<p>NO CONTENT</p>"}
@@ -209,12 +222,13 @@ function renderOuterItems(){
     n.style.left=`${item.x*100}%`;n.style.top=`${item.y*100}%`;n.style.setProperty("--rotation",`${item.rotation||0}deg`);
     const media=image||doodle?`<div class="sticky-media${doodle&&!image?" is-doodle-only":""}">${image?`<img src="${image}" alt="" />`:""}${doodle?`<img class="sticky-doodle" src="${doodle}" alt="" />`:""}</div>`:"";
     n.classList.toggle("has-media",!!media);
-    n.innerHTML=`<span class="sticky-paper" aria-hidden="true"></span><span class="sticky-grain" aria-hidden="true"></span>${media}<button class="delete-item" type="button">\u00d7</button><div class="sticky-copy"><h3>${esc(item.title)}</h3><p>${esc(item.content)}</p></div><small>\u4fbf\u7b7e / \u53cc\u51fb\u7f16\u8f91</small>`;
+    n.innerHTML=`<span class="sticky-paper" aria-hidden="true"></span><span class="sticky-grain" aria-hidden="true"></span>${media}<button class="delete-item" type="button" aria-label="删除便签">\u00d7</button><div class="sticky-copy"><h3>${esc(item.title)}</h3><p>${esc(item.content)}</p></div><small>${state.canEditPortfolio?"便签 / 双击编辑":"便签"}</small>`;
     bindOuterItem(n,item);els.outerItems.append(n);
   });
 }
 function bindOuterItem(n,item){
   let d=null,raf=0;
+  if(!state.canEditPortfolio){n.classList.add("is-readonly");n.querySelector(".delete-item")?.remove();return}
   const follow=()=>{
     if(!d)return;
     d.cx+=(d.tx-d.cx)*.115;
@@ -277,10 +291,7 @@ function renderCodeTree(){
       const node=document.createElement("article"),open=item.kind==="folder"?codeTreeExpanded.has(item.id):codeFileExpanded.has(item.id);node.className=`code-tree-node is-${item.kind}${open?" is-open":""}`;node.dataset.innerId=item.id;
       const toggle=document.createElement("button");toggle.type="button";toggle.className="code-tree-toggle";toggle.setAttribute("aria-expanded",String(open));toggle.innerHTML=`<span class="code-tree-caret">${item.kind==="folder"?">":"·"}</span><span class="code-tree-type">${item.kind==="folder"?"[DIR]":"[MD]"}</span><span class="code-tree-name">${esc(codeDisplayName(item))}</span><span class="code-tree-action">${open?"收起":"展开"}</span>`;
       node.append(toggle);
-      const actions=document.createElement("div");actions.className="code-tree-actions";actions.innerHTML='<button type="button" data-code-edit>编辑</button><button type="button" data-code-delete>删除</button>';
-      actions.querySelector("[data-code-edit]").onclick=e=>{e.stopPropagation();openItemDialog({scope:"inner",action:"edit",kind:item.kind,item})};
-      actions.querySelector("[data-code-delete]").onclick=e=>{e.stopPropagation();deleteItem(item.id)};
-      node.append(actions);
+      if(state.canEditPortfolio){const actions=document.createElement("div");actions.className="code-tree-actions";actions.innerHTML='<button type="button" data-code-edit>编辑</button><button type="button" data-code-delete>删除</button>';actions.querySelector("[data-code-edit]").onclick=e=>{e.stopPropagation();openItemDialog({scope:"inner",action:"edit",kind:item.kind,item})};actions.querySelector("[data-code-delete]").onclick=e=>{e.stopPropagation();deleteItem(item.id)};node.append(actions)}
       if(item.kind==="folder"){
         const children=build(item.id,depth+1);children.hidden=!open;node.append(children);
         toggle.onclick=()=>{codeTreeExpanded.has(item.id)?codeTreeExpanded.delete(item.id):codeTreeExpanded.add(item.id);renderCodeTree()};
@@ -632,6 +643,15 @@ function bindDesktopContextMenu(){
   document.addEventListener("pointerdown",e=>{if(!e.target.closest(".retro-context-menu"))close()});document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});window.addEventListener("blur",close);
 }
 function bindEvents(){els.enterMouse.onclick=()=>{markInteraction("mouse");if(state.level<2)setLevel(2)};document.querySelectorAll("[data-open-app]").forEach(b=>b.onclick=()=>{setLevel(2);openItemWindow(b.dataset.openApp)});document.querySelectorAll(".desktop-icon").forEach(b=>b.onclick=()=>{setLevel(2);openItemWindow(b.dataset.app)});document.getElementById("addNote").onclick=()=>openItemDialog({scope:"outer",action:"create"});document.getElementById("newFile").onclick=()=>createDesktopItemInline("file");document.getElementById("newFolder").onclick=()=>createDesktopItemInline("folder");document.getElementById("resetWorkspace").onclick=resetAll;document.querySelectorAll(".dialog-close").forEach(b=>b.onclick=closeDialog);els.itemForm.onsubmit=saveDialog;els.dialog.oncancel=e=>{e.preventDefault();closeDialog()};els.retroDesktop.ondragover=e=>{if(state.draggedInnerId)e.preventDefault()};els.retroDesktop.ondrop=e=>{if(state.draggedInnerId){e.preventDefault();moveItem(e.dataTransfer.getData("text/plain")||state.draggedInnerId,null);state.draggedInnerId=null}};els.windowLayer.addEventListener("pointerdown",e=>{const w=e.target.closest(".retro-window");if(w){const i=state.innerItems.find(x=>x.id===w.dataset.itemId);state.activeFolderId=i?.kind==="folder"?i.id:null}});els.powerButton.onclick=e=>{e.stopPropagation();markInteraction("power");togglePower()};bindPrinter();bindDesktopContextMenu();bindInteractionHints();bindOutsideSwipe();window.addEventListener("wheel",handleWheel,{passive:false});window.onresize=alignOuterMonitorStand}
+function bindPortfolioReadonlyGuards(){
+  const mutationTarget=event=>event.target.closest(".custom-inner-icon,.folder-entry,.retro-context-menu");
+  ["pointerdown","pointermove","pointerup","pointercancel","dragstart","dragover","drop"].forEach(type=>els.retroDesktop.addEventListener(type,event=>{if(state.canEditPortfolio||!mutationTarget(event))return;if(type.startsWith("drag"))event.preventDefault();event.stopImmediatePropagation()},true));
+  els.retroDesktop.addEventListener("contextmenu",event=>{if(state.canEditPortfolio||event.target.closest(".retro-window"))return;event.stopImmediatePropagation()},true);
+}
+function protectPortfolioMutations(){
+  const guard=fn=>function(...args){if(!state.canEditPortfolio)return;return fn.apply(this,args)};
+  openItemDialog=guard(openItemDialog);saveDialog=guard(saveDialog);resetAll=guard(resetAll);createDesktopItemInline=guard(createDesktopItemInline);moveItem=guard(moveItem);deleteItem=guard(deleteItem);
+}
 function updateSceneState(){
   const scene=state.outsideBoard?"board":String(state.level);
   els.body.dataset.scene=scene;
@@ -671,4 +691,4 @@ function bindSceneMotion(){
 function clock(){const c=document.getElementById("retroClock");if(c)c.textContent=new Intl.DateTimeFormat("zh-CN",{hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date())}
 els.itemForm.addEventListener("submit",()=>{if(state.dialogContext?.scope==="outer"){state.noteDoodleDirty=false;state.noteDoodleData=""}},{capture:true});
 window.addEventListener("feltboardnotice",event=>toast(event.detail?.message||"留言状态已更新"));
-bindNoteMedia();renderOuterItems();renderInnerItems();bindEvents();bindSceneMotion();applyDesktopMode();clock();setLevel(0);setInterval(clock,30000);
+bindNoteMedia();renderOuterItems();renderInnerItems();protectPortfolioMutations();bindEvents();bindPortfolioReadonlyGuards();bindSceneMotion();applyDesktopMode();clock();setLevel(0);verifyPortfolioEditAccess();setInterval(clock,30000);

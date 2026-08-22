@@ -258,6 +258,7 @@ module.exports = async function handler(request, response) {
   try {
     const isAdmin = await adminDevice(base, visitorId, claimCode);
     if (request.method === "GET") {
+      if (String(request.query?.access || "") === "1") return send(response, 200, { configured: true, admin: isAdmin });
       const result = await fetch(`${base}?select=id,visitor_id,payload,created_at&order=created_at.desc&limit=120`, { headers: supabaseHeaders() });
       if (!result.ok) return send(response, 502, { error: "留言暂时没有同步成功", stage: "read_notes", upstreamStatus: result.status });
       const rows = await result.json();
